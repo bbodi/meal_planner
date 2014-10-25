@@ -1,0 +1,15 @@
+[package]
+
+name = "meal_plan"
+version = "0.0.1"
+authors = ["bbodi <bbodi@gmail.com>"]
+
+[dependencies.sdl2]
+git = "https://github.com/AngryLawyer/rust-sdl2.git"
+
+[dependencies.sdl2_ttf]
+git = "https://github.com/andelf/rust-sdl2_ttf"
+
+[profile.release]
+opt-level = 3
+debug = false
