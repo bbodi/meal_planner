@@ -5,6 +5,42 @@ extern crate sdl2_ttf;
 const SCREEN_WIDHT: u32 = 640;
 const SCREEN_HEIGHT: u32 = 480;
 
+struct Layer {
+    texture: sdl2::render::Texture,
+}
+
+bitflags! {
+    flags EventHandlingResult: u32 {
+        const HANDLED   = 0x00000001,
+        const NEED_REDRAW   = 0x00000010,
+    }
+}
+
+trait WidgetImpl {
+    fn handle_event(&mut self) -> EventHandlingResult;
+
+    fn draw(&self);
+}
+
+struct Widget<'a> {
+    widgetImpl: Box<WidgetImpl + 'a>,
+    rect: sdl2::rect::Rect,
+}
+
+impl<'a> Widget<'a> {
+    fn handle_event(&mut self) -> EventHandlingResult {
+        self.widgetImpl.handle_event()
+    }
+
+    fn draw(&self) {
+        self.widgetImpl.draw()
+    }
+
+    fn get_rect(&self) -> sdl2::rect::Rect {
+        self.rect
+    }
+}
+
 fn main() {
     sdl2::init(sdl2::INIT_VIDEO);
     sdl2_ttf::init();
@@ -24,16 +60,20 @@ fn main() {
     let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 255));
     let _ = renderer.clear();
 
-
-    /*let texture = match renderer.create_texture(sdl2::pixels::ARGB8888, sdl2::render::AccessStreaming, SCREEN_WIDHT as int, SCREEN_HEIGHT as int) {
-        Ok(t) => t,
-        Err(e) => fail!(e)
-    };*/
-
-    let font = try!(sdl2_ttf::Font::from_file("DejaVuSansMono.ttf", 128));
+    let font = match sdl2_ttf::Font::from_file(&Path::new("DejaVuSansMono.ttf"), 128) {
+        Ok(f) => f,
+        Err(e) => fail!(e),
+    };
     // render a surface, and convert it to a texture bound to the renderer
-    let surface = try!(font.render_str_blended("Hello Rust!", sdl2::pixels::RGBA(255, 0, 0, 255)));
-    let texture = try!(renderer.create_texture_from_surface(&surface));
+    let surface = match font.render_str_blended("Hello Rust!", sdl2::pixels::RGBA(255, 0, 0, 255)) {
+        Ok(s) => s,
+        Err(e) => fail!(e),
+    };
+    let texture = match renderer.create_texture_from_surface(&surface) {
+        Ok(t) => t,
+        Err(e) => fail!(e),
+    };
+    renderer.set_viewport(&sdl2::rect::Rect::new(10, 10, 100, 100));
     renderer.copy(&texture, None, None);
     renderer.present();
 
@@ -44,6 +84,7 @@ fn main() {
     'main : loop {
         let current_tick = sdl2::timer::get_ticks();
 
+        renderer.set_viewport(&sdl2::rect::Rect::new(10, 10, 100, 100));
         let _ = renderer.copy(&texture, None, None);
 
         renderer.present();
