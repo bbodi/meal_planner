@@ -5,6 +5,8 @@ extern crate sdl2_ttf;
 const SCREEN_WIDHT: u32 = 640;
 const SCREEN_HEIGHT: u32 = 480;
 
+//mod line_chart;
+
 struct Layer {
     texture: sdl2::render::Texture,
 }

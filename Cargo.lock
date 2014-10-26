@@ -2,20 +2,18 @@
 name = "meal_plan"
 version = "0.0.1"
 dependencies = [
- "sdl2 0.0.1-alpha.1 (git+https://github.com/AngryLawyer/rust-sdl2.git#99c95bd85641234b29b361000681e9df132b5529)",
- "sdl2_ttf 0.0.1 (git+https://github.com/andelf/rust-sdl2_ttf#4388ac1b066e5fca35584454619a6cba793ee9b4)",
+ "sdl2 0.0.1-alpha.1",
+ "sdl2_ttf 0.0.1",
 ]
 
 [[package]]
 name = "sdl2"
 version = "0.0.1-alpha.1"
-source = "git+https://github.com/AngryLawyer/rust-sdl2.git#99c95bd85641234b29b361000681e9df132b5529"
 
 [[package]]
 name = "sdl2_ttf"
 version = "0.0.1"
-source = "git+https://github.com/andelf/rust-sdl2_ttf#4388ac1b066e5fca35584454619a6cba793ee9b4"
 dependencies = [
- "sdl2 0.0.1-alpha.1 (git+https://github.com/AngryLawyer/rust-sdl2.git#99c95bd85641234b29b361000681e9df132b5529)",
+ "sdl2 0.0.1-alpha.1",
 ]
 
