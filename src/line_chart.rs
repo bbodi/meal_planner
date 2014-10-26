@@ -1,3 +1,5 @@
+extern crate sdl2;
+
 use std::collections::RingBuf;
 use std::collections::Deque;
 use std::cmp::min;
@@ -57,7 +59,7 @@ impl Chart {
 		self
 	}
 
-	fn draw_bars(&self, dst: &RenderContext) {
+	fn draw_bars(&self, dst: &sdl2::render::Renderer) {
 		let mut last_value = 0f32;
 		for iter in self.data.iter().enumerate() {
 			let (index, value) = iter;
@@ -76,7 +78,7 @@ impl Chart {
 		}
 	}
 
-	fn draw_gradient_bar(&self, dst: &RenderContext, x:u32, value: u32, start_color: voxlap::Color, end_color: voxlap::Color) {
+	fn draw_gradient_bar(&self, dst: &RenderContext, x:u32, value: u32, start_color: sdl2::color::Color, end_color: sdl2::color::Color) {
 		for i in range(0, value) {
 			//let p = min(self.max_height, (y2-y)) as f32 / self.max_height as f32;
 			let p = i as f32 / self.max_height as f32;
@@ -85,29 +87,12 @@ impl Chart {
 			let r = start_color.r as f32 * sp + end_color.r as f32 * p;
 			let g = start_color.g as f32 * sp + end_color.g as f32 * p;
 			let b = start_color.b as f32 * sp + end_color.b as f32 * p;
-			dst.draw_point_2d(x, self.bottom_y - i, voxlap::Color::rgb(r as u8, g as u8, b as u8));
+			//dst.draw_point_2d(x, self.bottom_y - i, voxlap::Color::rgb(r as u8, g as u8, b as u8));
 		}
-		dst.draw_point_2d(x, self.bottom_y - value, voxlap::Color::rgb(217, 137, 50));
-		dst.draw_point_2d(x, self.bottom_y - value-1, voxlap::Color::rgb(217, 137, 50));
+		//dst.draw_point_2d(x, self.bottom_y - value, voxlap::Color::rgb(217, 137, 50));
+		//dst.draw_point_2d(x, self.bottom_y - value-1, voxlap::Color::rgb(217, 137, 50));
 	}
 
-	fn draw_center_line(&self, dst: &RenderContext) {
-		let x1 = self.x;
-		let y1 = self.y + self.max_height/2;
-		let x2 = self.right_x;
-		let y2 = self.y + self.max_height/2;
-		dst.draw_line_2d(x1, y1, x2, y2, voxlap::Color::rgb(0xFF, 0x66, 0));
-		dst.print6x8(self.right_x-16, y1, voxlap::Color::rgb(0xFF, 0x66, 0), None, "50");
-	}
-
-	fn draw_top_line(&self, dst: &RenderContext) {
-		let x1 = self.x;
-		let y1 = self.y;
-		let x2 = self.right_x;
-		let y2 = self.y;
-		dst.draw_line_2d(x1, y1, x2, y2, voxlap::Color::rgb(0, 255, 0));
-		dst.print6x8(self.right_x-24, y1, voxlap::Color::rgb(00, 255, 0), None, "100");
-	}
 
 	pub fn add_data(&mut self, data: u32) {
 		self.data.push_front(data);
@@ -116,15 +101,13 @@ impl Chart {
 		}
 	}
 
-	pub fn draw(&self, dst: &RenderContext) {
+	pub fn draw(&self, dst: &sdl2::render::Renderer, data: &Collection<u32>) {
 		self.draw_bars(dst);
-		self.draw_center_line(dst);
-		self.draw_top_line(dst);
 
 		let current_fps = *self.data.front().unwrap_or(&0);
 		let y_pos = self.bottom_y - min(current_fps, self.max_height);
 		if y_pos + 7 < 600 {
-			dst.print6x8(self.right_x, self.bottom_y - current_fps, voxlap::Color::rgb(255, 255, 255), None, format!("{}", current_fps).as_slice());
+			//dst.print6x8(self.right_x, self.bottom_y - current_fps, voxlap::Color::rgb(255, 255, 255), None, format!("{}", current_fps).as_slice());
 		}
 	}
 }
