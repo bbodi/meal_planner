@@ -92,6 +92,19 @@ impl<'a> Layer<'a> {
     	renderer.copy(&self.texture, None, None);
     }
 
+	// ClickOutsideEvent
+	// draw(widget) // csak egyet rajzol ki
+	// nem kell render_taget, se texture
+	// handle_system_event(widget, e); - csak ezután jöhetnek a widgetek, ha szükséges
+	// handle_event(widget, e);
+	// hot = hover
+	// active = clicked
+	// {
+	// 	if checkbox(x, y, &mut name, &mut value) {
+	//		ez elég fun lenne
+	// az átadott ptr lenne az ID.
+	//	}
+	// }
     pub fn draw2(&mut self, renderer: &sdl2::render::Renderer, widgets: &Vec<(&WidgetImpl, Rect)>) {
 		renderer.set_render_target(Some(&self.texture));
         let mut was_draw = false;

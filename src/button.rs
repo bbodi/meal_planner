@@ -73,7 +73,7 @@ impl Button {
 	    };
 	    
 		Button {
-			label: label.to_owned(),
+			label: label.into_string(),
 			font: font,
 			hover: false,
 			down: false,
