@@ -47,7 +47,7 @@ fn main() {
 
     let mut chart = line_chart::Chart::new(400, 400);
     let mut last = 50;
-    for _ in range(0, 100i32) {
+    for _ in range(0, 50i32) {
         last = last + std::rand::random::<i32>().abs() % 7 - 3;
         chart.data.push(last);
     }

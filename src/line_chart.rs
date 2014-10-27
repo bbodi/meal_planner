@@ -131,15 +131,30 @@ impl Chart {
 		//
 		let mut points = vec![];
 		for (i, v) in scaled_data.iter().enumerate() {
-			let p = sdl2::rect::Point::new((i as u32) as i32, (self.height - *v as u32) as i32);
+			let p = sdl2::rect::Point::new(i as i32, (self.height - *v as u32) as i32);
 			points.push(p);
 		}
 		renderer.set_draw_color(sdl2::pixels::RGB(255, 255, 255));
-		renderer.draw_points(points.as_slice());
+		//renderer.draw_points(points.as_slice());
+		//
+		//
+		if horizontal_pixels_between_values > 2 {
+			let mut rects = vec![];
+			for (i, v) in self.data.iter().enumerate() {
+				let x = i * horizontal_pixels_between_values as uint - 1;
+				let y = (self.height - *v as u32 - 1) as i32;
+				let p = sdl2::rect::Rect::new(x as i32, y, 2, 2);
+				rects.push(p);
+			}
+			renderer.set_draw_color(sdl2::pixels::RGB(255, 150, 150));
+			renderer.fill_rects(rects.as_slice());
+		}
 		//
 		if self.selected_column.is_some() {
 			let index = self.selected_column.unwrap();
 			if index < scaled_data.len() as u32 {
+				let real_index = self.selected_column.unwrap() / horizontal_pixels_between_values;
+				let index = real_index * horizontal_pixels_between_values;
 				self.draw_vertical_line(renderer, index, scaled_data[index as uint], sdl2::pixels::RGB(112, 42, 42), sdl2::pixels::RGB(255, 200, 200));
 				self.draw_rect_gradient(renderer, index - 13, (self.height as i32 - scaled_data[index as uint] - 30) as u32, 26, 15, RGB(174, 67, 75), RGB(166, 38, 51));
 			}
