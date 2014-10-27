@@ -5,43 +5,10 @@ extern crate sdl2_ttf;
 const SCREEN_WIDHT: u32 = 640;
 const SCREEN_HEIGHT: u32 = 480;
 
+mod widget;
 mod line_chart;
 
-struct Layer {
-    texture: sdl2::render::Texture,
-}
 
-bitflags! {
-    flags EventHandlingResult: u32 {
-        const HANDLED   = 0x00000001,
-        const NEED_REDRAW   = 0x00000010,
-    }
-}
-
-trait WidgetImpl {
-    fn handle_event(&mut self) -> EventHandlingResult;
-
-    fn draw(&self);
-}
-
-struct Widget<'a> {
-    widgetImpl: Box<WidgetImpl + 'a>,
-    rect: sdl2::rect::Rect,
-}
-
-impl<'a> Widget<'a> {
-    fn handle_event(&mut self) -> EventHandlingResult {
-        self.widgetImpl.handle_event()
-    }
-
-    fn draw(&self) {
-        self.widgetImpl.draw()
-    }
-
-    fn get_rect(&self) -> sdl2::rect::Rect {
-        self.rect
-    }
-}
 
 fn main() {
     sdl2::init(sdl2::INIT_VIDEO);
@@ -51,7 +18,7 @@ fn main() {
         Ok(window) => window,
         Err(err) => fail!(format!("failed to create window: {}", err))
     };
-    window.set_size(1280, 900);
+    //window.set_size(1280, 900);
     window.set_position(sdl2::video::PosCentered, sdl2::video::PosCentered);
 
     let renderer = match sdl2::render::Renderer::from_window(window, sdl2::render::DriverAuto, sdl2::render::ACCELERATED) {
@@ -75,8 +42,20 @@ fn main() {
         Ok(t) => t,
         Err(e) => fail!(e),
     };
-    renderer.set_viewport(&sdl2::rect::Rect::new(10, 10, 100, 100));
+    //renderer.set_viewport(&sdl2::rect::Rect::new(10, 10, 100, 100));
     renderer.copy(&texture, None, None);
+
+    let mut chart = line_chart::Chart::new(400, 400);
+    let mut last = 50;
+    for _ in range(0, 100i32) {
+        last = last + std::rand::random::<i32>().abs() % 7 - 3;
+        chart.data.push(last);
+    }
+
+    let mut layer = widget::Layer::new(&renderer, SCREEN_WIDHT, SCREEN_HEIGHT);
+    layer.add_widget(box chart, sdl2::rect::Rect::new(10, 10, 410, 410));
+    layer.draw(&renderer);
+
     renderer.present();
 
 
@@ -84,16 +63,16 @@ fn main() {
     let mut frame_count = 0u32;
     let mut next_frame_tick = 0;
     'main : loop {
+        sdl2::timer::delay(10);
         let current_tick = sdl2::timer::get_ticks();
 
-        renderer.set_viewport(&sdl2::rect::Rect::new(10, 10, 100, 100));
-        let _ = renderer.copy(&texture, None, None);
-
+        layer.draw(&renderer);
         renderer.present();
 
         match sdl2::event::poll_event() {
             sdl2::event::QuitEvent(_) => break 'main,
-            _ => {},
+            e => layer.handle_event(e), 
+            // _ => {},
         }
         let keys = sdl2::keyboard::get_keyboard_state();
         if keys[sdl2::scancode::EscapeScanCode] {
@@ -116,7 +95,7 @@ fn main() {
         let (state, xrel, yrel) = sdl2::mouse::get_relative_mouse_state();
         let m1_pressed = state == sdl2::mouse::LEFTMOUSESTATE;
 
-        let _ = renderer.clear();
+        renderer.clear();
         frame_count += 1;
 
         if current_tick >= next_frame_tick {
