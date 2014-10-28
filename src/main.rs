@@ -3,8 +3,8 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 
-const SCREEN_WIDHT: u32 = 640;
-const SCREEN_HEIGHT: u32 = 480;
+const SCREEN_WIDHT: u32 = 1024;
+const SCREEN_HEIGHT: u32 = 768;
 
 //mod app_event;
 //mod widget;
@@ -66,7 +66,7 @@ fn main() {
     let mut layer = imgui::Layer::new();
     let mut frame_count = 0u32;
     let mut next_frame_tick = 0;
-    let mut text = "Asd".into_string();
+    let mut text = "".into_string();
     'main : loop {
         sdl2::timer::delay(10);
         let current_tick = sdl2::timer::get_ticks();
@@ -90,7 +90,14 @@ fn main() {
                     last = last + std::rand::random::<i32>().abs() % 7 - 3;
                     data.push(last);
                 }
-                layer.textfield(&mut text, 420, 50, 62, 16).draw(&renderer);
+                if layer.textfield(&mut text, 420, 50, 400, 55)
+                    .default_text("Írj be egy számot, majd nyomj entert!")
+                    .draw(&renderer) {
+                    let d: i32 = std::from_str::FromStr::from_str(text.as_slice()).unwrap();
+                    data.push(d);
+                    text.clear();
+                }
+
                 layer.line_chart("Datas", 10, 10, 410, 410).data(data.as_slice()).draw(&renderer);
                 renderer.present();
             } 

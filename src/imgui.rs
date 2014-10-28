@@ -8,6 +8,52 @@ use button;
 use line_chart;
 use textfield;
 
+#[deriving(PartialEq, Clone, Show)]
+pub struct Key {
+	pub down: bool,
+	pub just_pressed: bool,
+	pub just_released: bool
+}
+
+impl Key {
+	pub fn new() -> Key {
+		Key {
+			down: false,
+			just_pressed: false,
+			just_released: false,
+		}
+	}
+}
+
+#[deriving(PartialEq, Clone, Show)]
+pub struct ControlKeys {
+	pub left: Key,
+	pub right: Key,
+	pub up: Key,
+	pub down: Key,
+	pub backspace: Key,
+	pub del: Key,
+	pub home: Key,
+	pub end: Key,
+	pub enter: Key,
+}
+
+impl ControlKeys {
+	pub fn new() -> ControlKeys {
+		ControlKeys {
+			left: Key::new(),
+			right: Key::new(),
+			up: Key::new(),
+			down: Key::new(),
+			backspace: Key::new(),
+			del: Key::new(),
+			home: Key::new(),
+			end: Key::new(),
+			enter: Key::new(),
+		}
+	}
+}
+
 pub struct Layer {
 	pub font: sdl2_ttf::Font,
 	active_id: u32,
@@ -18,7 +64,8 @@ pub struct Layer {
 	prev_mouse_state: u32,
 	tick: uint,
 	text_input: String,
-	textfield_datas: HashMap<u32, textfield::State>
+	textfield_datas: HashMap<u32, textfield::State>,
+	pub control_keys: ControlKeys,
 }
 
 impl Layer {
@@ -38,7 +85,8 @@ impl Layer {
 	    	prev_mouse_state: 0,
 	    	textfield_datas: HashMap::new(),
 	    	tick: 0,
-	    	text_input: "".into_string()
+	    	text_input: "".into_string(),
+	    	control_keys: ControlKeys::new(),
 	    }
 	}
 
@@ -125,10 +173,37 @@ impl Layer {
 		self.text_input.pop()
 	}
 
+	fn update_key(down: bool, key: &mut Key) {
+		if down && !key.down {
+			key.just_pressed = true;
+			key.just_released = false;
+			key.down = true;
+		} else if !down && key.down {
+			key.just_released = true;
+			key.just_pressed = false;
+			key.down = false;
+		} else {
+			key.just_released = false;
+			key.just_pressed = false;
+			key.down = down;
+		}
+	}
+
 	pub fn handle_event(&mut self, sdl_event: sdl2::event::Event) {
 		self.text_input = "".into_string();
 		self.prev_mouse_state = self.mouse_state;
 		self.tick = sdl2::timer::get_ticks();
+		let keys = sdl2::keyboard::get_keyboard_state();
+
+		Layer::update_key(keys[sdl2::scancode::BackspaceScanCode], &mut self.control_keys.backspace);
+		Layer::update_key(keys[sdl2::scancode::LeftScanCode], &mut self.control_keys.left);
+		Layer::update_key(keys[sdl2::scancode::RightScanCode], &mut self.control_keys.right);
+		Layer::update_key(keys[sdl2::scancode::DeleteScanCode], &mut self.control_keys.del);
+		Layer::update_key(keys[sdl2::scancode::ReturnScanCode], &mut self.control_keys.enter);
+		Layer::update_key(keys[sdl2::scancode::HomeScanCode], &mut self.control_keys.home);
+		Layer::update_key(keys[sdl2::scancode::EndScanCode], &mut self.control_keys.end);
+	    
+		
     	match sdl_event {
         	// /// (timestamp, window, winEventId, data1, data2)
 			sdl2::event::WindowEvent(_, _, winEventId, data1, data2) => {
@@ -194,6 +269,15 @@ pub fn draw_rect_gradient(renderer: &sdl2::render::Renderer, x: u32, y: u32, w: 
 		renderer.set_draw_color(sdl2::pixels::RGB(r as u8, g as u8, b as u8));
 		renderer.draw_line(start, end);
 	}
+}
+
+pub fn draw_text(x: u32, y: u32, renderer: &sdl2::render::Renderer, font: &sdl2_ttf::Font, text: &str, color: sdl2::pixels::Color) {
+	let (text_w, text_h) = match font.size_of_str(text) {
+		Ok((w, h)) => (w, h),
+		Err(e) => fail!("e"),
+	};
+	let texure = create_text_texture(renderer, font, text, color);
+	renderer.copy(&texure, None, Some(Rect::new(x as i32, y as i32, text_w as i32, text_h as i32)));
 }
 
 pub fn create_text_texture(renderer: &sdl2::render::Renderer, font: &sdl2_ttf::Font, text: &str, color: sdl2::pixels::Color) -> sdl2::render::Texture {
