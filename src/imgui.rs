@@ -7,6 +7,8 @@ use std::collections::HashMap;
 use button;
 use line_chart;
 use textfield;
+use checkbox;
+use dropdown;
 
 #[deriving(PartialEq, Clone, Show)]
 pub struct Key {
@@ -56,25 +58,31 @@ impl ControlKeys {
 
 pub struct Layer {
 	pub font: sdl2_ttf::Font,
-	active_id: u32,
-	hot_id: u32,
-	mouse_x: u32,
-	mouse_y: u32,
-	mouse_state: u32,
-	prev_mouse_state: u32,
+	active_id: i32,
+	hot_id: i32,
+	mouse_x: i32,
+	mouse_y: i32,
+	mouse_state: i32,
+	prev_mouse_state: i32,
 	tick: uint,
 	text_input: String,
-	textfield_datas: HashMap<u32, textfield::State>,
+	textfield_datas: HashMap<i32, textfield::State>,
 	pub control_keys: ControlKeys,
+	pub char_w: i32,
+	pub char_h: i32,
 }
 
 impl Layer {
 
 	pub fn new() -> Layer {
-		let font = match sdl2_ttf::Font::from_file(&Path::new("DejaVuSansMono.ttf"), 12) {
+		let font = match sdl2_ttf::Font::from_file(&Path::new("DejaVuSansMono.ttf"), 16) {
         	Ok(f) => f,
         	Err(e) => fail!(e),	
 	    };
+	    let (char_w, char_h) = match font.size_of_str("_") {
+			Ok((w, h)) => (w, h),
+			Err(e) => fail!("e"),
+		};
 	    Layer {
 	    	font: font,
 	    	active_id: 0xFFFFFFFF,
@@ -87,15 +95,17 @@ impl Layer {
 	    	tick: 0,
 	    	text_input: "".into_string(),
 	    	control_keys: ControlKeys::new(),
+	    	char_w: char_w as i32,
+	    	char_h: char_h as i32,
 	    }
 	}
 
-	pub fn get_mut_textfield_state(&mut self, x: u32, y: u32) -> &mut textfield::State {
+	pub fn get_mut_textfield_state(&mut self, x: i32, y: i32) -> &mut textfield::State {
 		let id = x << 8 | y;
 		self.textfield_datas.get_mut(&id) 
 	}
 
-	pub fn get_textfield_state(&self, x: u32, y: u32) -> &textfield::State {
+	pub fn get_textfield_state(&self, x: i32, y: i32) -> &textfield::State {
 		let id = x << 8 | y;
 		match self.textfield_datas.find(&id)  {
 			Some(d) => d,
@@ -103,7 +113,7 @@ impl Layer {
 		}
 	}
 
-	pub fn is_mouse_in(&self, x: u32, y: u32, w: u32, h: u32) -> bool {
+	pub fn is_mouse_in(&self, x: i32, y: i32, w: i32, h: i32) -> bool {
 		let mx = self.mouse_x;
 		let my = self.mouse_y;
 		mx >= x && mx < (x+w) && my >= y && my < (y+h)
@@ -121,14 +131,14 @@ impl Layer {
 		self.mouse_state == 0 && self.prev_mouse_state == 1
 	}
 
-	pub fn set_hot_widget(&mut self, x: u32, y: u32) {
+	pub fn set_hot_widget(&mut self, x: i32, y: i32) {
 		unsafe {
 			let id = x << 8 | y;
 			self.hot_id = id;
 		}
 	}
 
-	pub fn is_hot_widget(&self, x: u32, y: u32) -> bool {
+	pub fn is_hot_widget(&self, x: i32, y: i32) -> bool {
 		unsafe {
 			let id = x << 8 | y;
 			self.hot_id == id
@@ -143,25 +153,25 @@ impl Layer {
 		self.active_id = 0xFFFFFFFF;
 	}
 
-	pub fn set_active_widget(&mut self, x: u32, y: u32) {
+	pub fn set_active_widget(&mut self, x: i32, y: i32) {
 		unsafe {
 			let id = x << 8 | y;
 			self.active_id = id;
 		}
 	}
 
-	pub fn is_active_widget(&self, x: u32, y: u32) -> bool {
+	pub fn is_active_widget(&self, x: i32, y: i32) -> bool {
 		unsafe {
 			let id = x << 8 | y;
 			self.active_id == id
 		}
 	}
 
-	pub fn mouse_x(&self) -> u32 {
+	pub fn mouse_x(&self) -> i32 {
 		self.mouse_x
 	}
 
-	pub fn mouse_y(&self) -> u32 {
+	pub fn mouse_y(&self) -> i32 {
 		self.mouse_y
 	}
 
@@ -209,25 +219,25 @@ impl Layer {
 			sdl2::event::WindowEvent(_, _, winEventId, data1, data2) => {
 				match winEventId {
 					sdl2::event::ResizedWindowEventId => {
-						//self.set_window_size(data1 as u32, data2 as u32);
+						//self.set_window_size(data1 as i32, data2 as i32);
 					}
 					_ => {}
 				}
 			},
 			// (timestamp, window, which, [MouseState], x, y, xrel, yrel)
             sdl2::event::MouseMotionEvent(_, _, _, _, x, y, _, _) => {
-            	self.mouse_x = x as u32;
-            	self.mouse_y = y as u32;
+            	self.mouse_x = x as i32;
+            	self.mouse_y = y as i32;
             },
             /// (timestamp, window, which, MouseBtn, x, y)
     		sdl2::event::MouseButtonDownEvent(_, _, _, _, x, y) => {
-    			self.mouse_x = x as u32;
-            	self.mouse_y = y as u32;
+    			self.mouse_x = x as i32;
+            	self.mouse_y = y as i32;
             	self.mouse_state = 1;	
     		},
     		sdl2::event::MouseButtonUpEvent(_, _, _, _, x, y) => {
-    			self.mouse_x = x as u32;
-            	self.mouse_y = y as u32;
+    			self.mouse_x = x as i32;
+            	self.mouse_y = y as i32;
             	self.mouse_state = 0;	
     		},
     		sdl2::event::TextInputEvent(_, _, text) => {
@@ -237,11 +247,11 @@ impl Layer {
         };
     }
 
-    pub fn button<'a>(&'a mut self, label: &'a str, x: u32, y: u32, w: u32, h: u32) -> button::ButtonBuilder<'a> {
+    pub fn button<'a>(&'a mut self, label: &'a str, x: i32, y: i32, w: i32, h: i32) -> button::ButtonBuilder<'a> {
 		button::ButtonBuilder::new(self, label, x, y, w, h)
 	}
 
-	pub fn textfield<'a>(&'a mut self, text: &'a mut String, x: u32, y: u32, w: u32, h: u32) -> textfield::TextFieldBuilder<'a> {
+	pub fn textfield<'a>(&'a mut self, text: &'a mut String, x: i32, y: i32, w: i32, h: i32) -> textfield::TextFieldBuilder<'a> {
 		let id = x << 8 | y;
 		if !self.textfield_datas.contains_key(&id) {
 			self.textfield_datas.insert(id, textfield::State::new(text.as_slice()));
@@ -250,12 +260,20 @@ impl Layer {
 		textfield::TextFieldBuilder::new(self, text, x, y, w, h)
 	}
 
-	pub fn line_chart<'a>(&'a mut self, label: &'a str, x: u32, y: u32, w: u32, h: u32) -> line_chart::LineChartBuilder<'a> {
+	pub fn line_chart<'a>(&'a mut self, label: &'a str, x: i32, y: i32, w: i32, h: i32) -> line_chart::LineChartBuilder<'a> {
 		line_chart::LineChartBuilder::new(self, label, x, y, w, h)
+	}
+
+	pub fn checkbox<'a>(&'a mut self, label: &'a str, value: &'a mut bool, x: i32, y: i32) -> checkbox::CheckboxBuilder<'a> {
+		checkbox::CheckboxBuilder::new(self, label, value, x, y)
+	}
+
+	pub fn dropdown<'a>(&'a mut self, labels: &'a [&'a str], value: &'a mut uint, x: i32, y: i32) -> dropdown::DropdownBuilder<'a> {
+		dropdown::DropdownBuilder::new(self, labels, value, x, y)
 	}
 }
 
-pub fn draw_rect_gradient(renderer: &sdl2::render::Renderer, x: u32, y: u32, w: u32, h: u32, start_color: sdl2::pixels::Color, end_color: sdl2::pixels::Color) {
+pub fn draw_rect_gradient(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, start_color: sdl2::pixels::Color, end_color: sdl2::pixels::Color) {
 	for i in range(0, h) {
 		let p = i as f32 / h as f32;
 		let sp = 1f32 - p;
@@ -264,20 +282,20 @@ pub fn draw_rect_gradient(renderer: &sdl2::render::Renderer, x: u32, y: u32, w: 
 		let mut r = start_r as f32 * sp + end_r as f32 * p;
 		let mut g = start_g as f32 * sp + end_g as f32 * p;
 		let mut b = start_b as f32 * sp + end_b as f32 * p;
-		let start = sdl2::rect::Point::new((x as u32) as i32, (y+i) as i32);
-		let end = sdl2::rect::Point::new((x+w as u32) as i32, (y+i) as i32);
-		renderer.set_draw_color(sdl2::pixels::RGB(r as u8, g as u8, b as u8));
+		let start = sdl2::rect::Point::new(x, y+i);
+		let end = sdl2::rect::Point::new(x+w, y+i);
+		renderer.set_draw_color(sdl2::pixels::RGBA(r as u8, g as u8, b as u8, 150));
 		renderer.draw_line(start, end);
 	}
 }
 
-pub fn draw_text(x: u32, y: u32, renderer: &sdl2::render::Renderer, font: &sdl2_ttf::Font, text: &str, color: sdl2::pixels::Color) {
+pub fn draw_text(x: i32, y: i32, renderer: &sdl2::render::Renderer, font: &sdl2_ttf::Font, text: &str, color: sdl2::pixels::Color) {
 	let (text_w, text_h) = match font.size_of_str(text) {
 		Ok((w, h)) => (w, h),
 		Err(e) => fail!("e"),
 	};
 	let texure = create_text_texture(renderer, font, text, color);
-	renderer.copy(&texure, None, Some(Rect::new(x as i32, y as i32, text_w as i32, text_h as i32)));
+	renderer.copy(&texure, None, Some(Rect::new(x, y, text_w as i32, text_h as i32)));
 }
 
 pub fn create_text_texture(renderer: &sdl2::render::Renderer, font: &sdl2_ttf::Font, text: &str, color: sdl2::pixels::Color) -> sdl2::render::Texture {

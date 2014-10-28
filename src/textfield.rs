@@ -15,10 +15,10 @@ use imgui;
 
 pub struct TextFieldBuilder<'a> {
 	disabled: bool,
-	x: u32,
-	y: u32, 
-	w: u32, 
-	h: u32,
+	x: i32,
+	y: i32, 
+	w: i32, 
+	h: i32,
 	text: &'a mut String,
 	default_text: &'a str,
 	layer: &'a mut imgui::Layer
@@ -41,7 +41,7 @@ impl State {
 }
 
 impl<'a> TextFieldBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, text: &'a mut String, x: u32, y: u32, w: u32, h: u32) -> TextFieldBuilder<'a> {
+	pub fn new(layer: &'a mut imgui::Layer, text: &'a mut String, x: i32, y: i32, w: i32, h: i32) -> TextFieldBuilder<'a> {
 		TextFieldBuilder {
 			disabled: false,
 			x: x,
@@ -69,9 +69,11 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
 	let w = builder.w;
 	let h = builder.h;
 	let was_hot = builder.layer.is_hot_widget(x, y);
-	let active = builder.layer.is_active_widget(x, y);
+	let was_active = builder.layer.is_active_widget(x, y);
 	let hover = builder.layer.is_mouse_in(x, y, w, h);
-	let just_clicked = builder.layer.is_mouse_down() && hover && !active;
+	let just_clicked = builder.layer.is_mouse_down() && hover && !was_active;
+	let clicked_out = builder.layer.is_mouse_down() && !hover && was_active;
+	let active = was_active && !clicked_out;
 
 	
 	if active {
@@ -106,6 +108,8 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
 
 	if just_clicked {
 		builder.layer.set_active_widget(x, y);
+	} else if clicked_out {
+		builder.layer.clear_active_widget();
 	}
 
 	if hover && !was_hot {

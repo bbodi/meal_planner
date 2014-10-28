@@ -14,17 +14,17 @@ use imgui;
 
 pub struct ButtonBuilder<'a> {
 	disabled: bool,
-	x: u32,
-	y: u32, 
-	w: u32, 
-	h: u32,
+	x: i32,
+	y: i32, 
+	w: i32, 
+	h: i32,
 	label: &'a str,
 	allow_multi_click: bool,
 	layer: &'a mut imgui::Layer
 }
 
 impl<'a> ButtonBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, label: &'a str, x: u32, y: u32, w: u32, h: u32) -> ButtonBuilder<'a> {
+	pub fn new(layer: &'a mut imgui::Layer, label: &'a str, x: i32, y: i32, w: i32, h: i32) -> ButtonBuilder<'a> {
 		ButtonBuilder {
 			disabled: false,
 			x: x,
