@@ -243,6 +243,10 @@ impl<'a> Layer<'a> {
 			}
 		}
     }
+
+    pub fn button() {
+    	
+    }
 }
 
 bitflags! {
@@ -271,18 +275,3 @@ pub fn create_text_texture(renderer: &sdl2::render::Renderer, font: &sdl2_ttf::F
    	}
 }
 
-pub fn draw_rect_gradient(renderer: &sdl2::render::Renderer, x: u32, y: u32, w: u32, h: u32, start_color: sdl2::pixels::Color, end_color: sdl2::pixels::Color) {
-	for i in range(0, h) {
-		let p = i as f32 / h as f32;
-		let sp = 1f32 - p;
-		let (start_r, start_g, start_b) = start_color.get_rgb();
-		let (end_r, end_g, end_b) = end_color.get_rgb();
-		let mut r = start_r as f32 * sp + end_r as f32 * p;
-		let mut g = start_g as f32 * sp + end_g as f32 * p;
-		let mut b = start_b as f32 * sp + end_b as f32 * p;
-		let start = sdl2::rect::Point::new((x as u32) as i32, (y+i) as i32);
-		let end = sdl2::rect::Point::new((x+w as u32) as i32, (y+i) as i32);
-		renderer.set_draw_color(sdl2::pixels::RGB(r as u8, g as u8, b as u8));
-		renderer.draw_line(start, end);
-	}
-}
