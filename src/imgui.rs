@@ -33,6 +33,15 @@ pub trait IndexValue {
 	fn get(&self) -> uint;
 }
 
+impl IndexValue for i32 {
+	fn set(&mut self, value: uint) {
+		*self = value as i32;
+	}
+	fn get(&self) -> uint {
+		*self as uint
+	}
+}
+
 #[deriving(PartialEq, Clone, Show)]
 pub struct Key {
 	pub down: bool,
