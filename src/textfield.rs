@@ -12,13 +12,13 @@ use sdl2::rect::Rect;
 use sdl2::rect::Point;
 
 use imgui;
+use imgui::SizeInCharacters;
 
 pub struct TextFieldBuilder<'a> {
 	disabled: bool,
-	x: i32,
-	y: i32, 
-	w: i32, 
-	h: i32,
+	x: SizeInCharacters,
+	y: SizeInCharacters, 
+	w: SizeInCharacters, 
 	text: &'a mut String,
 	default_text: &'a str,
 	layer: &'a mut imgui::Layer
@@ -41,13 +41,12 @@ impl State {
 }
 
 impl<'a> TextFieldBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, text: &'a mut String, x: i32, y: i32, w: i32, h: i32) -> TextFieldBuilder<'a> {
+	pub fn new(layer: &'a mut imgui::Layer, text: &'a mut String, x: SizeInCharacters, y: SizeInCharacters, w: SizeInCharacters)-> TextFieldBuilder<'a> {
 		TextFieldBuilder {
 			disabled: false,
 			x: x,
 			y: y,
 			w: w,
-			h: h,
 			text: text,
 			layer: layer,
 			default_text: ""
@@ -56,6 +55,17 @@ impl<'a> TextFieldBuilder<'a> {
 
 	pub fn disabled(mut self, v: bool) -> TextFieldBuilder<'a> {self.disabled = v; self}
 	pub fn default_text(mut self, v: &'a str) -> TextFieldBuilder<'a> {self.default_text = v; self}
+	pub fn x(mut self, v: SizeInCharacters) -> TextFieldBuilder<'a> {self.x = v; self}
+	pub fn y(mut self, v: SizeInCharacters) -> TextFieldBuilder<'a> {self.y = v; self}
+	pub fn right(mut self, x: SizeInCharacters) -> TextFieldBuilder<'a> {
+		self.x = self.layer.last_x + self.layer.last_w + x;
+		self
+	}
+
+	pub fn down(mut self, y: SizeInCharacters) -> TextFieldBuilder<'a> {
+		self.y = self.layer.last_y + self.layer.last_h + y;
+		self
+	}
 	
 
 	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
@@ -64,10 +74,12 @@ impl<'a> TextFieldBuilder<'a> {
 }
 
 pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -> bool {
-	let x = builder.x;
-	let y = builder.y;
-	let w = builder.w;
-	let h = builder.h;
+	let char_w = builder.layer.char_w;
+	let char_h = builder.layer.char_h;
+	let x = builder.x.in_pixels(char_w);
+	let y = builder.y.in_pixels(char_h);
+	let w = builder.w.in_pixels(char_w);
+	let h = char_h;
 	let was_hot = builder.layer.is_hot_widget(x, y);
 	let was_active = builder.layer.is_active_widget(x, y);
 	let hover = builder.layer.is_mouse_in(x, y, w, h);
@@ -75,12 +87,17 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
 	let clicked_out = builder.layer.is_mouse_down() && !hover && was_active;
 	let active = was_active && !clicked_out;
 
+	builder.layer.last_x = builder.x;
+	builder.layer.last_y = builder.y;
+	builder.layer.last_w = builder.w;
+	builder.layer.last_h = SizeInCharacters(1);
+
 	
 	if active {
 		let maybe_char = builder.layer.input_char();
 		let text_len = builder.text.as_slice().chars().count();
 		let control_keys = builder.layer.control_keys;
-		let state = builder.layer.get_mut_textfield_state(builder.x, builder.y);
+		let state = builder.layer.get_mut_textfield_state(builder.text);
 		state.cursor_pos = ::std::cmp::min(state.cursor_pos, text_len);
 		
 		if state.cursor_pos > 0 && control_keys.backspace.just_pressed {
@@ -127,16 +144,17 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
 		//imgui::draw_rect_gradient(renderer, x, y, w, h, RGB(93, 93, 93), RGB(44, 44, 44));
 		imgui::draw_rect_gradient(renderer, x, y, w, h, RGB(51, 51, 51), RGB(51, 51, 51));
 	}
-	
+	let border_width = 2;
+	imgui::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 	if builder.text.len() > 0 {
-		imgui::draw_text(x, y, renderer, &builder.layer.font, builder.text.as_slice(), RGB(204, 204, 204));
+		imgui::draw_text(x+border_width, y, renderer, &builder.layer.font, builder.text.as_slice(), RGB(204, 204, 204));
 	} else if builder.default_text != "" && !active {
-		imgui::draw_text(x, y, renderer, &builder.layer.font, builder.default_text.as_slice(), RGB(113, 113, 113));
+		imgui::draw_text(x+border_width, y, renderer, &builder.layer.font, builder.default_text.as_slice(), RGB(113, 113, 113));
 	}
 
 	if active {
 		{
-			let state = builder.layer.get_textfield_state(builder.x, builder.y);
+			let state = builder.layer.get_textfield_state(builder.text);
 			if state.cursor_visible {
 				let (text_w, text_h) = match builder.layer.font.size_of_str("_") {
 					Ok((w, h)) => (w, h),
@@ -148,7 +166,7 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
 		}
 	
 		let tick = builder.layer.tick();
-		let mut state = builder.layer.get_mut_textfield_state(builder.x, builder.y);
+		let mut state = builder.layer.get_mut_textfield_state(builder.text);
 		if state.cursor_visibility_change_tick < tick {
 			state.cursor_visible = !state.cursor_visible;
 			state.cursor_visibility_change_tick = tick + 500;

@@ -17,6 +17,9 @@ mod textfield;
 mod line_chart;
 mod checkbox;
 mod dropdown;
+mod header;
+
+mod kcal_window;
 
 
 fn main() {
@@ -72,16 +75,15 @@ fn main() {
     //layer.add_widget(btn, sdl2::rect::Rect::new(420, 20, 62, 16));
 
     let mut layer = imgui::Layer::new();
+    let mut kcal_win = kcal_window::KCalWindow::new();
     let mut frame_count = 0u32;
     let mut next_frame_tick = 0;
     let mut text = "".into_string();
     let mut show_surface = false;
-    let mut dropdown_value = 0;
+    let mut dropdown_value: i32 = 0;
     'main : loop {
         sdl2::timer::delay(10);
         let current_tick = sdl2::timer::get_ticks();
-
-        //layer.draw(&renderer);
 
 
         let event = match sdl2::event::poll_event() {
@@ -89,76 +91,47 @@ fn main() {
             e => e, 
             // _ => {},
         };
-        layer.handle_event(event);
-        {
-            {
-                //let mut widgets = vec![];
-                //widgets.push((&chart as &widget::WidgetImpl, sdl2::rect::Rect::new(10, 10, 410, 410)));
-                //widgets.push((&btn as &widget::WidgetImpl, sdl2::rect::Rect::new(420, 20, 62, 16)));
-                //layer.draw2(&renderer, &widgets);
-                if layer.button("Add data", 420, 20, 62, 16).draw(&renderer) {
-                    last = last + std::rand::random::<i32>().abs() % 7 - 3;
-                    datas[0].push(last);
-                }
-                
-                layer.checkbox("Add data", &mut show_surface, 500, 20).draw(&renderer);
+        kcal_win.do_logic(&renderer, event);
+        
 
-                if layer.textfield(&mut text, 420, 50, 400, 55)
-                    .default_text("Írj be egy számot, majd nyomj entert!")
-                    .draw(&renderer) {
-                    match std::from_str::FromStr::from_str(text.as_slice()) {
-                        Some(d) => {
-                            datas[0].push(d);
-                            text.clear();
-                        },
-                        None => {},
-                    }
-                }
-                layer.dropdown(vec!["", "One", "Two", "Three", "Four", "Five"].as_slice(), &mut dropdown_value,  420, 120).draw(&renderer);
 
-                layer.line_chart("Datas", 10, 10, 410, 60).data(datas[0].as_slice()).draw(&renderer);
-                layer.line_chart("Datas", 10, 80, 410, 60)
-                    .data(datas[1].as_slice())
-                    .bottom_color(RGBA(82, 82, 82, 150))
-                    .top_color(RGB(60, 60, 60))
-                    .surface_color(if show_surface {Some(RGB(255, 255, 255))} else {None})
-                    .draw(&renderer);
-                layer.line_chart("Datas", 10, 150, 410, 60).data(datas[2].as_slice()).draw(&renderer);
-                layer.line_chart("Datas", 10, 230, 410, 60).data(datas[3].as_slice()).draw(&renderer);
-                renderer.present();
-            } 
-            {
-                /*let mut widgets = vec![];
-                widgets.push((&mut chart as &mut widget::WidgetImpl, sdl2::rect::Rect::new(10, 10, 410, 410)));
-                widgets.push((&mut btn as &mut widget::WidgetImpl, sdl2::rect::Rect::new(420, 20, 62, 16)));
-                layer.handle_event2(event, &mut widgets);*/
+        /*layer.handle_event(event);
+        if layer.button("Add data", 420, 20).draw(&renderer) {
+            last = last + std::rand::random::<i32>().abs() % 7 - 3;
+            datas[0].push(last);
+        }
+        
+        layer.checkbox("Add data", &mut show_surface, 550, 20).draw(&renderer);
+
+        if layer.textfield(&mut text, 420, 50, 400, 55)
+            .default_text("Írj be egy számot, majd nyomj entert!")
+            .draw(&renderer) {
+            match std::from_str::FromStr::from_str(text.as_slice()) {
+                Some(d) => {
+                    datas[0].push(d);
+                    text.clear();
+                },
+                None => {},
             }
         }
+        layer.dropdown(vec!["", "One", "Two", "Three", "Four", "Five"].as_slice(), &mut dropdown_value,  420, 120).draw(&renderer);
 
-        /*if btn.hover {
-            
-        }*/
+        for i in range(0, dropdown_value) {
+            layer.line_chart("Datas", 10, 10 + i as i32 *70, 410, 60).data(datas[i].as_slice()).draw(&renderer);
+        }
+
+        layer.line_chart("Datas", 10, 10 + 5 * 70, 410, 60)
+            .data(datas[1].as_slice())
+            .bottom_color(RGBA(82, 82, 82, 150))
+            .top_color(RGB(60, 60, 60))
+            .surface_color(if show_surface {Some(RGB(255, 255, 255))} else {None})
+            .draw(&renderer);*/
+        renderer.present();
 
         let keys = sdl2::keyboard::get_keyboard_state();
         if keys[sdl2::scancode::EscapeScanCode] {
             break 'main;
         }
-        if keys[sdl2::scancode::RScanCode] {
-        } else if keys[sdl2::scancode::FScanCode] {
-        }
-        if keys[sdl2::scancode::LShiftScanCode] {
-        }
-
-        if keys[sdl2::scancode::Num1ScanCode] {
-        }
-
-
-        if keys[sdl2::scancode::LeftScanCode] {
-        } else if keys[sdl2::scancode::RightScanCode] {
-        }
-
-        let (state, xrel, yrel) = sdl2::mouse::get_relative_mouse_state();
-        let m1_pressed = state == sdl2::mouse::LEFTMOUSESTATE;
 
         renderer.set_draw_color(sdl2::pixels::RGB(60 , 59, 64));
         renderer.clear();

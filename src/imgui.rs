@@ -9,6 +9,29 @@ use line_chart;
 use textfield;
 use checkbox;
 use dropdown;
+use header;
+
+pub struct SizeInCharacters(pub i32);
+
+impl SizeInCharacters {
+	pub fn in_pixels(&self, one_char_in_pixels: i32) -> i32 {
+		let SizeInCharacters(x) = *self;
+		x * one_char_in_pixels
+	}
+}
+
+impl Add<SizeInCharacters, SizeInCharacters> for SizeInCharacters {
+	fn add(&self, rhs: &SizeInCharacters) -> SizeInCharacters {
+		let SizeInCharacters(s) = *self;
+		let SizeInCharacters(rhs) = *rhs;
+		SizeInCharacters(s + rhs)
+	}
+}
+
+pub trait IndexValue {
+	fn set(&mut self, value: uint);
+	fn get(&self) -> uint;
+}
 
 #[deriving(PartialEq, Clone, Show)]
 pub struct Key {
@@ -70,12 +93,16 @@ pub struct Layer {
 	pub control_keys: ControlKeys,
 	pub char_w: i32,
 	pub char_h: i32,
+	pub last_x: SizeInCharacters,
+	pub last_y: SizeInCharacters,
+	pub last_w: SizeInCharacters, 
+	pub last_h: SizeInCharacters,
 }
 
 impl Layer {
 
 	pub fn new() -> Layer {
-		let font = match sdl2_ttf::Font::from_file(&Path::new("DejaVuSansMono.ttf"), 16) {
+		let font = match sdl2_ttf::Font::from_file(&Path::new("DejaVuSansMono.ttf"), 20) {
         	Ok(f) => f,
         	Err(e) => fail!(e),	
 	    };
@@ -97,19 +124,27 @@ impl Layer {
 	    	control_keys: ControlKeys::new(),
 	    	char_w: char_w as i32,
 	    	char_h: char_h as i32,
+	    	last_x: SizeInCharacters(0),
+	    	last_y: SizeInCharacters(0),
+	    	last_w: SizeInCharacters(0),
+	    	last_h: SizeInCharacters(0),
 	    }
 	}
 
-	pub fn get_mut_textfield_state(&mut self, x: i32, y: i32) -> &mut textfield::State {
-		let id = x << 8 | y;
-		self.textfield_datas.get_mut(&id) 
+	pub fn get_mut_textfield_state(&mut self, text: &mut String) -> &mut textfield::State {
+		unsafe {
+			let id = text as *mut String as i32;
+			self.textfield_datas.get_mut(&id) 
+		}
 	}
 
-	pub fn get_textfield_state(&self, x: i32, y: i32) -> &textfield::State {
-		let id = x << 8 | y;
-		match self.textfield_datas.find(&id)  {
-			Some(d) => d,
-			None => fail!(),
+	pub fn get_textfield_state(&self, text: &String) -> &textfield::State {
+		unsafe {
+			let id = text as *const String as i32;
+			match self.textfield_datas.find(&id)  {
+				Some(d) => d,
+				None => fail!(),
+			}
 		}
 	}
 
@@ -200,6 +235,10 @@ impl Layer {
 	}
 
 	pub fn handle_event(&mut self, sdl_event: sdl2::event::Event) {
+		self.last_x = SizeInCharacters(0);
+		self.last_y = SizeInCharacters(0);
+		self.last_w = SizeInCharacters(0);
+		self.last_h = SizeInCharacters(0);
 		self.text_input = "".into_string();
 		self.prev_mouse_state = self.mouse_state;
 		self.tick = sdl2::timer::get_ticks();
@@ -247,17 +286,34 @@ impl Layer {
         };
     }
 
-    pub fn button<'a>(&'a mut self, label: &'a str, x: i32, y: i32, w: i32, h: i32) -> button::ButtonBuilder<'a> {
-		button::ButtonBuilder::new(self, label, x, y, w, h)
+    pub fn button<'a>(&'a mut self, label: &'a str, x: i32, y: i32) -> button::ButtonBuilder<'a> {
+		button::ButtonBuilder::new(self, label, x, y)
 	}
 
-	pub fn textfield<'a>(&'a mut self, text: &'a mut String, x: i32, y: i32, w: i32, h: i32) -> textfield::TextFieldBuilder<'a> {
-		let id = x << 8 | y;
-		if !self.textfield_datas.contains_key(&id) {
-			self.textfield_datas.insert(id, textfield::State::new(text.as_slice()));
+	fn create_id(x: SizeInCharacters, y: SizeInCharacters) -> i32 {
+		let SizeInCharacters(x) = x;
+		let SizeInCharacters(y) = y;
+		x << 8 | y
+	}
+
+	pub fn textfield<'a>(&'a mut self, text: &'a mut String, w: SizeInCharacters) -> textfield::TextFieldBuilder<'a> {
+		unsafe {
+			let id = text as *mut String as i32;
+			if !self.textfield_datas.contains_key(&id) {
+				self.textfield_datas.insert(id, textfield::State::new(text.as_slice()));
+			}
 		}
+		let x = self.last_x;
+		let y = self.last_y;
 		
-		textfield::TextFieldBuilder::new(self, text, x, y, w, h)
+		textfield::TextFieldBuilder::new(self, text, x, y, w)
+	}
+
+	pub fn header<'a>(&'a mut self, label: &'a str, w: SizeInCharacters, h: SizeInCharacters) -> header::HeaderBuilder<'a> {
+		let x = self.last_x;
+		let y = self.last_y;
+
+		header::HeaderBuilder::new(self, label, x, y, w, h)
 	}
 
 	pub fn line_chart<'a>(&'a mut self, label: &'a str, x: i32, y: i32, w: i32, h: i32) -> line_chart::LineChartBuilder<'a> {
@@ -268,8 +324,17 @@ impl Layer {
 		checkbox::CheckboxBuilder::new(self, label, value, x, y)
 	}
 
-	pub fn dropdown<'a>(&'a mut self, labels: &'a [&'a str], value: &'a mut uint, x: i32, y: i32) -> dropdown::DropdownBuilder<'a> {
+	pub fn dropdown<'a>(&'a mut self, labels: &'a [&'a str], value: &'a mut IndexValue) -> dropdown::DropdownBuilder<'a> {
+		let x = self.last_x;
+		let y = self.last_y;
 		dropdown::DropdownBuilder::new(self, labels, value, x, y)
+	}
+}
+
+pub fn draw_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, border: i32, color: sdl2::pixels::Color) {
+	renderer.set_draw_color(color);
+	for i in range(0, border) {
+		renderer.draw_rect(&Rect::new(x+i, y+i, w-2*i, h-2*i));
 	}
 }
 
@@ -308,4 +373,8 @@ pub fn create_text_texture(renderer: &sdl2::render::Renderer, font: &sdl2_ttf::F
         Ok(t) => t,
         Err(e) => fail!(e),
    	}
+}
+
+pub fn center_text(text: &str, char_w: i32, border_w: i32) -> i32 {
+	border_w/2 - (text.len() as i32)/2 * char_w
 }

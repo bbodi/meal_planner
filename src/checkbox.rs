@@ -42,10 +42,13 @@ impl<'a> CheckboxBuilder<'a> {
 }
 
 pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) -> bool {
+	let char_w = builder.layer.char_w;
+	let char_h = builder.layer.char_h;
 	let x = builder.x;
 	let y = builder.y;
+	let w = char_h + char_w*builder.label.len() as i32;
 	let was_active = builder.layer.is_active_widget(x, y);
-	let hover = builder.layer.is_mouse_in(x, y, 10, 30);
+	let hover = builder.layer.is_mouse_in(x, y, w, char_h);
 	let mousebtn_just_released = builder.layer.is_mouse_released() && hover;
 	
 	
@@ -53,12 +56,22 @@ pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) ->
 		*builder.value = !*builder.value;
 	}
 
+	if hover {
+		imgui::draw_rect_gradient(renderer, builder.x, builder.y, char_h, char_h, RGB(99, 103, 113), RGB(62, 65, 73));
+	} else {
+		imgui::draw_rect_gradient(renderer, builder.x, builder.y, char_h, char_h, RGB(82, 86, 90), RGB(49, 52, 55));
+	}
+
 	if *builder.value {
-		renderer.set_draw_color(sdl2::pixels::RGB(51 , 255, 51));		
+		renderer.set_draw_color(sdl2::pixels::RGB(51 , 200, 51));		
 	} else {
 		renderer.set_draw_color(sdl2::pixels::RGB(51 , 51, 51));
 	}
-	renderer.fill_rect(&Rect::new(x as i32, y as i32, 10, 10));
-	imgui::draw_text(x + 10, y, renderer, &builder.layer.font, builder.label, RGB(151, 151, 151));
+	renderer.fill_rect(&Rect::new(x + char_h/3, y + char_h/3, char_h/3, char_h/3));
+	imgui::draw_text(x + char_h, y, renderer, &builder.layer.font, builder.label, RGB(151, 151, 151));
+
+	renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 0));
+	renderer.draw_rect(&Rect::new(builder.x, builder.y, char_h, char_h));
+
 	return mousebtn_just_released;
 }
