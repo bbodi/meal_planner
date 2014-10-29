@@ -71,7 +71,7 @@ pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) -> b
 	builder.layer.last_x = builder.x;
 	builder.layer.last_y = builder.y;
 	builder.layer.last_w = builder.w;
-	builder.layer.last_h = SizeInCharacters(2);
+	builder.layer.last_h = SizeInCharacters(1);
 
 	let border_width = 2;
 	imgui::draw_rect_gradient(renderer, x, y, w, header_h, RGB(40, 120, 182), RGB(22, 83, 144));

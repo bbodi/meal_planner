@@ -18,6 +18,8 @@ mod line_chart;
 mod checkbox;
 mod dropdown;
 mod header;
+mod scrollbar;
+mod label;
 
 mod kcal_window;
 

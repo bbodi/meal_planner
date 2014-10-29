@@ -96,6 +96,7 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
 	builder.layer.last_w = builder.w + SizeInCharacters(builder.label.len() as i32);
 	builder.layer.last_h = SizeInCharacters(1);
 	
+	let mut edited = false;
 	if active {
 		let maybe_char = builder.layer.input_char();
 		let text_len = builder.text.as_slice().chars().count() as i32;
@@ -107,6 +108,7 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
 			let idx: uint = builder.text.as_slice().graphemes(true).take(state.cursor_pos as uint - 1).map(|g| g.len()).sum();
 			builder.text.remove(idx);
 			state.cursor_pos = state.cursor_pos-1;
+			edited = true;
         } else if state.cursor_pos > 0 && control_keys.left.just_pressed { 
         	state.cursor_pos = state.cursor_pos-1;
         } else if state.cursor_pos < text_len && control_keys.right.just_pressed { 
@@ -114,6 +116,7 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
         } else if state.cursor_pos < text_len && control_keys.del.just_pressed { 
         	let idx: uint = builder.text.as_slice().graphemes(true).take(state.cursor_pos as uint).map(|g| g.len()).sum();            
 			builder.text.remove(idx);
+			edited = true;
         } else {
 			if maybe_char.is_some() {
 				let ch = maybe_char.unwrap();
@@ -121,8 +124,15 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
 				let idx: uint = builder.text.as_slice().graphemes(true).take(state.cursor_pos as uint).map(|g| g.len()).sum();
 				builder.text.insert(idx, ch);
 				state.cursor_pos = state.cursor_pos+1;
+				edited = true;
 			}
 		}
+	}
+
+	if active && builder.layer.control_keys.tab.just_pressed {
+		builder.layer.clear_active_widget();
+	} else if !builder.layer.is_there_active_widget() {
+		builder.layer.set_active_widget(x, y);
 	}
 
 
@@ -172,5 +182,5 @@ pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -
 			state.cursor_visibility_change_tick = tick + 500;
 		}
 	}
-	return builder.layer.control_keys.enter.just_pressed;
+	return edited || builder.layer.control_keys.enter.just_pressed;
 }

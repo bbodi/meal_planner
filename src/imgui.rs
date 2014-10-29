@@ -11,6 +11,9 @@ use checkbox;
 use dropdown;
 use header;
 
+const NO_WIDGET_ID: i32 = 0xFFFFFFFF;
+
+#[deriving(PartialEq, Clone, Show)]
 pub struct SizeInCharacters(pub i32);
 
 impl SizeInCharacters {
@@ -70,6 +73,7 @@ pub struct ControlKeys {
 	pub home: Key,
 	pub end: Key,
 	pub enter: Key,
+	pub tab: Key,
 }
 
 impl ControlKeys {
@@ -84,6 +88,7 @@ impl ControlKeys {
 			home: Key::new(),
 			end: Key::new(),
 			enter: Key::new(),
+			tab: Key::new(),
 		}
 	}
 }
@@ -96,6 +101,8 @@ pub struct Layer {
 	mouse_y: i32,
 	mouse_state: i32,
 	prev_mouse_state: i32,
+	pub last_mouse_x: i32,
+	pub last_mouse_y: i32,
 	tick: uint,
 	text_input: String,
 	textfield_datas: HashMap<i32, textfield::State>,
@@ -121,12 +128,14 @@ impl Layer {
 		};
 	    Layer {
 	    	font: font,
-	    	active_id: 0xFFFFFFFF,
-	    	hot_id: 0xFFFFFFFF,
+	    	active_id: NO_WIDGET_ID,
+	    	hot_id: NO_WIDGET_ID,
 	    	mouse_x: 0,
 	    	mouse_y: 0,
 	    	mouse_state: 0,
 	    	prev_mouse_state: 0,
+	    	last_mouse_x: 0,
+			last_mouse_y: 0,
 	    	textfield_datas: HashMap::new(),
 	    	tick: 0,
 	    	text_input: "".into_string(),
@@ -190,11 +199,11 @@ impl Layer {
 	}
 
 	pub fn clear_hot_widget(&mut self) {
-		self.hot_id = 0xFFFFFFFF;
+		self.hot_id = NO_WIDGET_ID;
 	}
 
 	pub fn clear_active_widget(&mut self) {
-		self.active_id = 0xFFFFFFFF;
+		self.active_id = NO_WIDGET_ID;
 	}
 
 	pub fn set_active_widget(&mut self, x: i32, y: i32) {
@@ -209,6 +218,10 @@ impl Layer {
 			let id = x << 8 | y;
 			self.active_id == id
 		}
+	}
+
+	pub fn is_there_active_widget(&self) -> bool {
+		self.active_id != NO_WIDGET_ID
 	}
 
 	pub fn mouse_x(&self) -> i32 {
@@ -248,6 +261,8 @@ impl Layer {
 		self.last_y = SizeInCharacters(0);
 		self.last_w = SizeInCharacters(0);
 		self.last_h = SizeInCharacters(0);
+		self.last_mouse_x = self.mouse_x;
+		self.last_mouse_y = self.mouse_y;
 		self.text_input = "".into_string();
 		self.prev_mouse_state = self.mouse_state;
 		self.tick = sdl2::timer::get_ticks();
@@ -260,8 +275,8 @@ impl Layer {
 		Layer::update_key(keys[sdl2::scancode::ReturnScanCode], &mut self.control_keys.enter);
 		Layer::update_key(keys[sdl2::scancode::HomeScanCode], &mut self.control_keys.home);
 		Layer::update_key(keys[sdl2::scancode::EndScanCode], &mut self.control_keys.end);
+		Layer::update_key(keys[sdl2::scancode::TabScanCode], &mut self.control_keys.tab);
 	    
-		
     	match sdl_event {
         	// /// (timestamp, window, winEventId, data1, data2)
 			sdl2::event::WindowEvent(_, _, winEventId, data1, data2) => {
@@ -345,6 +360,11 @@ pub fn draw_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i
 	for i in range(0, border) {
 		renderer.draw_rect(&Rect::new(x+i, y+i, w-2*i, h-2*i));
 	}
+}
+
+pub fn fill_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, color: sdl2::pixels::Color) {
+	renderer.set_draw_color(color);
+	renderer.fill_rect(&Rect::new(x, y, w, h));
 }
 
 pub fn draw_rect_gradient(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, start_color: sdl2::pixels::Color, end_color: sdl2::pixels::Color) {
