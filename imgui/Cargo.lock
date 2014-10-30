@@ -1,0 +1,19 @@
+[root]
+name = "rust-imgui"
+version = "0.0.1"
+dependencies = [
+ "sdl2 0.0.1-alpha.1",
+ "sdl2_ttf 0.0.1",
+]
+
+[[package]]
+name = "sdl2"
+version = "0.0.1-alpha.1"
+
+[[package]]
+name = "sdl2_ttf"
+version = "0.0.1"
+dependencies = [
+ "sdl2 0.0.1-alpha.1",
+]
+

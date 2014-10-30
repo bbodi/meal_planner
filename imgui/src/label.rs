@@ -1,15 +1,7 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-use std::iter::AdditiveIterator;
-use std::collections::RingBuf;
-use std::collections::Deque;
-use std::cmp::min;
-use std::cmp::max;
-
 use sdl2::pixels::RGB;
-use sdl2::rect::Rect;
-use sdl2::rect::Point;
 
 use imgui;
 use imgui::SizeInCharacters;
@@ -44,11 +36,20 @@ impl<'a> LabelBuilder<'a> {
 		self
 	}
 
+	pub fn inner_right(mut self, x: SizeInCharacters) -> LabelBuilder<'a> {
+		self.x = self.layer.last_x + x;
+		self
+	}
+
 	pub fn down(mut self, y: SizeInCharacters) -> LabelBuilder<'a> {
 		self.y = self.layer.last_y + self.layer.last_h + y;
 		self
 	}
-	
+
+	pub fn inner_down(mut self, y: SizeInCharacters) -> LabelBuilder<'a> {
+		self.y = self.layer.last_y + y;
+		self
+	}
 
 	pub fn draw(&mut self, renderer: &sdl2::render::Renderer)  {
 		draw(self, renderer);
@@ -60,18 +61,15 @@ pub fn draw(builder: &mut LabelBuilder, renderer: &sdl2::render::Renderer) {
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);
 	let y = builder.y.in_pixels(char_h);
-	let h = char_h;
 
 	builder.layer.last_x = builder.x;
 	builder.layer.last_y = builder.y;
 	builder.layer.last_w = SizeInCharacters(builder.label.len() as i32);
 	builder.layer.last_h = SizeInCharacters(1);
 	
-	let mut edited = false;
-	
 
 
-	renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
+	let _ = renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
 
 
 	if builder.label.len() > 0 {

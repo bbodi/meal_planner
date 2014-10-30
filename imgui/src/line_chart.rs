@@ -3,11 +3,6 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-use std::collections::RingBuf;
-use std::collections::Deque;
-use std::cmp::min;
-use std::cmp::max;
-
 use sdl2::pixels::RGB;
 use sdl2::rect::Rect;
 
@@ -62,8 +57,8 @@ pub fn draw(builder: &mut LineChartBuilder, renderer: &sdl2::render::Renderer) {
 		None
 	};
 
-	renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
-	renderer.fill_rect(&sdl2::rect::Rect::new(builder.x as i32, builder.y as i32, builder.w as i32, builder.h as i32));
+	let _ = renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
+	let _ = renderer.fill_rect(&sdl2::rect::Rect::new(builder.x as i32, builder.y as i32, builder.w as i32, builder.h as i32));
 	if builder.maybe_data.is_none() {
 		return;
 	}
@@ -79,8 +74,8 @@ pub fn draw(builder: &mut LineChartBuilder, renderer: &sdl2::render::Renderer) {
 			let p = sdl2::rect::Point::new(builder.x as i32 + i as i32, builder.y as i32 + (builder.h - *v as i32) as i32);
 			points.push(p);
 		}
-		renderer.set_draw_color(builder.surface_color.unwrap());
-		renderer.draw_points(points.as_slice());
+		let _ = renderer.set_draw_color(builder.surface_color.unwrap());
+		let _ = renderer.draw_points(points.as_slice());
 	}
 	//
 	//
@@ -92,8 +87,8 @@ pub fn draw(builder: &mut LineChartBuilder, renderer: &sdl2::render::Renderer) {
 			let p = sdl2::rect::Rect::new(builder.x as i32 + x as i32, builder.y as i32 + y, 2, 2);
 			rects.push(p);
 		}
-		renderer.set_draw_color(sdl2::pixels::RGB(255, 150, 150));
-		renderer.fill_rects(rects.as_slice());
+		let _ = renderer.set_draw_color(sdl2::pixels::RGB(255, 150, 150));
+		let _ = renderer.fill_rects(rects.as_slice());
 	}
 	//
 	if selected_column.is_some() {
@@ -109,7 +104,7 @@ pub fn draw(builder: &mut LineChartBuilder, renderer: &sdl2::render::Renderer) {
 			let v = scaled_data[index as uint];
 			imgui::draw_rect_gradient(renderer, x, y, w, h, RGB(174, 67, 75), RGB(166, 38, 51));
 			let texure = imgui::create_text_texture(renderer, &builder.layer.font, format!("{}", v).as_slice(), RGB(255, 255, 255));
-			renderer.copy(&texure, None, Some(Rect::new(x as i32, y as i32, w as i32, h as i32)));
+			let _ = renderer.copy(&texure, None, Some(Rect::new(x as i32, y as i32, w as i32, h as i32)));
 		}
 	}
 }
@@ -137,9 +132,9 @@ fn draw_horizontal_lines(builder: &LineChartBuilder, dst: &sdl2::render::Rendere
 		let sp = 1f32 - p;
 		let (start_r, start_g, start_b) = builder.bottom_color.get_rgb();
 		let (end_r, end_g, end_b) = builder.top_color.get_rgb();
-		let mut r = start_r as f32 * sp + end_r as f32 * p;
-		let mut g = start_g as f32 * sp + end_g as f32 * p;
-		let mut b = start_b as f32 * sp + end_b as f32 * p;
+		let r = start_r as f32 * sp + end_r as f32 * p;
+		let g = start_g as f32 * sp + end_g as f32 * p;
+		let b = start_b as f32 * sp + end_b as f32 * p;
 		for (i, value) in data.iter().enumerate() {
 			if y as i32 > *value {
 				continue;
@@ -147,8 +142,8 @@ fn draw_horizontal_lines(builder: &LineChartBuilder, dst: &sdl2::render::Rendere
 			let p = sdl2::rect::Point::new(builder.x as i32 + i as i32, builder.y as i32 + (builder.h-y) as i32);
 			points.push(p);
 		}
-		dst.set_draw_color(sdl2::pixels::RGB(r as u8, g as u8, b as u8));
-		dst.draw_points(points.as_slice());
+		let _ = dst.set_draw_color(sdl2::pixels::RGB(r as u8, g as u8, b as u8));
+		let _ = dst.draw_points(points.as_slice());
 		points.clear();
 	}
 }
@@ -159,12 +154,12 @@ fn draw_vertical_line(builder: &LineChartBuilder, renderer: &sdl2::render::Rende
 		let sp = 1f32 - p;
 		let (start_r, start_g, start_b) = start_color.get_rgb();
 		let (end_r, end_g, end_b) = end_color.get_rgb();
-		let mut r = start_r as f32 * sp + end_r as f32 * p;
+		let r = start_r as f32 * sp + end_r as f32 * p;
 		let g = start_g as f32 * sp + end_g as f32 * p;
 		let b = start_b as f32 * sp + end_b as f32 * p;
 
 		let p = sdl2::rect::Point::new(builder.x as i32 + index as i32, (builder.y + builder.h-y as i32) as i32);
-		renderer.set_draw_color(sdl2::pixels::RGB(r as u8, g as u8, b as u8));
-		renderer.draw_point(p);
+		let _ = renderer.set_draw_color(sdl2::pixels::RGB(r as u8, g as u8, b as u8));
+		let _ = renderer.draw_point(p);
 	}
 }

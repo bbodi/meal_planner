@@ -3,17 +3,11 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-use std::collections::RingBuf;
-use std::collections::Deque;
-use std::cmp::min;
-use std::cmp::max;
+
 
 use sdl2::pixels::RGB;
-use sdl2::rect::Rect;
-use sdl2::rect::Point;
 
 use imgui;
-use imgui::IndexValue;
 use imgui::SizeInCharacters;
 
 pub struct HeaderBuilder<'a> {
@@ -26,12 +20,17 @@ pub struct HeaderBuilder<'a> {
 	layer: &'a mut imgui::Layer,
 }
 
+
+pub fn header<'a>(layer: &'a mut imgui::Layer, label: &'a str, w: SizeInCharacters, h: SizeInCharacters) -> HeaderBuilder<'a>{
+	HeaderBuilder::new(layer, label, w, h)
+}
+
 impl<'a> HeaderBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, label: &'a str, x: SizeInCharacters, y: SizeInCharacters, w: SizeInCharacters, h: SizeInCharacters) -> HeaderBuilder<'a> {
+	pub fn new(layer: &'a mut imgui::Layer, label: &'a str, w: SizeInCharacters, h: SizeInCharacters) -> HeaderBuilder<'a> {
 		HeaderBuilder {
 			disabled: false,
-			x: x,
-			y: y,
+			x: layer.last_x,
+			y: layer.last_y,
 			w: w,
 			h: h,
 			label: label,
@@ -42,8 +41,14 @@ impl<'a> HeaderBuilder<'a> {
 	pub fn disabled(mut self, v: bool) -> HeaderBuilder<'a> {self.disabled = v; self}
 	pub fn x(mut self, v: SizeInCharacters) -> HeaderBuilder<'a> {self.x = v; self}
 	pub fn y(mut self, v: SizeInCharacters) -> HeaderBuilder<'a> {self.y = v; self}
+
 	pub fn right(mut self, x: SizeInCharacters) -> HeaderBuilder<'a> {
 		self.x = self.layer.last_x + self.layer.last_w + x;
+		self
+	}
+
+	pub fn inner_right(mut self, x: SizeInCharacters) -> HeaderBuilder<'a> {
+		self.x = self.layer.last_x + x;
 		self
 	}
 
@@ -51,15 +56,19 @@ impl<'a> HeaderBuilder<'a> {
 		self.y = self.layer.last_y + self.layer.last_h + y;
 		self
 	}
-	
 
-	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
-		draw(self, renderer)
+	pub fn inner_down(mut self, y: SizeInCharacters) -> HeaderBuilder<'a> {
+		self.y = self.layer.last_y + y;
+		self
+	}
+
+	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) {
+		draw(self, renderer);
 	}
 }
 
 
-pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) -> bool {
+pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);
@@ -82,5 +91,4 @@ pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) -> b
 	}
 
 	imgui::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
-	false
 }

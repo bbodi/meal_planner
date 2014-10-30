@@ -1,32 +1,30 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-use std::collections::RingBuf;
-use std::collections::Deque;
-use std::cmp::min;
-use std::cmp::max;
-
 use sdl2::pixels::RGB;
-use sdl2::rect::Rect;
-use sdl2::rect::Point;
+use imgui::SizeInCharacters;
 
 use imgui;
 
 pub struct ButtonBuilder<'a> {
 	disabled: bool,
-	x: i32,
-	y: i32, 
+	x: SizeInCharacters,
+	y: SizeInCharacters, 
 	label: &'a str,
 	allow_multi_click: bool,
 	layer: &'a mut imgui::Layer
 }
 
+pub fn button<'a>(layer: &'a mut imgui::Layer, label: &'a str) -> ButtonBuilder<'a> {
+	ButtonBuilder::new(layer, label)
+}
+
 impl<'a> ButtonBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, label: &'a str, x: i32, y: i32) -> ButtonBuilder<'a> {
+	pub fn new(layer: &'a mut imgui::Layer, label: &'a str) -> ButtonBuilder<'a> {
 		ButtonBuilder {
 			disabled: false,
-			x: x,
-			y: y,
+			x: layer.last_x,
+			y: layer.last_y,
 			label: label,
 			layer: layer,
 			allow_multi_click: false
@@ -35,7 +33,27 @@ impl<'a> ButtonBuilder<'a> {
 
 	pub fn disabled(mut self, v: bool) -> ButtonBuilder<'a> {self.disabled = v; self}
 	pub fn allow_multi_click(mut self, v: bool) -> ButtonBuilder<'a> {self.allow_multi_click = v; self}
-	
+	pub fn x(mut self, v: SizeInCharacters) -> ButtonBuilder<'a> {self.x = v; self}
+	pub fn y(mut self, v: SizeInCharacters) -> ButtonBuilder<'a> {self.y = v; self}
+	pub fn right(mut self, x: SizeInCharacters) -> ButtonBuilder<'a> {
+		self.x = self.layer.last_x + self.layer.last_w + x;
+		self
+	}
+
+	pub fn inner_right(mut self, x: SizeInCharacters) -> ButtonBuilder<'a> {
+		self.x = self.layer.last_x + x;
+		self
+	}
+
+	pub fn down(mut self, y: SizeInCharacters) -> ButtonBuilder<'a> {
+		self.y = self.layer.last_y + self.layer.last_h + y;
+		self
+	}
+
+	pub fn inner_down(mut self, y: SizeInCharacters) -> ButtonBuilder<'a> {
+		self.y = self.layer.last_y + y;
+		self
+	}
 
 	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
 		draw(self, renderer)
@@ -45,13 +63,17 @@ impl<'a> ButtonBuilder<'a> {
 pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> bool {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
-	let x = builder.x;
-	let y = builder.y;
+	let x = builder.x.in_pixels(char_w);
+	let y = builder.y.in_pixels(char_h);
 	let border_width = 2i32;
-	let borders_size = border_width * 2;
 	let text_border_dist = 3;
 	let w = char_w*builder.label.len() as i32 + text_border_dist*2;
 	let h = char_h;
+
+	builder.layer.last_x = builder.x;
+	builder.layer.last_y = builder.y;
+	builder.layer.last_w = SizeInCharacters(builder.label.len() as i32);
+	builder.layer.last_h = SizeInCharacters(1);
 
 	let was_hot = builder.layer.is_hot_widget(x, y);
 	let was_active = builder.layer.is_active_widget(x, y);
@@ -73,7 +95,7 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 		builder.layer.clear_hot_widget();
 	}
 
-	renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
+	let _ = renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
 	
 	if button_down {
 		imgui::draw_rect_gradient(renderer, x, y, w, h, RGB(48, 48, 48), RGB(83, 83, 83));

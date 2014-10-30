@@ -1,17 +1,23 @@
-
 extern crate sdl2;
 extern crate sdl2_ttf;
+
+extern crate rust_imgui;
+extern crate csv;
+extern crate serialize;
 
 
 use sdl2::pixels::RGB;
 use sdl2::pixels::RGBA;
 
+use label::label;
+use imgui::SizeInCharacters;
+
 const SCREEN_WIDHT: u32 = 1024;
 const SCREEN_HEIGHT: u32 = 768;
-//mod app_event;
-//mod widget;
-//mod button;
-mod imgui;
+
+
+/*mod imgui;
+mod db;
 mod button;
 mod textfield;
 mod line_chart;
@@ -20,8 +26,11 @@ mod dropdown;
 mod header;
 mod scrollbar;
 mod label;
+mod panel;*/
+mod tricolor_field;
 
 mod kcal_window;
+mod kcal_table;
 
 
 fn main() {
@@ -39,7 +48,7 @@ fn main() {
         Ok(renderer) => renderer,
         Err(err) => fail!(format!("failed to create renderer: {}", err))
     };
-    renderer.set_logical_size(SCREEN_WIDHT as int, SCREEN_HEIGHT as int);
+    let _ = renderer.set_logical_size(SCREEN_WIDHT as int, SCREEN_HEIGHT as int);
     let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 255));
     let _ = renderer.clear();
 
@@ -47,7 +56,6 @@ fn main() {
         Ok(f) => f,
         Err(e) => fail!(e),
     };
-    // render a surface, and convert it to a texture bound to the renderer
     let surface = match font.render_str_blended("Hello Rust!", sdl2::pixels::RGBA(255, 0, 0, 255)) {
         Ok(s) => s,
         Err(e) => fail!(e),
@@ -56,8 +64,7 @@ fn main() {
         Ok(t) => t,
         Err(e) => fail!(e),
     };
-    //renderer.set_viewport(&sdl2::rect::Rect::new(10, 10, 100, 100));
-    renderer.copy(&texture, None, None);
+    let _ = renderer.copy(&texture, None, None);
 
     let mut last: i32 = 20;
     let mut datas = vec![];
@@ -75,14 +82,19 @@ fn main() {
     //layer.add_widget(box chart, sdl2::rect::Rect::new(10, 10, 410, 410));
     let mut btn = button::Button::new("Add data");*/
     //layer.add_widget(btn, sdl2::rect::Rect::new(420, 20, 62, 16));
-
-    let mut layer = imgui::Layer::new();
-    let mut kcal_win = kcal_window::KCalWindow::new();
+    
     let mut frame_count = 0u32;
     let mut next_frame_tick = 0;
-    let mut text = "".into_string();
+    let mut fps = 0;
+
+    /*let mut text = "".into_string();
     let mut show_surface = false;
-    let mut dropdown_value: i32 = 0;
+    let mut dropdown_value: i32 = 0;*/
+    let mut dao = db::Dao::new();
+    let mut foods = dao.load_foods();
+    let mut layer = imgui::Layer::new();
+    let mut kcal_win = kcal_window::KCalWindow::new();
+    let mut kcal_table = kcal_table::KCalTable::new();
     'main : loop {
         sdl2::timer::delay(10);
         let current_tick = sdl2::timer::get_ticks();
@@ -93,7 +105,17 @@ fn main() {
             e => e, 
             // _ => {},
         };
-        kcal_win.do_logic(&renderer, event);
+        if false {
+            kcal_win.do_logic(&renderer, &event);
+        }
+        if kcal_table.do_logic(&renderer, &event, &mut foods) {
+            dao.persist_foods(foods.as_slice());
+        }
+
+        layer.handle_event(&event);
+        let mouse_str = format!("FPS: {}, {}, {}", fps, layer.mouse_x() / layer.char_w, layer.mouse_y()/ layer.char_h);
+        label(&mut layer, mouse_str.as_slice())
+            .x(SizeInCharacters(0)).y(SizeInCharacters(0)).draw(&renderer);
         
 
 
@@ -135,11 +157,12 @@ fn main() {
             break 'main;
         }
 
-        renderer.set_draw_color(sdl2::pixels::RGB(60 , 59, 64));
-        renderer.clear();
+        let _ = renderer.set_draw_color(sdl2::pixels::RGB(60 , 59, 64));
+        let _ = renderer.clear();
         frame_count += 1;
 
         if current_tick >= next_frame_tick {
+            fps = frame_count;
             next_frame_tick = current_tick + 1000;
             frame_count = 0;
         }

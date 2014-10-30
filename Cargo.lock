@@ -2,9 +2,15 @@
 name = "meal_plan"
 version = "0.0.1"
 dependencies = [
+ "rust-csv 0.5.0 (git+https://github.com/BurntSushi/rust-csv.git#e8945bf8a1e8779727748c2e0d460f8d9aaf4b67)",
  "sdl2 0.0.1-alpha.1",
  "sdl2_ttf 0.0.1",
 ]
+
+[[package]]
+name = "rust-csv"
+version = "0.5.0"
+source = "git+https://github.com/BurntSushi/rust-csv.git#e8945bf8a1e8779727748c2e0d460f8d9aaf4b67"
 
 [[package]]
 name = "sdl2"

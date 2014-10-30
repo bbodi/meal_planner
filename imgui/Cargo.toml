@@ -1,17 +1,18 @@
 [package]
 
-name = "meal_plan"
+name = "rust_imgui"
 version = "0.0.1"
 authors = ["bbodi <bbodi@gmail.com>"]
 
+[lib]
+
+name       = "rust_imgui"
+
 [dependencies.sdl2]
 # git = "https://github.com/AngryLawyer/rust-sdl2.git"
-path = "../rust-sdl2/"
+path = "../../rust-sdl2/"
 
 [dependencies.sdl2_ttf]
 # git = "https://github.com/andelf/rust-sdl2_ttf"
-path = "../rust-sdl2_ttf/"
+path = "../../rust-sdl2_ttf/"
 
-[profile.release]
-opt-level = 3
-debug = false

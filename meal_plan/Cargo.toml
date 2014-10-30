@@ -1,0 +1,17 @@
+[package]
+
+name = "meal_planner"
+version = "0.0.1"
+authors = ["bbodi <bbodi@gmail.com>"]
+
+[dependencies.rust_imgui]
+path = "../imgui/"
+
+
+[dependencies.rust-csv]
+git = "https://github.com/BurntSushi/rust-csv.git"
+
+
+[profile.release]
+opt-level = 3
+debug = false
