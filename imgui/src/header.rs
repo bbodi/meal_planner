@@ -1,14 +1,9 @@
-// TODO 2 pixel széles border
-
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-
-
 use sdl2::pixels::RGB;
-
-use imgui;
-use imgui::SizeInCharacters;
+use base;
+use base::SizeInCharacters;
 
 pub struct HeaderBuilder<'a> {
 	disabled: bool,
@@ -17,16 +12,16 @@ pub struct HeaderBuilder<'a> {
 	w: SizeInCharacters,
 	h: SizeInCharacters,
 	label: &'a str,
-	layer: &'a mut imgui::Layer,
+	layer: &'a mut base::Layer,
 }
 
 
-pub fn header<'a>(layer: &'a mut imgui::Layer, label: &'a str, w: SizeInCharacters, h: SizeInCharacters) -> HeaderBuilder<'a>{
+pub fn header<'a>(layer: &'a mut base::Layer, label: &'a str, w: SizeInCharacters, h: SizeInCharacters) -> HeaderBuilder<'a>{
 	HeaderBuilder::new(layer, label, w, h)
 }
 
 impl<'a> HeaderBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, label: &'a str, w: SizeInCharacters, h: SizeInCharacters) -> HeaderBuilder<'a> {
+	pub fn new(layer: &'a mut base::Layer, label: &'a str, w: SizeInCharacters, h: SizeInCharacters) -> HeaderBuilder<'a> {
 		HeaderBuilder {
 			disabled: false,
 			x: layer.last_x,
@@ -84,11 +79,11 @@ pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) {
 
 	let border_width = 2;
 	builder.layer.draw_rect_gradient(renderer, x, y, w, header_h, RGB(40, 120, 182), RGB(22, 83, 144));
-	imgui::draw_rect(renderer, x, y, w+border_width, header_h+border_width, 2, RGB(0, 0, 0));
-	let text_x = imgui::center_text(builder.label, char_w, w);
+	base::draw_rect(renderer, x, y, w+border_width, header_h+border_width, 2, RGB(0, 0, 0));
+	let text_x = base::center_text(builder.label, char_w, w);
 	if builder.label.len() > 0 {
 		builder.layer.draw_text(x + text_x, y, renderer, builder.label, RGB(236, 236, 236));
 	}
 
-	imgui::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
+	base::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 }

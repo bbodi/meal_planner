@@ -2,25 +2,24 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 use sdl2::pixels::RGB;
-use imgui::SizeInCharacters;
-
-use imgui;
+use base;
+use base::SizeInCharacters;
 
 pub struct ButtonBuilder<'a> {
 	disabled: bool,
 	x: SizeInCharacters,
-	y: SizeInCharacters, 
+	y: SizeInCharacters,
 	label: &'a str,
 	allow_multi_click: bool,
-	layer: &'a mut imgui::Layer
+	layer: &'a mut base::Layer
 }
 
-pub fn button<'a>(layer: &'a mut imgui::Layer, label: &'a str) -> ButtonBuilder<'a> {
+pub fn button<'a>(layer: &'a mut base::Layer, label: &'a str) -> ButtonBuilder<'a> {
 	ButtonBuilder::new(layer, label)
 }
 
 impl<'a> ButtonBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, label: &'a str) -> ButtonBuilder<'a> {
+	pub fn new(layer: &'a mut base::Layer, label: &'a str) -> ButtonBuilder<'a> {
 		ButtonBuilder {
 			disabled: false,
 			x: layer.last_x,
@@ -61,6 +60,11 @@ impl<'a> ButtonBuilder<'a> {
 }
 
 pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> bool {
+	builder.layer.last_x = builder.x;
+	builder.layer.last_y = builder.y;
+	builder.layer.last_w = SizeInCharacters(builder.label.len() as i32);
+	builder.layer.last_h = SizeInCharacters(1);
+
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);
@@ -69,11 +73,11 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 	let text_border_dist = 3;
 	let w = char_w*builder.label.len() as i32 + text_border_dist*2;
 	let h = char_h;
-
-	builder.layer.last_x = builder.x;
-	builder.layer.last_y = builder.y;
-	builder.layer.last_w = SizeInCharacters(builder.label.len() as i32);
-	builder.layer.last_h = SizeInCharacters(1);
+	if builder.disabled {
+		base::fill_rect(renderer, x, y, w, h, RGB(50, 50, 50));
+		builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, renderer, builder.label, RGB(151, 151, 151));
+		return false;
+	}
 
 	let was_hot = builder.layer.is_hot_widget(x, y);
 	let was_active = builder.layer.is_active_widget(x, y);
@@ -96,7 +100,7 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 	}
 
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
-	
+
 	if button_down {
 		builder.layer.draw_rect_gradient(renderer, x, y, w, h, RGB(48, 48, 48), RGB(83, 83, 83));
 	} else if hover {
@@ -104,7 +108,7 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 	} else {
 		builder.layer.draw_rect_gradient(renderer, x, y, w, h, RGB(82, 85, 90), RGB(47, 50, 53));
 	}
-	imgui::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
+	base::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 	builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, renderer, builder.label, RGB(151, 151, 151));
 	return (released && hover) || (button_down && hover && builder.allow_multi_click);
 }

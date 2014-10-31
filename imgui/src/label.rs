@@ -2,24 +2,23 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 use sdl2::pixels::RGB;
-
-use imgui;
-use imgui::SizeInCharacters;
+use base;
+use base::SizeInCharacters;
 
 pub struct LabelBuilder<'a> {
-	x: SizeInCharacters,
-	y: SizeInCharacters, 
-	label: &'a str,
-	layer: &'a mut imgui::Layer,
+	pub x: SizeInCharacters,
+	pub y: SizeInCharacters,
+	pub label: &'a str,
+	pub layer: &'a mut base::Layer,
 }
 
-pub fn label<'a>(layer: &'a mut imgui::Layer, label: &'a str) -> LabelBuilder<'a> {
+pub fn label<'a>(layer: &'a mut base::Layer, label: &'a str) -> LabelBuilder<'a> {
 	LabelBuilder::new(layer, label)
 }
 
 
 impl<'a> LabelBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, label: &'a str)-> LabelBuilder<'a> {
+	pub fn new(layer: &'a mut base::Layer, label: &'a str)-> LabelBuilder<'a> {
 		LabelBuilder {
 			x: layer.last_x,
 			y: layer.last_y,

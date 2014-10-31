@@ -1,8 +1,8 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-use imgui::imgui;
-use imgui::imgui::SizeInCharacters;
+use imgui::base;
+use imgui::base::SizeInCharacters;
 
 use sdl2::pixels::RGB;
 
@@ -11,13 +11,14 @@ use imgui::label::label;
 use imgui::textfield::textfield_f32;
 use imgui::textfield::textfield_i32;
 use imgui::panel::panel;
+use imgui::dropdown::dropdown;
 use imgui::header::header;
 
 enum WeightType {
 	Kg, Lb,
 }
 
-impl imgui::IndexValue for WeightType {
+impl base::IndexValue for WeightType {
 	fn set(&mut self, value: uint) {
 		*self = match value {
 			0 => Kg,
@@ -42,7 +43,7 @@ enum GoalType {
 	Bulking, Cutting
 }
 
-impl imgui::IndexValue for GoalType {
+impl base::IndexValue for GoalType {
 	fn set(&mut self, value: uint) {
 		*self = match value {
 			0 => Bulking,
@@ -59,7 +60,7 @@ enum ActivityModifier {
 	Sedentary, Lightly, Moderately, Very, Extremely
 }
 
-impl imgui::IndexValue for ActivityModifier {
+impl base::IndexValue for ActivityModifier {
 	fn set(&mut self, value: uint) {
 		*self = match value {
 			0 => Sedentary,
@@ -87,7 +88,7 @@ impl ActivityModifier {
 }
 
 pub struct KCalWindow<'a> {
-	layer: imgui::Layer,
+	layer: base::Layer,
 
 	weight: f32,
 	age: i32,
@@ -150,7 +151,7 @@ impl<'a> KCalWindow<'a> {
 
 	pub fn new() -> KCalWindow<'a> {
 		KCalWindow {
-			layer: imgui::Layer::new(),
+			layer: base::Layer::new(),
 			weight: 0f32,
 			age: 0,
 			height: 0,
@@ -158,7 +159,7 @@ impl<'a> KCalWindow<'a> {
 			weight_type: Kg,
 			activity_mod: Sedentary,
 			height_type: 0,
-			goal_type: Bulking, 
+			goal_type: Bulking,
 			protein_per_kg: 1.8f32,
 			protein: 0,
 			fat: 0,
@@ -182,9 +183,9 @@ impl<'a> KCalWindow<'a> {
 			.y(SizeInCharacters(7))
             .label("Mass: ")
             .draw(renderer) {
-			self.recalc_bmr();            	
+			self.recalc_bmr();
         }
-        self.layer.dropdown(vec!["kg", "lb"].as_slice(), &mut self.weight_type)
+        dropdown(&mut self.layer, vec!["kg", "lb"].as_slice(), &mut self.weight_type)
         	.right(SizeInCharacters(1))
         	.draw(renderer);
 
@@ -204,11 +205,11 @@ impl<'a> KCalWindow<'a> {
             self.recalc_bmr();
         }
 
-        self.layer.dropdown(vec!["cm", "ft"].as_slice(), &mut self.height_type)
+        dropdown(&mut self.layer, vec!["cm", "ft"].as_slice(), &mut self.height_type)
         	.right(SizeInCharacters(1))
         	.draw(renderer);
 
-        if self.layer.dropdown(vec!["Sedentary", "Lightly active", "Moderately active", "Very active", "Extremely active", ].as_slice(), &mut self.activity_mod)
+        if dropdown(&mut self.layer, vec!["Sedentary", "Lightly active", "Moderately active", "Very active", "Extremely active", ].as_slice(), &mut self.activity_mod)
         	.x(SizeInCharacters(7))
         	.right(SizeInCharacters(1))
         	.draw(renderer) {
@@ -221,7 +222,7 @@ impl<'a> KCalWindow<'a> {
 			.draw(renderer);
 
 		if self.bmr_str.len() > 0 {
-			self.layer.dropdown(vec!["Bulking", "Cutting", ].as_slice(), &mut self.goal_type)
+			dropdown(&mut self.layer, vec!["Bulking", "Cutting", ].as_slice(), &mut self.goal_type)
 	        	.x(SizeInCharacters(7))
 	        	.down(SizeInCharacters(1))
 	        	.draw(renderer);
@@ -232,11 +233,11 @@ impl<'a> KCalWindow<'a> {
 	        	.down(SizeInCharacters(0))
 	        	.draw(renderer);
 	        {
-	        	
+
 		        label(&mut self.layer, format!("Protein: {:3}", self.protein).as_slice() )
 		        	.inner_down(SizeInCharacters(1))
 		            .draw(renderer);
-		        
+
 		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut self.protein_percent )
 		        	.right(SizeInCharacters(2))
 		        	.draw(renderer) {

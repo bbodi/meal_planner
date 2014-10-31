@@ -1,30 +1,32 @@
-// TODO 2 pixel széles border
-
 extern crate sdl2;
 extern crate sdl2_ttf;
 
+
 use sdl2::pixels::RGB;
 use sdl2::rect::Rect;
-
-use imgui;
-use imgui::IndexValue;
-use imgui::SizeInCharacters;
+use base;
+use base::SizeInCharacters;
+use base::IndexValue;
 
 pub struct DropdownBuilder<'a> {
 	disabled: bool,
 	x: SizeInCharacters,
 	y: SizeInCharacters,
 	labels: &'a [&'a str],
-	layer: &'a mut imgui::Layer,
+	layer: &'a mut base::Layer,
 	value: &'a mut IndexValue + 'a
 }
 
+pub fn dropdown<'a>(layer: &'a mut base::Layer, labels: &'a [&str], value: &'a mut IndexValue) -> DropdownBuilder<'a> {
+	DropdownBuilder::new(layer, labels, value)
+}
+
 impl<'a> DropdownBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, labels: &'a [&str], value: &'a mut IndexValue, x: SizeInCharacters, y: SizeInCharacters) -> DropdownBuilder<'a> {
+	pub fn new(layer: &'a mut base::Layer, labels: &'a [&str], value: &'a mut IndexValue) -> DropdownBuilder<'a> {
 		DropdownBuilder {
 			disabled: false,
-			x: x,
-			y: y,
+			x: layer.last_x,
+			y: layer.last_y,
 			labels: labels,
 			layer: layer,
 			value: value,
@@ -53,7 +55,7 @@ impl<'a> DropdownBuilder<'a> {
 		self.y = self.layer.last_y + y;
 		self
 	}
-	
+
 
 	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
 		draw(self, renderer)
@@ -109,7 +111,7 @@ pub fn draw(builder: &mut DropdownBuilder, renderer: &sdl2::render::Renderer) ->
 		}
 		builder.layer.clear_active_widget();
 	}
-	
+
 	let top_color = match hover {
 		false => RGB(82, 85, 90),
 		true => RGB(102, 105, 110),

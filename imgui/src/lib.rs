@@ -4,7 +4,7 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-pub mod imgui;
+pub mod base;
 pub mod button;
 pub mod textfield;
 pub mod line_chart;

@@ -10,7 +10,7 @@ use sdl2::pixels::RGB;
 use sdl2::pixels::RGBA;
 
 use imgui::label::label;
-use imgui::imgui::SizeInCharacters;
+use imgui::base::SizeInCharacters;
 
 const SCREEN_WIDHT: u32 = 1024;
 const SCREEN_HEIGHT: u32 = 768;
@@ -19,9 +19,11 @@ const SCREEN_HEIGHT: u32 = 768;
 mod db;
 
 mod tricolor_field;
+mod tricolor_label;
 
 mod kcal_window;
 mod kcal_table;
+mod daily_plan;
 
 
 fn main() {
@@ -68,12 +70,12 @@ fn main() {
         datas.push(data);
     }
     /*let mut chart = line_chart::Chart::new(400, 400);
-    
+
     let mut layer = widget::Layer::new(&renderer, SCREEN_WIDHT, SCREEN_HEIGHT);
     //layer.add_widget(box chart, sdl2::rect::Rect::new(10, 10, 410, 410));
     let mut btn = button::Button::new("Add data");*/
     //layer.add_widget(btn, sdl2::rect::Rect::new(420, 20, 62, 16));
-    
+
     let mut frame_count = 0u32;
     let mut next_frame_tick = 0;
     let mut fps = 0;
@@ -83,9 +85,10 @@ fn main() {
     let mut dropdown_value: i32 = 0;*/
     let mut dao = db::Dao::new();
     let mut foods = dao.load_foods();
-    let mut layer = imgui::imgui::Layer::new();
+    let mut layer = imgui::base::Layer::new();
     let mut kcal_win = kcal_window::KCalWindow::new();
     let mut kcal_table = kcal_table::KCalTable::new();
+    let mut daily_plan = daily_plan::DailyPlan::new();
     'main : loop {
         sdl2::timer::delay(10);
         let current_tick = sdl2::timer::get_ticks();
@@ -93,30 +96,33 @@ fn main() {
 
         let event = match sdl2::event::poll_event() {
             sdl2::event::QuitEvent(_) => break 'main,
-            e => e, 
+            e => e,
             // _ => {},
         };
         if false {
             kcal_win.do_logic(&renderer, &event);
         }
 
-        if kcal_table.do_logic(&renderer, &event, &mut foods) {
+        /*if kcal_table.do_logic(&renderer, &event, &mut foods) {
             dao.persist_foods(foods.as_slice());
+        }*/
+        if daily_plan.do_logic(&renderer, &event, &mut foods) {
         }
+
 
         layer.handle_event(&event);
         let mouse_str = format!("FPS: {}, {}, {}", fps, layer.mouse_x() / layer.char_w, layer.mouse_y()/ layer.char_h);
         match renderer.get_parent() {
             &sdl2::render::WindowParent(ref w) => w.set_title(mouse_str.as_slice()),
             _ => {},
-        }; 
+        };
 
         /*layer.handle_event(event);
         if layer.button("Add data", 420, 20).draw(&renderer) {
             last = last + std::rand::random::<i32>().abs() % 7 - 3;
             datas[0].push(last);
         }
-        
+
         layer.checkbox("Add data", &mut show_surface, 550, 20).draw(&renderer);
 
         if layer.textfield(&mut text, 420, 50, 400, 55)

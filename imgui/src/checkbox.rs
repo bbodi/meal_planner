@@ -3,25 +3,24 @@ extern crate sdl2_ttf;
 
 use sdl2::pixels::RGB;
 use sdl2::rect::Rect;
-use imgui::SizeInCharacters;
-
-use imgui;
+use base;
+use base::SizeInCharacters;
 
 pub struct CheckboxBuilder<'a> {
 	disabled: bool,
 	x: SizeInCharacters,
-	y: SizeInCharacters, 
+	y: SizeInCharacters,
 	label: &'a str,
-	layer: &'a mut imgui::Layer,
+	layer: &'a mut base::Layer,
 	value: &'a mut bool,
 }
 
-pub fn checkbox<'a>(layer: &'a mut imgui::Layer, label: &'a str, value: &'a mut bool) -> CheckboxBuilder<'a> {
+pub fn checkbox<'a>(layer: &'a mut base::Layer, label: &'a str, value: &'a mut bool) -> CheckboxBuilder<'a> {
 	CheckboxBuilder::new(layer, label, value)
 }
 
 impl<'a> CheckboxBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, label: &'a str, value: &'a mut bool, ) -> CheckboxBuilder<'a> {
+	pub fn new(layer: &'a mut base::Layer, label: &'a str, value: &'a mut bool, ) -> CheckboxBuilder<'a> {
 		CheckboxBuilder {
 			disabled: false,
 			x: layer.last_x,
@@ -66,8 +65,8 @@ pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) ->
 	let w = char_h + char_w*builder.label.len() as i32;
 	let hover = builder.layer.is_mouse_in(x, y, w, char_h);
 	let mousebtn_just_released = builder.layer.is_mouse_released() && hover;
-	
-	
+
+
 	if mousebtn_just_released {
 		*builder.value = !*builder.value;
 	}
@@ -79,7 +78,7 @@ pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) ->
 	}
 
 	if *builder.value {
-		let _ = renderer.set_draw_color(sdl2::pixels::RGB(51 , 200, 51));		
+		let _ = renderer.set_draw_color(sdl2::pixels::RGB(51 , 200, 51));
 	} else {
 		let _ = renderer.set_draw_color(sdl2::pixels::RGB(51 , 51, 51));
 	}

@@ -4,19 +4,18 @@ extern crate sdl2_ttf;
 use std::iter::AdditiveIterator;
 
 use sdl2::pixels::RGB;
-
-use imgui;
-use imgui::SizeInCharacters;
+use base;
+use base::SizeInCharacters;
 
 pub struct TextFieldBuilder<'a> {
 	pub disabled: bool,
 	pub x: SizeInCharacters,
-	pub y: SizeInCharacters, 
-	pub w: SizeInCharacters, 
+	pub y: SizeInCharacters,
+	pub w: SizeInCharacters,
 	pub value: Value<'a>,
 	pub default_text: &'a str,
 	pub label: &'a str,
-	pub layer: &'a mut imgui::Layer,
+	pub layer: &'a mut base::Layer,
 	pub value_color: sdl2::pixels::Color,
 	pub label_color: sdl2::pixels::Color,
 	pub bold: bool,
@@ -47,15 +46,15 @@ pub enum Value<'a> {
 	I32(&'a mut i32),
 }
 
-pub fn textfield_f32<'a>(layer: &'a mut imgui::Layer, ptr: &'a mut f32, w: SizeInCharacters)-> TextFieldBuilder<'a> {
+pub fn textfield_f32<'a>(layer: &'a mut base::Layer, ptr: &'a mut f32, w: SizeInCharacters)-> TextFieldBuilder<'a> {
 	TextFieldBuilder::new(layer, F32(ptr), w)
 }
 
-pub fn textfield_i32<'a>(layer: &'a mut imgui::Layer, ptr: &'a mut i32, w: SizeInCharacters)-> TextFieldBuilder<'a> {
+pub fn textfield_i32<'a>(layer: &'a mut base::Layer, ptr: &'a mut i32, w: SizeInCharacters)-> TextFieldBuilder<'a> {
 	TextFieldBuilder::new(layer, I32(ptr), w)
 }
 
-pub fn textfield_str<'a>(layer: &'a mut imgui::Layer, ptr: &'a mut String, w: SizeInCharacters)-> TextFieldBuilder<'a> {
+pub fn textfield_str<'a>(layer: &'a mut base::Layer, ptr: &'a mut String, w: SizeInCharacters)-> TextFieldBuilder<'a> {
 	TextFieldBuilder::new(layer, Text(ptr), w)
 }
 
@@ -79,7 +78,7 @@ impl <'a> Value<'a> {
 
 
 impl<'a> TextFieldBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, value: Value<'a>, w: SizeInCharacters)-> TextFieldBuilder<'a> {
+	pub fn new(layer: &'a mut base::Layer, value: Value<'a>, w: SizeInCharacters)-> TextFieldBuilder<'a> {
 		layer.add_textfield_state(value.get_id(), State::new(&value));
 		TextFieldBuilder {
 			disabled: false,
@@ -124,7 +123,7 @@ impl<'a> TextFieldBuilder<'a> {
 		self.y = self.layer.last_y + y;
 		self
 	}
-	
+
 
 	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
 		draw(self, renderer)
@@ -135,7 +134,7 @@ impl<'a> TextFieldBuilder<'a> {
 pub fn draw_bg(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
-	let label_width = builder.label.len() as i32  * char_w;	
+	let label_width = builder.label.len() as i32  * char_w;
 	let x = builder.x.in_pixels(char_w);
 	let y = builder.y.in_pixels(char_h);
 	let w = builder.w.in_pixels(char_w);
@@ -155,7 +154,7 @@ pub fn draw_bg(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer
 pub fn draw_text(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
-	let label_width = builder.label.len() as i32  * char_w;	
+	let label_width = builder.label.len() as i32  * char_w;
 	let x = builder.x.in_pixels(char_w);
 	let y = builder.y.in_pixels(char_h);
 	let w = builder.w.in_pixels(char_w);
@@ -193,14 +192,14 @@ pub fn draw_text(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Render
 pub fn draw_border(builder: &TextFieldBuilder, renderer: &sdl2::render::Renderer) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
-	let label_width = builder.label.len() as i32  * char_w;	
+	let label_width = builder.label.len() as i32  * char_w;
 	let x = builder.x.in_pixels(char_w);
 	let y = builder.y.in_pixels(char_h);
 	let w = builder.w.in_pixels(char_w);
 	let h = char_h;
 
 	let border_width = 2;
-	imgui::draw_rect(renderer, label_width+x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
+	base::draw_rect(renderer, label_width+x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 }
 
 pub fn handle_logic(builder: &mut TextFieldBuilder) -> bool {
@@ -210,7 +209,7 @@ pub fn handle_logic(builder: &mut TextFieldBuilder) -> bool {
 	let y = builder.y.in_pixels(char_h);
 	let w = builder.w.in_pixels(char_w);
 	let h = char_h;
-	let label_width = builder.label.len() as i32  * char_w;	
+	let label_width = builder.label.len() as i32  * char_w;
 	let was_hot = builder.layer.is_hot_widget(x, y);
 	let was_active = builder.layer.is_active_widget(x, y);
 	let hover = builder.layer.is_mouse_in(x, y, label_width+w, h);
@@ -222,28 +221,28 @@ pub fn handle_logic(builder: &mut TextFieldBuilder) -> bool {
 	builder.layer.last_y = builder.y;
 	builder.layer.last_w = builder.w + SizeInCharacters(builder.label.len() as i32);
 	builder.layer.last_h = SizeInCharacters(1);
-	
+
 	let mut edited = false;
 	let output_value = if active {
 		let maybe_char = builder.layer.input_char();
 		let control_keys = builder.layer.control_keys;
 		let state = builder.layer.get_mut_textfield_state(builder.value.get_id());
 		let text_len = state.value.as_slice().chars().count() as i32;
-		
-		
+
+
 		state.cursor_pos = ::std::cmp::min(state.cursor_pos, text_len);
-		
+
 		if state.cursor_pos > 0 && control_keys.backspace.just_pressed {
 			let idx: uint = state.value.as_slice().graphemes(true).take(state.cursor_pos as uint - 1).map(|g| g.len()).sum();
 			state.value.remove(idx);
 			state.cursor_pos = state.cursor_pos-1;
 			edited = true;
-        } else if state.cursor_pos > 0 && control_keys.left.just_pressed { 
+        } else if state.cursor_pos > 0 && control_keys.left.just_pressed {
         	state.cursor_pos = state.cursor_pos-1;
-        } else if state.cursor_pos < text_len && control_keys.right.just_pressed { 
+        } else if state.cursor_pos < text_len && control_keys.right.just_pressed {
         	state.cursor_pos = state.cursor_pos+1;
-        } else if state.cursor_pos < text_len && control_keys.del.just_pressed { 
-        	let idx: uint = state.value.as_slice().graphemes(true).take(state.cursor_pos as uint).map(|g| g.len()).sum();            
+        } else if state.cursor_pos < text_len && control_keys.del.just_pressed {
+        	let idx: uint = state.value.as_slice().graphemes(true).take(state.cursor_pos as uint).map(|g| g.len()).sum();
 			state.value.remove(idx);
 			edited = true;
         } else {
@@ -319,7 +318,7 @@ pub fn handle_logic(builder: &mut TextFieldBuilder) -> bool {
 
 pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -> bool {
 	draw_bg(builder, renderer);
-	
+
 	draw_text(builder, renderer);
 	draw_border(builder, renderer);
 

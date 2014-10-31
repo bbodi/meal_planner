@@ -5,9 +5,7 @@ use sdl2::rect::Rect;
 use std::collections::HashMap;
 use std::collections::LruCache;
 
-use line_chart;
 use textfield;
-use dropdown;
 
 const NO_WIDGET_ID: i32 = 0x0FFFFFFF;
 
@@ -26,6 +24,14 @@ impl Add<SizeInCharacters, SizeInCharacters> for SizeInCharacters {
 		let SizeInCharacters(s) = *self;
 		let SizeInCharacters(rhs) = *rhs;
 		SizeInCharacters(s + rhs)
+	}
+}
+
+impl Sub<SizeInCharacters, SizeInCharacters> for SizeInCharacters {
+	fn sub(&self, rhs: &SizeInCharacters) -> SizeInCharacters {
+		let SizeInCharacters(s) = *self;
+		let SizeInCharacters(rhs) = *rhs;
+		SizeInCharacters(s - rhs)
 	}
 }
 
@@ -112,7 +118,7 @@ pub struct Layer {
 	pub bchar_h: i32,
 	pub last_x: SizeInCharacters,
 	pub last_y: SizeInCharacters,
-	pub last_w: SizeInCharacters, 
+	pub last_w: SizeInCharacters,
 	pub last_h: SizeInCharacters,
 
 	pub text_cache: LruCache<(u8, u8, u8, bool, u64), sdl2::render::Texture>,
@@ -127,7 +133,7 @@ impl Layer {
 		//DejaVuSansMono, Consolas
 		let font = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono.ttf"), 16) {
         	Ok(f) => f,
-        	Err(e) => panic!(e),	
+        	Err(e) => panic!(e),
 	    };
 	    let (char_w, char_h) = match font.size_of_str("_") {
 			Ok((w, h)) => (w, h),
@@ -135,7 +141,7 @@ impl Layer {
 		};
 		let bfont = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono-Bold.ttf"), 16) {
         	Ok(f) => f,
-        	Err(e) => panic!(e),	
+        	Err(e) => panic!(e),
 	    };
 	    let (bchar_w, bchar_h) = match bfont.size_of_str("_") {
 			Ok((w, h)) => (w, h),
@@ -164,13 +170,13 @@ impl Layer {
 	    	last_y: SizeInCharacters(0),
 	    	last_w: SizeInCharacters(0),
 	    	last_h: SizeInCharacters(0),
-	    	text_cache: LruCache::new(1000),
-	    	gradient_rect_cache: LruCache::new(1000),
+	    	text_cache: LruCache::new(200),
+	    	gradient_rect_cache: LruCache::new(200),
 	    }
 	}
 
 	pub fn get_mut_textfield_state(&mut self, id: i32) -> &mut textfield::State {
-		self.textfield_datas.get_mut(&id) 
+		self.textfield_datas.get_mut(&id)
 	}
 
 	pub fn get_textfield_state(&self, id: i32) -> &textfield::State {
@@ -282,7 +288,7 @@ impl Layer {
 		Layer::update_key(keys[sdl2::scancode::HomeScanCode], &mut self.control_keys.home);
 		Layer::update_key(keys[sdl2::scancode::EndScanCode], &mut self.control_keys.end);
 		Layer::update_key(keys[sdl2::scancode::TabScanCode], &mut self.control_keys.tab);
-	    
+
     	match sdl_event {
 			// (timestamp, window, which, [MouseState], x, y, xrel, yrel)
             &sdl2::event::MouseMotionEvent(_, _, _, _, x, y, _, _) => {
@@ -293,12 +299,12 @@ impl Layer {
     		&sdl2::event::MouseButtonDownEvent(_, _, _, _, x, y) => {
     			self.mouse_x = x as i32;
             	self.mouse_y = y as i32;
-            	self.mouse_state = 1;	
+            	self.mouse_state = 1;
     		},
     		&sdl2::event::MouseButtonUpEvent(_, _, _, _, x, y) => {
     			self.mouse_x = x as i32;
             	self.mouse_y = y as i32;
-            	self.mouse_state = 0;	
+            	self.mouse_state = 0;
     		},
     		&sdl2::event::TextInputEvent(_, _, ref text) => {
     			self.text_input = text.clone();
@@ -307,20 +313,10 @@ impl Layer {
         };
     }
 
-	pub fn add_textfield_state(&mut self, id: i32, state: textfield::State) {
+	pub fn add_textfield_state(&mut self, id: i32, state: ::textfield::State) {
 		if !self.textfield_datas.contains_key(&id) {
 			self.textfield_datas.insert(id, state);
 		}
-	}
-
-	pub fn line_chart<'a>(&'a mut self, label: &'a str, x: i32, y: i32, w: i32, h: i32) -> line_chart::LineChartBuilder<'a> {
-		line_chart::LineChartBuilder::new(self, label, x, y, w, h)
-	}
-
-	pub fn dropdown<'a>(&'a mut self, labels: &'a [&'a str], value: &'a mut IndexValue) -> dropdown::DropdownBuilder<'a> {
-		let x = self.last_x;
-		let y = self.last_y;
-		dropdown::DropdownBuilder::new(self, labels, value, x, y)
 	}
 
 	pub fn draw_bold_text(&mut self, x: i32, y: i32, renderer: &sdl2::render::Renderer, text: &str, color: sdl2::pixels::Color) {
@@ -341,13 +337,13 @@ impl Layer {
 		let has_cached_texture = self.text_cache.get(&key).is_some();
 		if has_cached_texture {
 			let cached_texture = self.text_cache.get(&key).unwrap();
-			let _ = renderer.copy(cached_texture, None, Some(Rect::new(x, y, text_w as i32, text_h as i32)));	
+			let _ = renderer.copy(cached_texture, None, Some(Rect::new(x, y, text_w as i32, text_h as i32)));
 		} else {
 			println!("MISS: {}", text);
-			let created_texture = self.create_text_texture(renderer, bold, text, color);	
-			let _ = renderer.copy(&created_texture, None, Some(Rect::new(x, y, text_w as i32, text_h as i32)));	
+			let created_texture = self.create_text_texture(renderer, bold, text, color);
+			let _ = renderer.copy(&created_texture, None, Some(Rect::new(x, y, text_w as i32, text_h as i32)));
 			self.text_cache.put(key, created_texture);
-		}		
+		}
 	}
 
 	fn create_text_texture(&self, renderer: &sdl2::render::Renderer, bold: bool, text: &str, color: sdl2::pixels::Color) -> sdl2::render::Texture {
@@ -369,13 +365,13 @@ impl Layer {
 		let has_cached_texture = self.gradient_rect_cache.get(&key).is_some();
 		if has_cached_texture {
 			let cached_texture = self.gradient_rect_cache.get(&key).unwrap();
-			let _ = renderer.copy(cached_texture, None, Some(Rect::new(x, y, w, h)));	
+			let _ = renderer.copy(cached_texture, None, Some(Rect::new(x, y, w, h)));
 		} else {
 			println!("MISS GRADIENT");
-			let created_texture = create_gradient_texture(renderer, w, h, start_color, end_color);	
-			let _ = renderer.copy(&created_texture, None, Some(Rect::new(x, y, w, h)));	
+			let created_texture = create_gradient_texture(renderer, w, h, start_color, end_color);
+			let _ = renderer.copy(&created_texture, None, Some(Rect::new(x, y, w, h)));
 			self.gradient_rect_cache.put(key, created_texture);
-		}	
+		}
 	}
 }
 

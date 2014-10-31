@@ -1,4 +1,6 @@
 
+use imgui::base;
+
 #[deriving(Decodable, Encodable)]
 pub enum WeightType {
     G, Dkg, Kg
@@ -15,10 +17,23 @@ impl WeightType {
     }
 }
 
+impl base::IndexValue for WeightType {
+    fn set(&mut self, value: uint) {
+        *self = match value {
+            0 => G,
+            1 => Dkg,
+            _ => Kg,
+        };
+    }
+    fn get(&self) -> uint {
+        *self as uint
+    }
+}
+
 #[deriving(Decodable, Encodable)]
 pub struct Food {
     pub name: String,
-    pub size: i32, 
+    pub size: i32,
     pub weight_type: WeightType,
     pub protein: f32,
     pub ch: f32,
@@ -32,7 +47,7 @@ impl Food {
     pub fn new() -> Food {
         Food {
             name: "".into_string(),
-            size: 100, 
+            size: 100,
             weight_type: G,
             protein: 0f32,
             ch: 0f32,

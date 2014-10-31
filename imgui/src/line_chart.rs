@@ -5,13 +5,12 @@ extern crate sdl2_ttf;
 
 use sdl2::pixels::RGB;
 use sdl2::rect::Rect;
-
-use imgui;
+use base;
 
 pub struct LineChartBuilder<'a> {
 	x: i32,
-	y: i32, 
-	w: i32, 
+	y: i32,
+	w: i32,
 	h: i32,
 	label: &'a str,
 	maybe_data: Option<&'a [i32]>,
@@ -19,11 +18,15 @@ pub struct LineChartBuilder<'a> {
 	bottom_color: sdl2::pixels::Color,
 	surface_color: Option<sdl2::pixels::Color>,
 
-	layer: &'a mut imgui::Layer
+	layer: &'a mut base::Layer
+}
+
+pub fn line_chart<'a>(layer: &'a mut base::Layer, label: &'a str, x: i32, y: i32, w: i32, h: i32) -> LineChartBuilder<'a> {
+	LineChartBuilder::new(layer, label, x, y, w, h)
 }
 
 impl<'a> LineChartBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, label: &'a str, x: i32, y: i32, w: i32, h: i32) -> LineChartBuilder<'a> {
+	pub fn new(layer: &'a mut base::Layer, label: &'a str, x: i32, y: i32, w: i32, h: i32) -> LineChartBuilder<'a> {
 		LineChartBuilder {
 			x: x,
 			y: y,
@@ -43,7 +46,7 @@ impl<'a> LineChartBuilder<'a> {
 	pub fn top_color(mut self, data: sdl2::pixels::Color) -> LineChartBuilder<'a> { self.top_color = data; self}
 	pub fn bottom_color(mut self, data: sdl2::pixels::Color) -> LineChartBuilder<'a> { self.bottom_color = data; self}
 	pub fn surface_color(mut self, data: Option<sdl2::pixels::Color>) -> LineChartBuilder<'a> { self.surface_color = data; self}
-	
+
 
 	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) {
 		draw(self, renderer);
@@ -66,7 +69,7 @@ pub fn draw(builder: &mut LineChartBuilder, renderer: &sdl2::render::Renderer) {
 	let horizontal_pixels_between_values = builder.w / ::std::cmp::min(builder.w, data.len() as i32) ;
 	let scaled_data = create_scaled_chart_data(data.as_slice(), horizontal_pixels_between_values);
 	draw_horizontal_lines(builder, renderer, scaled_data.as_slice());
-	
+
 	//
 	if builder.surface_color.is_some() {
 		let mut points = vec![];

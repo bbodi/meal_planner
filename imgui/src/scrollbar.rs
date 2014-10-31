@@ -2,29 +2,28 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 use sdl2::pixels::RGB;
-
-use imgui;
-use imgui::SizeInCharacters;
+use base;
+use base::SizeInCharacters;
 
 pub struct ScrollBarBuilder<'a> {
 	disabled: bool,
 	x: SizeInCharacters,
-	y: SizeInCharacters, 
+	y: SizeInCharacters,
 	w: SizeInCharacters,
 	min_value: f32,
 	max_value: f32,
 	value: &'a mut f32,
-	layer: &'a mut imgui::Layer,
+	layer: &'a mut base::Layer,
 	color: sdl2::pixels::Color,
 }
 
 
-pub fn scrollbar<'a>( layer: &'a mut imgui::Layer, w: SizeInCharacters, min_value: f32, max_value: f32, value: &'a mut f32) -> ScrollBarBuilder<'a> {
+pub fn scrollbar<'a>( layer: &'a mut base::Layer, w: SizeInCharacters, min_value: f32, max_value: f32, value: &'a mut f32) -> ScrollBarBuilder<'a> {
 	ScrollBarBuilder::new(layer, w, min_value, max_value, value)
 }
 
 impl<'a> ScrollBarBuilder<'a> {
-	pub fn new(layer: &'a mut imgui::Layer, w: SizeInCharacters, min_value: f32, max_value: f32, value: &'a mut f32) -> ScrollBarBuilder<'a> {
+	pub fn new(layer: &'a mut base::Layer, w: SizeInCharacters, min_value: f32, max_value: f32, value: &'a mut f32) -> ScrollBarBuilder<'a> {
 		ScrollBarBuilder {
 			disabled: false,
 			x: layer.last_x,
@@ -61,7 +60,7 @@ impl<'a> ScrollBarBuilder<'a> {
 		self.y = self.layer.last_y + y;
 		self
 	}
-	
+
 
 	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
 		draw(self, renderer)
@@ -87,7 +86,7 @@ pub fn draw(builder: &mut ScrollBarBuilder, renderer: &sdl2::render::Renderer) -
 	builder.layer.last_w = SizeInCharacters(all_w / char_w);
 	builder.layer.last_h = SizeInCharacters(2);
 
-	
+
 	let value_range = builder.max_value - builder.min_value;
 	let step = value_range / wc as f32;
 	let place_count = (builder.max_value - builder.min_value) / step ;
@@ -98,7 +97,7 @@ pub fn draw(builder: &mut ScrollBarBuilder, renderer: &sdl2::render::Renderer) -
 
 	builder.layer.draw_text(x, y, renderer, min_label.as_slice(), RGB(151, 151, 151));
 	let range_start_x = min_label_w+char_w + x;
-	imgui::fill_rect(renderer, range_start_x, y, w, char_h, builder.color);
+	base::fill_rect(renderer, range_start_x, y, w, char_h, builder.color);
 
 	let pointer_x = min_label_w+char_w + x + char_w*value_place;
 
@@ -106,7 +105,7 @@ pub fn draw(builder: &mut ScrollBarBuilder, renderer: &sdl2::render::Renderer) -
 	if hover {
 		builder.layer.draw_rect_gradient(renderer, pointer_x, y-char_h/2, char_w, char_h*2, RGB(114, 114, 114), RGB(68, 68, 68));
 		let str = format!("{:.1f}", *builder.value);
-		imgui::fill_rect(renderer, pointer_x, y-char_h, str.len() as i32 * char_w, char_h, RGB(51, 51, 51));
+		base::fill_rect(renderer, pointer_x, y-char_h, str.len() as i32 * char_w, char_h, RGB(51, 51, 51));
 		builder.layer.draw_text(pointer_x, y-char_h, renderer, str.as_slice(), RGB(221, 221, 221));
 	} else {
 		builder.layer.draw_rect_gradient(renderer, pointer_x, y-char_h/2, char_w, char_h*2, RGB(82, 85, 90), RGB(47, 50, 53));
