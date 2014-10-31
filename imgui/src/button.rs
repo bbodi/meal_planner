@@ -98,13 +98,13 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
 	
 	if button_down {
-		imgui::draw_rect_gradient(renderer, x, y, w, h, RGB(48, 48, 48), RGB(83, 83, 83));
+		builder.layer.draw_rect_gradient(renderer, x, y, w, h, RGB(48, 48, 48), RGB(83, 83, 83));
 	} else if hover {
-		imgui::draw_rect_gradient(renderer, x, y, w, h, RGB(114, 114, 114), RGB(68, 68, 68));
+		builder.layer.draw_rect_gradient(renderer, x, y, w, h, RGB(114, 114, 114), RGB(68, 68, 68));
 	} else {
-		imgui::draw_rect_gradient(renderer, x, y, w, h, RGB(82, 85, 90), RGB(47, 50, 53));
+		builder.layer.draw_rect_gradient(renderer, x, y, w, h, RGB(82, 85, 90), RGB(47, 50, 53));
 	}
 	imgui::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
-	imgui::draw_text(border_width+text_border_dist+x, y+border_width, renderer, &builder.layer.font, builder.label, RGB(151, 151, 151));
+	builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, renderer, builder.label, RGB(151, 151, 151));
 	return (released && hover) || (button_down && hover && builder.allow_multi_click);
 }

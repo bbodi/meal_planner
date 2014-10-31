@@ -1,17 +1,17 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-use imgui;
-use imgui::SizeInCharacters;
+use imgui::imgui;
+use imgui::imgui::SizeInCharacters;
 
 use sdl2::pixels::RGB;
 
-use scrollbar::scrollbar;
-use label::label;
-use textfield::textfield_f32;
-use textfield::textfield_i32;
-use panel::panel;
-use header::header;
+use imgui::scrollbar::scrollbar;
+use imgui::label::label;
+use imgui::textfield::textfield_f32;
+use imgui::textfield::textfield_i32;
+use imgui::panel::panel;
+use imgui::header::header;
 
 enum WeightType {
 	Kg, Lb,
@@ -86,7 +86,7 @@ impl ActivityModifier {
 	}
 }
 
-pub struct KCalWindow {
+pub struct KCalWindow<'a> {
 	layer: imgui::Layer,
 
 	weight: f32,
@@ -108,7 +108,7 @@ pub struct KCalWindow {
 	target_calories: f32,
 }
 
-impl KCalWindow {
+impl<'a> KCalWindow<'a> {
 
 	fn set_target_calories(&mut self, tc: f32) {
 		self.target_calories = tc;
@@ -148,7 +148,7 @@ impl KCalWindow {
 		self.bmr_str.push_str(("BMR: ".into_string() + (self.bmr as i32).to_string() + " kCal").as_slice());
 	}
 
-	pub fn new() -> KCalWindow {
+	pub fn new() -> KCalWindow<'a> {
 		KCalWindow {
 			layer: imgui::Layer::new(),
 			weight: 0f32,
@@ -171,7 +171,7 @@ impl KCalWindow {
 		}
 	}
 
-	pub fn do_logic(&mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event) {
+	pub fn do_logic(&'a mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event) {
 		self.layer.handle_event(event);
 		header(&mut self.layer, "BMR", SizeInCharacters(70), SizeInCharacters(25))
 			.x(SizeInCharacters(6))

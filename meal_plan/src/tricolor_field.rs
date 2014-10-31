@@ -3,9 +3,8 @@ extern crate sdl2_ttf;
 
 use sdl2::pixels::RGB;
 use sdl2::rect::Rect;
-use sdl2::rect::Point;
 
-use textfield;
+use imgui::textfield;
 
 pub struct TriColorFieldBuilder<'a> {
 	textfield: textfield::TextFieldBuilder<'a>,
@@ -62,7 +61,7 @@ pub fn draw(builder: &mut TriColorFieldBuilder, renderer: &sdl2::render::Rendere
 
 	fill_tri_rect(renderer, label_width+x, y, w, h, builder.values, hover || active);
 	
-	textfield::draw_text(&builder.textfield, renderer);
+	textfield::draw_text(&mut builder.textfield, renderer);
 	textfield::draw_border(&builder.textfield, renderer);
 	textfield::handle_logic(&mut builder.textfield)
 }

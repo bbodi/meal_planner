@@ -4,7 +4,7 @@ name = "meal_planner"
 version = "0.0.1"
 authors = ["bbodi <bbodi@gmail.com>"]
 
-[dependencies.rust_imgui]
+[dependencies.imgui]
 path = "../imgui/"
 
 

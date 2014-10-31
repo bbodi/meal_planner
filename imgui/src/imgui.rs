@@ -3,6 +3,7 @@ extern crate sdl2_ttf;
 
 use sdl2::rect::Rect;
 use std::collections::HashMap;
+use std::collections::LruCache;
 
 use line_chart;
 use textfield;
@@ -113,6 +114,11 @@ pub struct Layer {
 	pub last_y: SizeInCharacters,
 	pub last_w: SizeInCharacters, 
 	pub last_h: SizeInCharacters,
+
+	pub text_cache: LruCache<(u8, u8, u8, bool, u64), sdl2::render::Texture>,
+
+	// w, h, src_color, dst_color
+	pub gradient_rect_cache: LruCache<(u32, u32, u8, u8, u8, u8, u8, u8), sdl2::render::Texture>,
 }
 
 impl Layer {
@@ -121,19 +127,19 @@ impl Layer {
 		//DejaVuSansMono, Consolas
 		let font = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono.ttf"), 16) {
         	Ok(f) => f,
-        	Err(e) => fail!(e),	
+        	Err(e) => panic!(e),	
 	    };
 	    let (char_w, char_h) = match font.size_of_str("_") {
 			Ok((w, h)) => (w, h),
-			Err(e) => fail!(e),
+			Err(e) => panic!(e),
 		};
 		let bfont = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono-Bold.ttf"), 16) {
         	Ok(f) => f,
-        	Err(e) => fail!(e),	
+        	Err(e) => panic!(e),	
 	    };
 	    let (bchar_w, bchar_h) = match bfont.size_of_str("_") {
 			Ok((w, h)) => (w, h),
-			Err(e) => fail!(e),
+			Err(e) => panic!(e),
 		};
 	    Layer {
 	    	font: font,
@@ -158,6 +164,8 @@ impl Layer {
 	    	last_y: SizeInCharacters(0),
 	    	last_w: SizeInCharacters(0),
 	    	last_h: SizeInCharacters(0),
+	    	text_cache: LruCache::new(1000),
+	    	gradient_rect_cache: LruCache::new(1000),
 	    }
 	}
 
@@ -168,7 +176,7 @@ impl Layer {
 	pub fn get_textfield_state(&self, id: i32) -> &textfield::State {
 		match self.textfield_datas.find(&id)  {
 			Some(d) => d,
-			None => fail!(),
+			None => panic!(),
 		}
 	}
 
@@ -314,6 +322,61 @@ impl Layer {
 		let y = self.last_y;
 		dropdown::DropdownBuilder::new(self, labels, value, x, y)
 	}
+
+	pub fn draw_bold_text(&mut self, x: i32, y: i32, renderer: &sdl2::render::Renderer, text: &str, color: sdl2::pixels::Color) {
+		self.do_draw_text(x, y, renderer, true, text, color);
+	}
+
+	pub fn draw_text(&mut self, x: i32, y: i32, renderer: &sdl2::render::Renderer, text: &str, color: sdl2::pixels::Color) {
+		self.do_draw_text(x, y, renderer, false, text, color);
+	}
+
+	fn do_draw_text(&mut self, x: i32, y: i32, renderer: &sdl2::render::Renderer, bold: bool, text: &str, color: sdl2::pixels::Color) {
+		let (text_w, text_h) = match self.font.size_of_str(text) {
+			Ok((w, h)) => (w, h),
+			Err(e) => panic!(e),
+		};
+		let (r, g, b) = color.get_rgb();
+		let key = (r, g, b, bold, ::std::hash::hash(&text.into_string()));
+		let has_cached_texture = self.text_cache.get(&key).is_some();
+		if has_cached_texture {
+			let cached_texture = self.text_cache.get(&key).unwrap();
+			let _ = renderer.copy(cached_texture, None, Some(Rect::new(x, y, text_w as i32, text_h as i32)));	
+		} else {
+			println!("MISS: {}", text);
+			let created_texture = self.create_text_texture(renderer, bold, text, color);	
+			let _ = renderer.copy(&created_texture, None, Some(Rect::new(x, y, text_w as i32, text_h as i32)));	
+			self.text_cache.put(key, created_texture);
+		}		
+	}
+
+	fn create_text_texture(&self, renderer: &sdl2::render::Renderer, bold: bool, text: &str, color: sdl2::pixels::Color) -> sdl2::render::Texture {
+		let font = match bold {true => &self.bfont, false => &self.font};
+	    let surface = match font.render_str_solid(text, color) {
+	        Ok(s) => s,
+	        Err(e) => panic!(e),
+	    };
+		match renderer.create_texture_from_surface(&surface) {
+	        Ok(t) => t,
+	        Err(e) => panic!(e),
+	   	}
+	}
+
+	pub fn draw_rect_gradient(&mut self, renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, start_color: sdl2::pixels::Color, end_color: sdl2::pixels::Color) {
+		let (sr, sg, sb) = start_color.get_rgb();
+		let (er, eg, eb) = end_color.get_rgb();
+		let key = (w as u32, h as u32, sr, sg, sb, er, eg, eb);
+		let has_cached_texture = self.gradient_rect_cache.get(&key).is_some();
+		if has_cached_texture {
+			let cached_texture = self.gradient_rect_cache.get(&key).unwrap();
+			let _ = renderer.copy(cached_texture, None, Some(Rect::new(x, y, w, h)));	
+		} else {
+			println!("MISS GRADIENT");
+			let created_texture = create_gradient_texture(renderer, w, h, start_color, end_color);	
+			let _ = renderer.copy(&created_texture, None, Some(Rect::new(x, y, w, h)));	
+			self.gradient_rect_cache.put(key, created_texture);
+		}	
+	}
 }
 
 pub fn draw_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, border: i32, color: sdl2::pixels::Color) {
@@ -328,7 +391,12 @@ pub fn fill_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i
 	let _ = renderer.fill_rect(&Rect::new(x, y, w, h));
 }
 
-pub fn draw_rect_gradient(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, start_color: sdl2::pixels::Color, end_color: sdl2::pixels::Color) {
+fn create_gradient_texture(renderer: &sdl2::render::Renderer, w: i32, h: i32, start_color: sdl2::pixels::Color, end_color: sdl2::pixels::Color) -> sdl2::render::Texture {
+	let texture =  match renderer.create_texture(sdl2::pixels::RGBA8888, sdl2::render::AccessTarget, w as int, h as int) {
+		Ok(t) => t,
+		Err(e) => panic!(e),
+	};
+	renderer.set_render_target(Some(&texture));
 	for i in range(0, h) {
 		let p = i as f32 / h as f32;
 		let sp = 1f32 - p;
@@ -337,32 +405,13 @@ pub fn draw_rect_gradient(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: 
 		let r = start_r as f32 * sp + end_r as f32 * p;
 		let g = start_g as f32 * sp + end_g as f32 * p;
 		let b = start_b as f32 * sp + end_b as f32 * p;
-		let start = sdl2::rect::Point::new(x, y+i);
-		let end = sdl2::rect::Point::new(x+w, y+i);
-		let _ = renderer.set_draw_color(sdl2::pixels::RGBA(r as u8, g as u8, b as u8, 150));
+		let start = sdl2::rect::Point::new(0, i);
+		let end = sdl2::rect::Point::new(w, i);
+		let _ = renderer.set_draw_color(sdl2::pixels::RGB(r as u8, g as u8, b as u8));
 		let _ = renderer.draw_line(start, end);
 	}
-}
-
-pub fn draw_text(x: i32, y: i32, renderer: &sdl2::render::Renderer, font: &sdl2_ttf::Font, text: &str, color: sdl2::pixels::Color) {
-	let (text_w, text_h) = match font.size_of_str(text) {
-		Ok((w, h)) => (w, h),
-		Err(e) => fail!(e),
-	};
-	let texure = create_text_texture(renderer, font, text, color);
-	let _ = renderer.copy(&texure, None, Some(Rect::new(x, y, text_w as i32, text_h as i32)));
-}
-
-pub fn create_text_texture(renderer: &sdl2::render::Renderer, font: &sdl2_ttf::Font, text: &str, color: sdl2::pixels::Color) -> sdl2::render::Texture {
-	// render a surface, and convert it to a texture bound to the renderer
-    let surface = match font.render_str_blended(text, color) {
-        Ok(s) => s,
-        Err(e) => fail!(e),
-    };
-	match renderer.create_texture_from_surface(&surface) {
-        Ok(t) => t,
-        Err(e) => fail!(e),
-   	}
+	renderer.set_render_target(None);
+	texture
 }
 
 pub fn center_text(text: &str, char_w: i32, border_w: i32) -> i32 {

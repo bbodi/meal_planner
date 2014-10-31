@@ -1,6 +1,3 @@
-use std::io::BufferedWriter;
-use std::io::File;
-use std::io::fs::PathExtensions;
 
 #[deriving(Decodable, Encodable)]
 pub enum WeightType {
@@ -68,6 +65,5 @@ impl Dao {
         for food in foods.iter() {
             enc.encode(food);
         }
-        enc.flush();
     }
 }

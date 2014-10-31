@@ -1,7 +1,7 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-extern crate rust_imgui;
+extern crate imgui;
 extern crate csv;
 extern crate serialize;
 
@@ -9,24 +9,15 @@ extern crate serialize;
 use sdl2::pixels::RGB;
 use sdl2::pixels::RGBA;
 
-use label::label;
-use imgui::SizeInCharacters;
+use imgui::label::label;
+use imgui::imgui::SizeInCharacters;
 
 const SCREEN_WIDHT: u32 = 1024;
 const SCREEN_HEIGHT: u32 = 768;
 
 
-/*mod imgui;
 mod db;
-mod button;
-mod textfield;
-mod line_chart;
-mod checkbox;
-mod dropdown;
-mod header;
-mod scrollbar;
-mod label;
-mod panel;*/
+
 mod tricolor_field;
 
 mod kcal_window;
@@ -39,14 +30,14 @@ fn main() {
 
     let window = match sdl2::video::Window::new("rust-sdl2 demo: Video", sdl2::video::PosCentered, sdl2::video::PosCentered, SCREEN_WIDHT as int, SCREEN_HEIGHT as int, sdl2::video::SHOWN | sdl2::video::RESIZABLE) {
         Ok(window) => window,
-        Err(err) => fail!(format!("failed to create window: {}", err))
+        Err(err) => panic!(format!("paniced to create window: {}", err))
     };
     //window.set_size(1280, 900);
     window.set_position(sdl2::video::PosCentered, sdl2::video::PosCentered);
 
     let renderer = match sdl2::render::Renderer::from_window(window, sdl2::render::DriverAuto, sdl2::render::ACCELERATED) {
         Ok(renderer) => renderer,
-        Err(err) => fail!(format!("failed to create renderer: {}", err))
+        Err(err) => panic!(format!("paniced to create renderer: {}", err))
     };
     let _ = renderer.set_logical_size(SCREEN_WIDHT as int, SCREEN_HEIGHT as int);
     let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 255));
@@ -54,15 +45,15 @@ fn main() {
 
     let font = match sdl2_ttf::Font::from_file(&Path::new("DejaVuSansMono.ttf"), 128) {
         Ok(f) => f,
-        Err(e) => fail!(e),
+        Err(e) => panic!(e),
     };
     let surface = match font.render_str_blended("Hello Rust!", sdl2::pixels::RGBA(255, 0, 0, 255)) {
         Ok(s) => s,
-        Err(e) => fail!(e),
+        Err(e) => panic!(e),
     };
     let texture = match renderer.create_texture_from_surface(&surface) {
         Ok(t) => t,
-        Err(e) => fail!(e),
+        Err(e) => panic!(e),
     };
     let _ = renderer.copy(&texture, None, None);
 
@@ -92,7 +83,7 @@ fn main() {
     let mut dropdown_value: i32 = 0;*/
     let mut dao = db::Dao::new();
     let mut foods = dao.load_foods();
-    let mut layer = imgui::Layer::new();
+    let mut layer = imgui::imgui::Layer::new();
     let mut kcal_win = kcal_window::KCalWindow::new();
     let mut kcal_table = kcal_table::KCalTable::new();
     'main : loop {
@@ -108,16 +99,17 @@ fn main() {
         if false {
             kcal_win.do_logic(&renderer, &event);
         }
+
         if kcal_table.do_logic(&renderer, &event, &mut foods) {
             dao.persist_foods(foods.as_slice());
         }
 
         layer.handle_event(&event);
         let mouse_str = format!("FPS: {}, {}, {}", fps, layer.mouse_x() / layer.char_w, layer.mouse_y()/ layer.char_h);
-        label(&mut layer, mouse_str.as_slice())
-            .x(SizeInCharacters(0)).y(SizeInCharacters(0)).draw(&renderer);
-        
-
+        match renderer.get_parent() {
+            &sdl2::render::WindowParent(ref w) => w.set_title(mouse_str.as_slice()),
+            _ => {},
+        }; 
 
         /*layer.handle_event(event);
         if layer.button("Add data", 420, 20).draw(&renderer) {

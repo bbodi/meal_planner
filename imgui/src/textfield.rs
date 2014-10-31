@@ -132,7 +132,7 @@ impl<'a> TextFieldBuilder<'a> {
 }
 
 
-pub fn draw_bg(builder: &TextFieldBuilder, renderer: &sdl2::render::Renderer) {
+pub fn draw_bg(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let label_width = builder.label.len() as i32  * char_w;	
@@ -146,13 +146,13 @@ pub fn draw_bg(builder: &TextFieldBuilder, renderer: &sdl2::render::Renderer) {
 	let clicked_out = builder.layer.is_mouse_down() && !hover && was_active;
 	let active = was_active && !clicked_out;
 	if hover || active {
-		imgui::draw_rect_gradient(renderer, label_width+x, y, w, h, RGB(51, 51, 51), RGB(61, 61, 61));
+		builder.layer.draw_rect_gradient(renderer, label_width+x, y, w, h, RGB(51, 51, 51), RGB(61, 61, 61));
 	} else {
-		imgui::draw_rect_gradient(renderer, label_width+x, y, w, h, RGB(51, 51, 51), RGB(51, 51, 51));
+		builder.layer.draw_rect_gradient(renderer, label_width+x, y, w, h, RGB(51, 51, 51), RGB(51, 51, 51));
 	}
 }
 
-pub fn draw_text(builder: &TextFieldBuilder, renderer: &sdl2::render::Renderer) {
+pub fn draw_text(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let label_width = builder.label.len() as i32  * char_w;	
@@ -170,21 +170,22 @@ pub fn draw_text(builder: &TextFieldBuilder, renderer: &sdl2::render::Renderer) 
 	let output_value = builder.layer.get_textfield_state(builder.value.get_id()).value.clone();
 	if output_value.len() > 0 {
 		if builder.bold {
-			imgui::draw_text(label_width+x+border_width, y, renderer, &builder.layer.bfont, output_value.as_slice(), builder.value_color);
+			builder.layer.draw_bold_text(label_width+x+border_width, y, renderer, output_value.as_slice(), builder.value_color);
 		} else {
-			imgui::draw_text(label_width+x+border_width, y, renderer, &builder.layer.font, output_value.as_slice(), builder.value_color);
+			builder.layer.draw_text(label_width+x+border_width, y, renderer, output_value.as_slice(), builder.value_color);
 		}
 	} else if builder.default_text != "" && !active {
-		imgui::draw_text(label_width+x+border_width, y, renderer, &builder.layer.font, builder.default_text.as_slice(), RGB(113, 113, 113));
+		builder.layer.draw_text(label_width+x+border_width, y, renderer, builder.default_text.as_slice(), RGB(113, 113, 113));
 	}
 
 	if label_width > 0 {
-		imgui::draw_text(x+border_width, y, renderer, &builder.layer.font, builder.label.as_slice(), builder.label_color);
+		builder.layer.draw_text(x+border_width, y, renderer, builder.label.as_slice(), builder.label_color);
 	}
 	if active {
-		let state = builder.layer.get_textfield_state(builder.value.get_id());
-		if state.cursor_visible {
-			imgui::draw_text(label_width+x + char_w as i32 *state.cursor_pos, y, renderer, &builder.layer.font, "_", RGB(204, 204, 204));
+		let cursor_pos = builder.layer.get_textfield_state(builder.value.get_id()).cursor_pos;
+		let cursor_visible = builder.layer.get_textfield_state(builder.value.get_id()).cursor_visible;
+		if cursor_visible {
+			builder.layer.draw_text(label_width+x + char_w as i32 * cursor_pos, y, renderer, "_", RGB(204, 204, 204));
 		}
 	}
 }

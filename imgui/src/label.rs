@@ -66,13 +66,11 @@ pub fn draw(builder: &mut LabelBuilder, renderer: &sdl2::render::Renderer) {
 	builder.layer.last_y = builder.y;
 	builder.layer.last_w = SizeInCharacters(builder.label.len() as i32);
 	builder.layer.last_h = SizeInCharacters(1);
-	
-
 
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
 
 
 	if builder.label.len() > 0 {
-		imgui::draw_text(x, y, renderer, &builder.layer.font, builder.label, RGB(221, 221, 221));
+		builder.layer.draw_text(x, y, renderer, builder.label, RGB(221, 221, 221));
 	}
 }

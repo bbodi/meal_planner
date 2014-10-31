@@ -102,9 +102,8 @@ pub fn draw(builder: &mut LineChartBuilder, renderer: &sdl2::render::Renderer) {
 			let w = 26i32;
 			let h = 15i32;
 			let v = scaled_data[index as uint];
-			imgui::draw_rect_gradient(renderer, x, y, w, h, RGB(174, 67, 75), RGB(166, 38, 51));
-			let texure = imgui::create_text_texture(renderer, &builder.layer.font, format!("{}", v).as_slice(), RGB(255, 255, 255));
-			let _ = renderer.copy(&texure, None, Some(Rect::new(x as i32, y as i32, w as i32, h as i32)));
+			builder.layer.draw_rect_gradient(renderer, x, y, w, h, RGB(174, 67, 75), RGB(166, 38, 51));
+			builder.layer.draw_text(x, y, renderer, format!("{}", v).as_slice(), RGB(255, 255, 255));
 		}
 	}
 }

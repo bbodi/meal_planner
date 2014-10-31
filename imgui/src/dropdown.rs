@@ -120,16 +120,16 @@ pub fn draw(builder: &mut DropdownBuilder, renderer: &sdl2::render::Renderer) ->
 	};
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 0));
 	let _ = renderer.draw_rect(&Rect::new(x, y, label_w, h));
-	imgui::draw_rect_gradient(renderer, x+1, y+1, label_w-2, h-2, top_color, bottom_color);
+	builder.layer.draw_rect_gradient(renderer, x+1, y+1, label_w-2, h-2, top_color, bottom_color);
 	if builder.labels[builder.value.get()].len() > 0 {
-		imgui::draw_text(x+1, y+1, renderer, &builder.layer.font, builder.labels[builder.value.get()], RGB(221, 221, 221));
+		builder.layer.draw_text(x+1, y+1, renderer, builder.labels[builder.value.get()], RGB(221, 221, 221));
 	}
 
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 0));
 	let _ = renderer.draw_rect(&Rect::new(x+label_w, y, down_arrow_w, h));
-	imgui::draw_rect_gradient(renderer, x+label_w+1, y+1, down_arrow_w-2, h-2, top_color, bottom_color);
+	builder.layer.draw_rect_gradient(renderer, x+label_w+1, y+1, down_arrow_w-2, h-2, top_color, bottom_color);
 	let arrow_char = if active {"▲"} else {"▼"};
-	imgui::draw_text(x + label_w+char_w/3, y, renderer, &builder.layer.font, arrow_char, RGB(221, 221, 221));
+	builder.layer.draw_text(x + label_w+char_w/3, y, renderer, arrow_char, RGB(221, 221, 221));
 
 	if active {
 		for (i, label) in builder.labels.iter().enumerate() {
@@ -146,7 +146,7 @@ pub fn draw(builder: &mut DropdownBuilder, renderer: &sdl2::render::Renderer) ->
 			if label.len() == 0 {
 				continue;
 			}
-			imgui::draw_text(x+1, y +1+ (1+i)*char_h, renderer, &builder.layer.font, *label, RGB(198, 198, 198));
+			builder.layer.draw_text(x+1, y +1+ (1+i)*char_h, renderer, *label, RGB(198, 198, 198));
 		}
 	}
 	modified

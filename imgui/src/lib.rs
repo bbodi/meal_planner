@@ -1,4 +1,4 @@
-#![crate_name = "rust_imgui"]
+#![crate_name = "imgui"]
 #![crate_type = "lib"]
 
 extern crate sdl2;

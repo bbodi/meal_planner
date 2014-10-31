@@ -1,12 +1,12 @@
 [package]
 
-name = "rust_imgui"
+name = "imgui"
 version = "0.0.1"
 authors = ["bbodi <bbodi@gmail.com>"]
 
 [lib]
 
-name       = "rust_imgui"
+name       = "imgui"
 
 [dependencies.sdl2]
 # git = "https://github.com/AngryLawyer/rust-sdl2.git"

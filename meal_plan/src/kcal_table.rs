@@ -1,18 +1,18 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
-use imgui;
-use imgui::SizeInCharacters;
+use imgui::imgui;
+use imgui::imgui::SizeInCharacters;
 
 use sdl2::pixels::RGB;
 
-use label::label;
-use textfield::textfield_f32;
-use textfield::textfield_i32;
-use textfield::textfield_str;
+use imgui::label::label;
+use imgui::textfield::textfield_f32;
+use imgui::textfield::textfield_i32;
+use imgui::textfield::textfield_str;
 use tricolor_field::tricolor_field_str;
-use button::button;
-use header::header;
+use imgui::button::button;
+use imgui::header::header;
 use db;
 
 
@@ -30,21 +30,50 @@ impl imgui::IndexValue for db::WeightType {
 }
 
 
-pub struct KCalTable {
-	layer: imgui::Layer,
+pub struct KCalTable<'a> {
+	pub layer: imgui::Layer,
 }
 
-impl KCalTable {
+impl<'a> KCalTable<'a> {
 
-	pub fn new() -> KCalTable {
+	pub fn new() -> KCalTable<'a> {
 		KCalTable {
 			layer: imgui::Layer::new(),
 		}
 	}
 
+	pub fn draw_rects(&self, renderer: &sdl2::render::Renderer) {
+		for x in range(0, 20) {
+			for y in range(0, 20) {
+				imgui::fill_rect(renderer, x * 42, y * 22, 40, 10, RGB(51, 51, 51));
+			}
+		}
+	}
+
+	pub fn draw_gradient_rects(&mut self, renderer: &sdl2::render::Renderer) {
+		for x in range(0, 20) {
+			for y in range(0, 20) {
+				self.layer.draw_rect_gradient(renderer, x * 42, y * 22, 40, 10, RGB(114, 114, 114), RGB(68, 68, 68));
+			}
+		}
+	}
+
+	pub fn draw_texts(&mut self, renderer: &sdl2::render::Renderer) {
+		for x in range(0, 20) {
+			for y in range(0, 20) {
+				self.layer.draw_text(x * 42, 20 + y * 22, renderer, "bali", RGB(221, 221, 221));
+			}
+		}
+	}
+
 	// 1 oldalon 16
-	pub fn do_logic(&mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event, foods: &mut Vec<db::Food>) -> bool {
+	pub fn do_logic(&'a mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event, foods: &'a mut Vec<db::Food>) -> bool {
 		self.layer.handle_event(event);
+		//self.draw_gradient_rects(renderer);
+		//self.draw_rects(renderer);
+		//self.draw_texts(renderer);
+
+		//return false;
 
 		header(&mut self.layer, "Foods", SizeInCharacters(53), SizeInCharacters(37))
 			.x(SizeInCharacters(1))
