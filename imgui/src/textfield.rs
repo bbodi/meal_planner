@@ -7,6 +7,11 @@ use sdl2::pixels::RGB;
 use base;
 use base::SizeInCharacters;
 
+pub enum TextFieldResult {
+	Selected,
+	Changed,
+}
+
 pub struct TextFieldBuilder<'a> {
 	pub disabled: bool,
 	pub x: SizeInCharacters,
@@ -119,13 +124,18 @@ impl<'a> TextFieldBuilder<'a> {
 		self
 	}
 
+	pub fn up(mut self, y: SizeInCharacters) -> TextFieldBuilder<'a> {
+		self.y = self.layer.last_y - y;
+		self
+	}
+
 	pub fn inner_down(mut self, y: SizeInCharacters) -> TextFieldBuilder<'a> {
 		self.y = self.layer.last_y + y;
 		self
 	}
 
 
-	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
+	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> Option<TextFieldResult> {
 		draw(self, renderer)
 	}
 }
@@ -202,7 +212,7 @@ pub fn draw_border(builder: &TextFieldBuilder, renderer: &sdl2::render::Renderer
 	base::draw_rect(renderer, label_width+x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 }
 
-pub fn handle_logic(builder: &mut TextFieldBuilder) -> bool {
+pub fn handle_logic(builder: &mut TextFieldBuilder) -> Option<TextFieldResult> {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);
@@ -290,33 +300,33 @@ pub fn handle_logic(builder: &mut TextFieldBuilder) -> bool {
 		}
 	}
 	if !edited {
-		return false;
+		return if just_clicked { Some(Selected) } else {None};
 	}
 	match builder.value {
 		Text(ref mut ptr) => {
 			ptr.clear();
 			ptr.push_str(output_value.as_slice());
-			return true;
+			return Some(Changed);
 		},
 		I32(ref mut ptr) => {
 			let maybe = from_str::<i32>(output_value.as_slice());
 			if maybe.is_some() {
 				**ptr = maybe.unwrap();
-				return true;
+				return Some(Changed);
 			}
 		},
 		F32(ref mut ptr) => {
 			let maybe = from_str::<f32>(output_value.as_slice());
 			if maybe.is_some() {
 				**ptr = maybe.unwrap();
-				return true;
+				return Some(Changed);
 			}
 		}
 	}
-	return false;
+	return None;
 }
 
-pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -> bool {
+pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -> Option<TextFieldResult> {
 	draw_bg(builder, renderer);
 
 	draw_text(builder, renderer);

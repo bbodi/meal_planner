@@ -10,6 +10,8 @@ pub struct LabelBuilder<'a> {
 	pub y: SizeInCharacters,
 	pub label: &'a str,
 	pub layer: &'a mut base::Layer,
+	bold: bool,
+	color: sdl2::pixels::Color,
 }
 
 pub fn label<'a>(layer: &'a mut base::Layer, label: &'a str) -> LabelBuilder<'a> {
@@ -24,10 +26,14 @@ impl<'a> LabelBuilder<'a> {
 			y: layer.last_y,
 			layer: layer,
 			label: label,
+			bold: false,
+			color: RGB(221, 221, 221),
 		}
 	}
 
 	pub fn label(mut self, v: &'a str) -> LabelBuilder<'a> {self.label = v; self}
+	pub fn color(mut self, v: sdl2::pixels::Color) -> LabelBuilder<'a> {self.color = v; self}
+	pub fn bold(mut self, v: bool) -> LabelBuilder<'a> {self.bold = v; self}
 	pub fn x(mut self, v: SizeInCharacters) -> LabelBuilder<'a> {self.x = v; self}
 	pub fn y(mut self, v: SizeInCharacters) -> LabelBuilder<'a> {self.y = v; self}
 	pub fn right(mut self, x: SizeInCharacters) -> LabelBuilder<'a> {
@@ -42,6 +48,11 @@ impl<'a> LabelBuilder<'a> {
 
 	pub fn down(mut self, y: SizeInCharacters) -> LabelBuilder<'a> {
 		self.y = self.layer.last_y + self.layer.last_h + y;
+		self
+	}
+
+	pub fn up(mut self, y: SizeInCharacters) -> LabelBuilder<'a> {
+		self.y = self.layer.last_y - y;
 		self
 	}
 
@@ -66,10 +77,12 @@ pub fn draw(builder: &mut LabelBuilder, renderer: &sdl2::render::Renderer) {
 	builder.layer.last_w = SizeInCharacters(builder.label.len() as i32);
 	builder.layer.last_h = SizeInCharacters(1);
 
-	let _ = renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
-
 
 	if builder.label.len() > 0 {
-		builder.layer.draw_text(x, y, renderer, builder.label, RGB(221, 221, 221));
+		if builder.bold {
+			builder.layer.draw_bold_text(x, y, renderer, builder.label, builder.color);
+		} else {
+			builder.layer.draw_text(x, y, renderer, builder.label, builder.color);
+		}
 	}
 }

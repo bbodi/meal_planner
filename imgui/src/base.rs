@@ -1,7 +1,11 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
+use std::cmp::max;
+
 use sdl2::rect::Rect;
+use sdl2::rect::Point;
+use sdl2::pixels::RGB;
 use std::collections::HashMap;
 use std::collections::LruCache;
 
@@ -78,6 +82,7 @@ pub struct ControlKeys {
 	pub end: Key,
 	pub enter: Key,
 	pub tab: Key,
+	pub ctrl: Key,
 }
 
 impl ControlKeys {
@@ -93,6 +98,7 @@ impl ControlKeys {
 			end: Key::new(),
 			enter: Key::new(),
 			tab: Key::new(),
+			ctrl: Key::new(),
 		}
 	}
 }
@@ -102,6 +108,7 @@ pub struct Layer {
 	pub bfont: sdl2_ttf::Font,
 	active_id: i32,
 	hot_id: i32,
+	last_active_id: i32,
 	mouse_x: i32,
 	mouse_y: i32,
 	mouse_state: i32,
@@ -120,7 +127,7 @@ pub struct Layer {
 	pub last_y: SizeInCharacters,
 	pub last_w: SizeInCharacters,
 	pub last_h: SizeInCharacters,
-
+	pub group_stack: Vec<(SizeInCharacters, SizeInCharacters, SizeInCharacters, SizeInCharacters)>,
 	pub text_cache: LruCache<(u8, u8, u8, bool, u64), sdl2::render::Texture>,
 
 	// w, h, src_color, dst_color
@@ -152,6 +159,7 @@ impl Layer {
 	    	bfont: bfont,
 	    	active_id: NO_WIDGET_ID,
 	    	hot_id: NO_WIDGET_ID,
+	    	last_active_id: NO_WIDGET_ID,
 	    	mouse_x: 0,
 	    	mouse_y: 0,
 	    	mouse_state: 0,
@@ -172,6 +180,7 @@ impl Layer {
 	    	last_h: SizeInCharacters(0),
 	    	text_cache: LruCache::new(200),
 	    	gradient_rect_cache: LruCache::new(200),
+	    	group_stack: vec![],
 	    }
 	}
 
@@ -184,6 +193,10 @@ impl Layer {
 			Some(d) => d,
 			None => panic!(),
 		}
+	}
+
+	pub fn start_group(func: ||) {
+		func();
 	}
 
 	pub fn is_mouse_in(&self, x: i32, y: i32, w: i32, h: i32) -> bool {
@@ -209,6 +222,12 @@ impl Layer {
 		self.hot_id = id;
 	}
 
+	pub fn set_active_widget_temporarily(&mut self, x: i32, y: i32) {
+		self.last_active_id = self.active_id;
+		let id = x << 8 | y;
+		self.active_id = id;
+	}
+
 	pub fn is_hot_widget(&self, x: i32, y: i32) -> bool {
 		let id = x << 8 | y;
 		self.hot_id == id
@@ -219,7 +238,8 @@ impl Layer {
 	}
 
 	pub fn clear_active_widget(&mut self) {
-		self.active_id = NO_WIDGET_ID;
+		self.active_id = self.last_active_id;
+		self.last_active_id = NO_WIDGET_ID;
 	}
 
 	pub fn set_active_widget(&mut self, x: i32, y: i32) {
@@ -288,6 +308,7 @@ impl Layer {
 		Layer::update_key(keys[sdl2::scancode::HomeScanCode], &mut self.control_keys.home);
 		Layer::update_key(keys[sdl2::scancode::EndScanCode], &mut self.control_keys.end);
 		Layer::update_key(keys[sdl2::scancode::TabScanCode], &mut self.control_keys.tab);
+		Layer::update_key(keys[sdl2::scancode::LCtrlScanCode], &mut self.control_keys.ctrl);
 
     	match sdl_event {
 			// (timestamp, window, which, [MouseState], x, y, xrel, yrel)
@@ -347,6 +368,7 @@ impl Layer {
 	}
 
 	fn create_text_texture(&self, renderer: &sdl2::render::Renderer, bold: bool, text: &str, color: sdl2::pixels::Color) -> sdl2::render::Texture {
+		assert!(text.len() > 0, "create_text_texture was called with empty string!");
 		let font = match bold {true => &self.bfont, false => &self.font};
 	    let surface = match font.render_str_solid(text, color) {
 	        Ok(s) => s,
@@ -373,6 +395,14 @@ impl Layer {
 			self.gradient_rect_cache.put(key, created_texture);
 		}
 	}
+
+	pub fn draw_rect_gradient1(&mut self, renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, start_color: sdl2::pixels::Color) {
+		let (sr, sg, sb) = start_color.get_rgb();
+		let sr = sr as i32;
+		let sg = sg as i32;
+		let sb = sb as i32;
+		self.draw_rect_gradient(renderer, x, y, w, h, start_color, RGB(max(0, sr-40) as u8, max(0, sg-40) as u8, max(0, sb-40) as u8))
+	}
 }
 
 pub fn draw_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, border: i32, color: sdl2::pixels::Color) {
@@ -385,6 +415,11 @@ pub fn draw_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i
 pub fn fill_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, color: sdl2::pixels::Color) {
 	let _ = renderer.set_draw_color(color);
 	let _ = renderer.fill_rect(&Rect::new(x, y, w, h));
+}
+
+pub fn draw_line(renderer: &sdl2::render::Renderer, x1: i32, y1: i32, x2: i32, y2: i32, color: sdl2::pixels::Color) {
+	let _ = renderer.set_draw_color(color);
+	let _ = renderer.draw_line(Point::new(x1, y1), Point::new(x2, y2));
 }
 
 fn create_gradient_texture(renderer: &sdl2::render::Renderer, w: i32, h: i32, start_color: sdl2::pixels::Color, end_color: sdl2::pixels::Color) -> sdl2::render::Texture {
@@ -410,6 +445,10 @@ fn create_gradient_texture(renderer: &sdl2::render::Renderer, w: i32, h: i32, st
 	texture
 }
 
-pub fn center_text(text: &str, char_w: i32, border_w: i32) -> i32 {
-	border_w/2 - (text.len() as i32)/2 * char_w
+pub fn center_text(text: &str, char_w: i32, area_width: i32) -> i32 {
+	area_width/2 - (text.len() as i32)/2 * char_w
+}
+
+pub fn center_text_in_chars(text: &str, area_width: i32) -> SizeInCharacters {
+	SizeInCharacters(area_width/2 - (text.len() as i32)/2)
 }

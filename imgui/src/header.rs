@@ -11,8 +11,10 @@ pub struct HeaderBuilder<'a> {
 	y: SizeInCharacters,
 	w: SizeInCharacters,
 	h: SizeInCharacters,
+	bold: bool,
 	label: &'a str,
 	layer: &'a mut base::Layer,
+	color: Option<sdl2::pixels::Color>,
 }
 
 
@@ -28,17 +30,26 @@ impl<'a> HeaderBuilder<'a> {
 			y: layer.last_y,
 			w: w,
 			h: h,
+			bold: false,
 			label: label,
 			layer: layer,
+			color: None,
 		}
 	}
 
 	pub fn disabled(mut self, v: bool) -> HeaderBuilder<'a> {self.disabled = v; self}
 	pub fn x(mut self, v: SizeInCharacters) -> HeaderBuilder<'a> {self.x = v; self}
 	pub fn y(mut self, v: SizeInCharacters) -> HeaderBuilder<'a> {self.y = v; self}
+	pub fn bold(mut self, v: bool) -> HeaderBuilder<'a> {self.bold = v; self}
+	pub fn color(mut self, v: sdl2::pixels::Color) -> HeaderBuilder<'a> {self.color = Some(v); self}
 
 	pub fn right(mut self, x: SizeInCharacters) -> HeaderBuilder<'a> {
 		self.x = self.layer.last_x + self.layer.last_w + x;
+		self
+	}
+
+	pub fn left(mut self, x: SizeInCharacters) -> HeaderBuilder<'a> {
+		self.x = self.layer.last_x - x;
 		self
 	}
 
@@ -52,12 +63,34 @@ impl<'a> HeaderBuilder<'a> {
 		self
 	}
 
+	pub fn up(mut self, y: SizeInCharacters) -> HeaderBuilder<'a> {
+		self.y = self.layer.last_y - y;
+		self
+	}
+
 	pub fn inner_down(mut self, y: SizeInCharacters) -> HeaderBuilder<'a> {
 		self.y = self.layer.last_y + y;
 		self
 	}
 
+	pub fn draw_with_body(&mut self, renderer: &sdl2::render::Renderer, body: |&mut base::Layer|) {
+		self.layer.last_x = self.x;
+		self.layer.last_y = self.y;
+		self.layer.last_w = SizeInCharacters(0);
+		self.layer.last_h = SizeInCharacters(1);
+		draw(self, renderer);
+		body(self.layer);
+		self.layer.last_x = self.x;
+		self.layer.last_y = self.y;
+		self.layer.last_w = self.w;
+		self.layer.last_h = self.h;
+	}
+
 	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) {
+		self.layer.last_x = self.x;
+		self.layer.last_y = self.y;
+		self.layer.last_w = self.w;
+		self.layer.last_h = SizeInCharacters(1);
 		draw(self, renderer);
 	}
 }
@@ -72,17 +105,20 @@ pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) {
 	let header_h = char_h;
 	let h = builder.h.in_pixels(char_h);
 
-	builder.layer.last_x = builder.x;
-	builder.layer.last_y = builder.y;
-	builder.layer.last_w = builder.w;
-	builder.layer.last_h = SizeInCharacters(1);
-
 	let border_width = 2;
-	builder.layer.draw_rect_gradient(renderer, x, y, w, header_h, RGB(40, 120, 182), RGB(22, 83, 144));
+	if builder.color.is_some() {
+		builder.layer.draw_rect_gradient1(renderer, x, y, w, header_h, builder.color.unwrap());	
+	} else {
+		builder.layer.draw_rect_gradient(renderer, x, y, w, header_h, RGB(40, 120, 182), RGB(22, 83, 144));
+	}
 	base::draw_rect(renderer, x, y, w+border_width, header_h+border_width, 2, RGB(0, 0, 0));
 	let text_x = base::center_text(builder.label, char_w, w);
 	if builder.label.len() > 0 {
-		builder.layer.draw_text(x + text_x, y, renderer, builder.label, RGB(236, 236, 236));
+		if builder.bold {
+			builder.layer.draw_bold_text(x + text_x, y, renderer, builder.label, RGB(236, 236, 236));
+		} else {
+			builder.layer.draw_text(x + text_x, y, renderer, builder.label, RGB(236, 236, 236));
+		}
 	}
 
 	base::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));

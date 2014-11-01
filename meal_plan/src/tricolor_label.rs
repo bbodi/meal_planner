@@ -10,19 +10,21 @@ use tricolor_field;
 
 pub struct TriColorLabelBuilder<'a> {
     label: label::LabelBuilder<'a>,
-    values: &'a [f32],
+    values: (f32, f32, f32, f32),
+    width: SizeInCharacters
 }
 
-pub fn tricolor_label<'a>(label: label::LabelBuilder<'a>, values: &'a [f32]) -> TriColorLabelBuilder<'a> {
-    TriColorLabelBuilder::new(label, values)
+pub fn tricolor_label<'a>(label: label::LabelBuilder<'a>, values: (f32, f32, f32, f32), width: SizeInCharacters) -> TriColorLabelBuilder<'a> {
+    TriColorLabelBuilder::new(label.color(RGB(0, 0, 0)).bold(true), values, width)
 }
 
 
 impl<'a> TriColorLabelBuilder<'a> {
-    pub fn new(label: label::LabelBuilder<'a>, values: &'a [f32])-> TriColorLabelBuilder<'a> {
+    pub fn new(label: label::LabelBuilder<'a>, values: (f32, f32, f32, f32), width: SizeInCharacters)-> TriColorLabelBuilder<'a> {
         TriColorLabelBuilder {
             values: values,
             label: label,
+            width: width
         }
     }
 
@@ -37,7 +39,7 @@ pub fn draw(builder: &mut TriColorLabelBuilder, renderer: &sdl2::render::Rendere
     let x = builder.label.x.in_pixels(char_w);
     let y = builder.label.y.in_pixels(char_h);
 
-    let label_width = builder.label.label.len() as i32 * char_w;
-    tricolor_field::fill_tri_rect(renderer, x, y, label_width, char_h, builder.values, false);
+    tricolor_field::fill_tri_rect(renderer, x, y, builder.width.in_pixels(char_w), char_h, builder.values, false);
     builder.label.draw(renderer);
+    builder.label.layer.last_w = builder.width;
 }

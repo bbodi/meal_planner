@@ -11,6 +11,8 @@ use sdl2::pixels::RGBA;
 
 use imgui::label::label;
 use imgui::base::SizeInCharacters;
+use imgui::checkbox::checkbox;
+use imgui::panel::panel;
 
 const SCREEN_WIDHT: u32 = 1024;
 const SCREEN_HEIGHT: u32 = 768;
@@ -80,15 +82,21 @@ fn main() {
     let mut next_frame_tick = 0;
     let mut fps = 0;
 
-    /*let mut text = "".into_string();
-    let mut show_surface = false;
-    let mut dropdown_value: i32 = 0;*/
     let mut dao = db::Dao::new();
     let mut foods = dao.load_foods();
+    let mut daily_menus = dao.load_daily_menus();
+
     let mut layer = imgui::base::Layer::new();
+    let mut recommended_macros = dao.load_recommended_macros();
+    println!("{}", recommended_macros.protein);
     let mut kcal_win = kcal_window::KCalWindow::new();
     let mut kcal_table = kcal_table::KCalTable::new();
-    let mut daily_plan = daily_plan::DailyPlan::new();
+    let mut last_meal_id = 0;
+    let mut last_meal_food_id = 0;
+    let mut daily_plan = daily_plan::DailyPlan::new(&mut last_meal_id, &mut last_meal_food_id);
+    let mut show_cal_win = false;
+    let mut show_table_win = false;
+    let mut show_daily_win = true;
     'main : loop {
         sdl2::timer::delay(10);
         let current_tick = sdl2::timer::get_ticks();
@@ -99,14 +107,49 @@ fn main() {
             e => e,
             // _ => {},
         };
-        if false {
-            kcal_win.do_logic(&renderer, &event);
+
+        if show_cal_win {
+            if kcal_win.do_logic(&renderer, &event, &mut recommended_macros) {
+                dao.persist_recommended_macros(&recommended_macros);
+            }
+        }
+        if show_table_win {
+            if kcal_table.do_logic(&renderer, &event, &mut foods) {
+                dao.persist_foods(foods.as_slice());
+            }
+        }
+        if show_daily_win {
+            if daily_plan.do_logic(&renderer, &event, &mut foods, daily_menus.get_mut(0)) {
+                dao.persist_daily_menu(daily_menus.as_mut_slice());
+            }
         }
 
-        /*if kcal_table.do_logic(&renderer, &event, &mut foods) {
-            dao.persist_foods(foods.as_slice());
-        }*/
-        if daily_plan.do_logic(&renderer, &event, &mut foods) {
+        if layer.control_keys.ctrl.down {
+            panel(&mut layer, SizeInCharacters(20), SizeInCharacters(5))
+                .x(SizeInCharacters(10))
+                .y(SizeInCharacters(10))
+                .draw(&renderer);
+            if checkbox(&mut layer, &mut show_cal_win)
+                .label("Calorie window")
+                .x(SizeInCharacters(10))
+                .y(SizeInCharacters(10)).draw(&renderer) && show_cal_win {
+                show_daily_win = false;
+                show_table_win = false;
+            }
+            if checkbox(&mut layer, &mut show_table_win)
+                .label("Food list window")
+                .x(SizeInCharacters(10))
+                .down(SizeInCharacters(1)).draw(&renderer) && show_table_win {
+                show_daily_win = false;
+                show_cal_win = false;
+            }
+            if checkbox(&mut layer, &mut show_daily_win)
+                .label("Daily window")
+                .x(SizeInCharacters(10))
+                .down(SizeInCharacters(1)).draw(&renderer) && show_daily_win {
+                show_table_win = false;
+                show_cal_win = false;
+            }
         }
 
 

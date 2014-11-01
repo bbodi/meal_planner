@@ -1,6 +1,8 @@
 #![crate_name = "imgui"]
 #![crate_type = "lib"]
 
+ // TODO: is_active_widtget SizeInCharacter-t fogadjon el, ne pixelt!
+
 extern crate sdl2;
 extern crate sdl2_ttf;
 

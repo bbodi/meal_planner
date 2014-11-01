@@ -15,23 +15,26 @@ pub struct CheckboxBuilder<'a> {
 	value: &'a mut bool,
 }
 
-pub fn checkbox<'a>(layer: &'a mut base::Layer, label: &'a str, value: &'a mut bool) -> CheckboxBuilder<'a> {
-	CheckboxBuilder::new(layer, label, value)
+pub fn checkbox<'a>(layer: &'a mut base::Layer, value: &'a mut bool) -> CheckboxBuilder<'a> {
+	CheckboxBuilder::new(layer, value)
 }
 
 impl<'a> CheckboxBuilder<'a> {
-	pub fn new(layer: &'a mut base::Layer, label: &'a str, value: &'a mut bool, ) -> CheckboxBuilder<'a> {
+	pub fn new(layer: &'a mut base::Layer, value: &'a mut bool, ) -> CheckboxBuilder<'a> {
 		CheckboxBuilder {
 			disabled: false,
 			x: layer.last_x,
 			y: layer.last_y,
-			label: label,
+			label: "",
 			layer: layer,
 			value: value,
 		}
 	}
 
 	pub fn disabled(mut self, v: bool) -> CheckboxBuilder<'a> {self.disabled = v; self}
+	pub fn label(mut self, v: &'a str) -> CheckboxBuilder<'a> {self.label = v; self}
+	pub fn x(mut self, v: SizeInCharacters) -> CheckboxBuilder<'a> {self.x = v; self}
+	pub fn y(mut self, v: SizeInCharacters) -> CheckboxBuilder<'a> {self.y = v; self}
 	pub fn right(mut self, x: SizeInCharacters) -> CheckboxBuilder<'a> {
 		self.x = self.layer.last_x + self.layer.last_w + x;
 		self
@@ -65,7 +68,12 @@ pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) ->
 	let w = char_h + char_w*builder.label.len() as i32;
 	let hover = builder.layer.is_mouse_in(x, y, w, char_h);
 	let mousebtn_just_released = builder.layer.is_mouse_released() && hover;
+	let label_len = builder.label.len() as i32;
 
+	builder.layer.last_x = builder.x;
+	builder.layer.last_y = builder.y;
+	builder.layer.last_w = SizeInCharacters(label_len + 1);
+	builder.layer.last_h = SizeInCharacters(1);
 
 	if mousebtn_just_released {
 		*builder.value = !*builder.value;
@@ -83,7 +91,9 @@ pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) ->
 		let _ = renderer.set_draw_color(sdl2::pixels::RGB(51 , 51, 51));
 	}
 	let _ = renderer.fill_rect(&Rect::new(x + char_h/3, y + char_h/3, char_h/3, char_h/3));
-	builder.layer.draw_text(x + char_h, y, renderer, builder.label, RGB(151, 151, 151));
+	if builder.label.len() > 0 {
+		builder.layer.draw_text(x + char_h, y, renderer, builder.label, RGB(151, 151, 151));
+	}
 
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 0));
 	let _ = renderer.draw_rect(&Rect::new(x, y, char_h, char_h));

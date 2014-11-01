@@ -44,6 +44,11 @@ impl<'a> ButtonBuilder<'a> {
 		self
 	}
 
+	pub fn left(mut self, x: SizeInCharacters) -> ButtonBuilder<'a> {
+		self.x = self.layer.last_x - x;
+		self
+	}
+
 	pub fn down(mut self, y: SizeInCharacters) -> ButtonBuilder<'a> {
 		self.y = self.layer.last_y + self.layer.last_h + y;
 		self
@@ -87,8 +92,8 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 	let button_down = was_active && !released;
 	let mouse_down = builder.layer.is_mouse_down();
 
-	if mouse_down && hover {
-		builder.layer.set_active_widget(x, y);
+	if mouse_down && hover && !was_active {
+		builder.layer.set_active_widget_temporarily(x, y);
 	} else if was_active && released {
 		builder.layer.clear_active_widget();
 	}

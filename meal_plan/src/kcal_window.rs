@@ -8,89 +8,22 @@ use sdl2::pixels::RGB;
 
 use imgui::scrollbar::scrollbar;
 use imgui::label::label;
+use imgui::textfield;
 use imgui::textfield::textfield_f32;
 use imgui::textfield::textfield_i32;
 use imgui::panel::panel;
 use imgui::dropdown::dropdown;
 use imgui::header::header;
+use imgui::button::button;
 
-enum WeightType {
-	Kg, Lb,
-}
+use db;
+use db::RecommendedMacros;
 
-impl base::IndexValue for WeightType {
-	fn set(&mut self, value: uint) {
-		*self = match value {
-			0 => Kg,
-			_ => Lb,
-		};
-	}
-	fn get(&self) -> uint {
-		*self as uint
-	}
-}
-
-impl WeightType {
-	pub fn to_kg(&self, value: f32) -> f32 {
-		match *self {
-			Kg => value,
-			Lb => (value * 0.453592f32),
-		}
-	}
-}
-
-enum GoalType {
-	Bulking, Cutting
-}
-
-impl base::IndexValue for GoalType {
-	fn set(&mut self, value: uint) {
-		*self = match value {
-			0 => Bulking,
-			_ => Cutting,
-		};
-	}
-	fn get(&self) -> uint {
-		*self as uint
-	}
-}
-
-
-enum ActivityModifier {
-	Sedentary, Lightly, Moderately, Very, Extremely
-}
-
-impl base::IndexValue for ActivityModifier {
-	fn set(&mut self, value: uint) {
-		*self = match value {
-			0 => Sedentary,
-			1 => Lightly,
-			2 => Moderately,
-			3 => Very,
-			_ => Extremely,
-		};
-	}
-	fn get(&self) -> uint {
-		*self as uint
-	}
-}
-
-impl ActivityModifier {
-	pub fn get_modified_value(&self, value: f32) -> f32 {
-		match *self {
-			Sedentary => (value as f32 * 1.2f32),
-			Lightly => (value as f32 * 1.375f32),
-			Moderately => (value as f32 * 1.55f32),
-			Very => (value as f32 * 1.725f32),
-			Extremely => (value as f32 * 1.9f32),
-		}
-	}
-}
 
 pub struct KCalWindow<'a> {
 	layer: base::Layer,
 
-	weight: f32,
+	/*weight: f32,
 	age: i32,
 	height: i32,
 	weight_type: WeightType,
@@ -106,123 +39,110 @@ pub struct KCalWindow<'a> {
 	ch_percent: f32,
 	fat_percent: f32,
 	bmr: f32,
-	target_calories: f32,
+	target_calories: f32,*/
+}
+
+
+fn set_target_calories(rm: &mut RecommendedMacros, tc: f32) {
+	rm.target_calories = tc;
+	rm.protein = ((rm.protein_percent / 100f32 * rm.target_calories) / 4f32) as i32;
+	rm.ch = ((rm.ch_percent / 100f32 * rm.target_calories) / 4f32) as i32;
+	rm.fat = ((rm.fat_percent / 100f32 * rm.target_calories) / 9f32) as i32;
+	rm.protein_per_kg = rm.protein as f32 / rm.weight;
+}
+
+fn protein_percent_changed(rm: &mut RecommendedMacros) {
+	rm.ch_percent = 100f32 - rm.protein_percent - rm.fat_percent;
+	rm.protein = ((rm.protein_percent / 100f32 * rm.target_calories) / 4f32) as i32;
+	rm.protein_per_kg = rm.protein as f32 / rm.weight;
+}
+
+fn ch_percent_changed(rm: &mut RecommendedMacros) {
+	rm.fat_percent = 100f32 - rm.protein_percent - rm.ch_percent;
+    rm.ch = ((rm.ch_percent / 100f32 * rm.target_calories) / 4f32) as i32;
+}
+
+fn fat_percent_changed(rm: &mut RecommendedMacros) {
+	rm.ch_percent = 100f32 - rm.protein_percent - rm.fat_percent;
+	rm.fat = ((rm.fat_percent / 100f32 * rm.target_calories) / 9f32) as i32;
+}
+
+fn recalc_bmr(rm: &mut RecommendedMacros) {
+	//(66 + (13,7*78 kg) + (5*190 cm) - ( 6,8*25 year)) * 1.55 activity level
+	let a = 13.7f32 * rm.weight_type.to_g(rm.weight) / 1000f32;
+	let height = rm.height as f32 * if rm.height_type == 1 {30.48f32} else {1f32};
+	let b = 5f32 * height;
+	let c = 6.8f32 * rm.age as f32;
+	let d = 66f32 + a+b+c;
+	let bmr = rm.activity_mod.get_modified_value(d);
+	rm.bmr = bmr;
+	set_target_calories(rm, bmr);
+	//rm.bmr_str.clear();
+	//rm.bmr_str.push_str(("BMR: ".into_string() + (rm.bmr as i32).to_string() + " kCal").as_slice());
 }
 
 impl<'a> KCalWindow<'a> {
-
-	fn set_target_calories(&mut self, tc: f32) {
-		self.target_calories = tc;
-		self.protein = ((self.protein_percent / 100f32 * self.target_calories) / 4f32) as i32;
-		self.ch = ((self.ch_percent / 100f32 * self.target_calories) / 4f32) as i32;
-		self.fat = ((self.fat_percent / 100f32 * self.target_calories) / 9f32) as i32;
-		self.protein_per_kg = self.protein as f32 / self.weight;
-	}
-
-	fn protein_percent_changed(&mut self) {
-		self.ch_percent = 100f32 - self.protein_percent - self.fat_percent;
-		self.protein = ((self.protein_percent / 100f32 * self.target_calories) / 4f32) as i32;
-		self.protein_per_kg = self.protein as f32 / self.weight;
-	}
-
-	fn ch_percent_changed(&mut self) {
-		self.fat_percent = 100f32 - self.protein_percent - self.ch_percent;
-	    self.ch = ((self.ch_percent / 100f32 * self.target_calories) / 4f32) as i32;
-	}
-
-	fn fat_percent_changed(&mut self) {
-		self.ch_percent = 100f32 - self.protein_percent - self.fat_percent;
-		self.fat = ((self.fat_percent / 100f32 * self.target_calories) / 9f32) as i32;
-	}
-
-	fn recalc_bmr(&mut self) {
-		//(66 + (13,7*78 kg) + (5*190 cm) - ( 6,8*25 year)) * 1.55 activity level
-		let a = 13.7f32 * self.weight_type.to_kg(self.weight);
-		let height = self.height as f32 * if self.height_type == 1 {30.48f32} else {1f32};
-		let b = 5f32 * height;
-		let c = 6.8f32 * self.age as f32;
-		let d = 66f32 + a+b+c;
-		let bmr = self.activity_mod.get_modified_value(d);
-		self.bmr = bmr;
-		self.set_target_calories(bmr);
-		self.bmr_str.clear();
-		self.bmr_str.push_str(("BMR: ".into_string() + (self.bmr as i32).to_string() + " kCal").as_slice());
-	}
-
 	pub fn new() -> KCalWindow<'a> {
 		KCalWindow {
 			layer: base::Layer::new(),
-			weight: 0f32,
-			age: 0,
-			height: 0,
-			bmr_str: String::new(),
-			weight_type: Kg,
-			activity_mod: Sedentary,
-			height_type: 0,
-			goal_type: Bulking,
-			protein_per_kg: 1.8f32,
-			protein: 0,
-			fat: 0,
-			ch: 0,
-			protein_percent: 10f32,
-			ch_percent: 10f32,
-			fat_percent: 10f32,
-			bmr: 0f32,
-			target_calories: 0f32,
 		}
 	}
 
-	pub fn do_logic(&'a mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event) {
+	pub fn do_logic(&'a mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event, recommended_macros: &mut db::RecommendedMacros) -> bool {
 		self.layer.handle_event(event);
-		header(&mut self.layer, "BMR", SizeInCharacters(70), SizeInCharacters(25))
+
+		header(&mut self.layer, "BMR", SizeInCharacters(70), SizeInCharacters(22))
 			.x(SizeInCharacters(6))
 			.y(SizeInCharacters(5))
 			.draw(renderer);
-		if textfield_f32(&mut self.layer, &mut self.weight, SizeInCharacters(4))
+		match textfield_f32(&mut self.layer, &mut recommended_macros.weight, SizeInCharacters(4))
 			.x(SizeInCharacters(7))
 			.y(SizeInCharacters(7))
             .label("Mass: ")
             .draw(renderer) {
-			self.recalc_bmr();
-        }
-        dropdown(&mut self.layer, vec!["kg", "lb"].as_slice(), &mut self.weight_type)
+        	Some(textfield::Changed) => recalc_bmr(recommended_macros),
+        	_ => {},
+        };
+        dropdown(&mut self.layer, vec!["g", "dkg", "kg", "lb"].as_slice(), &mut recommended_macros.weight_type)
         	.right(SizeInCharacters(1))
         	.draw(renderer);
 
-        if textfield_i32(&mut self.layer, &mut self.age, SizeInCharacters(4))
+        match textfield_i32(&mut self.layer, &mut recommended_macros.age, SizeInCharacters(4))
         	.x(SizeInCharacters(7))
         	.right(SizeInCharacters(2))
             .label("Age: ")
             .draw(renderer) {
-            self.recalc_bmr();
-        }
+            Some(textfield::Changed) => recalc_bmr(recommended_macros),
+        	_ => {},
+        };
 
-        if textfield_i32(&mut self.layer, &mut self.height, SizeInCharacters(4))
+        match textfield_i32(&mut self.layer, &mut recommended_macros.height, SizeInCharacters(4))
         	.x(SizeInCharacters(7))
         	.right(SizeInCharacters(2))
             .label("Height: ")
             .draw(renderer) {
-            self.recalc_bmr();
-        }
+            Some(textfield::Changed) => recalc_bmr(recommended_macros),
+        	_ => {},
+        };
 
-        dropdown(&mut self.layer, vec!["cm", "ft"].as_slice(), &mut self.height_type)
+        dropdown(&mut self.layer, vec!["cm", "ft"].as_slice(), &mut recommended_macros.height_type)
         	.right(SizeInCharacters(1))
         	.draw(renderer);
 
-        if dropdown(&mut self.layer, vec!["Sedentary", "Lightly active", "Moderately active", "Very active", "Extremely active", ].as_slice(), &mut self.activity_mod)
+        if dropdown(&mut self.layer, vec!["Sedentary", "Lightly active", "Moderately active", "Very active", "Extremely active", ].as_slice(), &mut recommended_macros.activity_mod)
         	.x(SizeInCharacters(7))
         	.right(SizeInCharacters(1))
         	.draw(renderer) {
-        	self.recalc_bmr();
+        	recalc_bmr(recommended_macros);
         }
-
-        header(&mut self.layer, self.bmr_str.as_slice(), SizeInCharacters(70), SizeInCharacters(0))
+        let bmr_str = format!("BMR: {:.0f}", recommended_macros.bmr);
+        header(&mut self.layer, bmr_str.as_slice(), SizeInCharacters(70), SizeInCharacters(0))
 			.x(SizeInCharacters(6))
 			.down(SizeInCharacters(2))
 			.draw(renderer);
 
-		if self.bmr_str.len() > 0 {
-			dropdown(&mut self.layer, vec!["Bulking", "Cutting", ].as_slice(), &mut self.goal_type)
+		if recommended_macros.height > 0 && recommended_macros.weight > 0f32 && recommended_macros.age > 0 {
+			dropdown(&mut self.layer, vec!["Bulking", "Cutting", ].as_slice(), &mut recommended_macros.goal_type)
 	        	.x(SizeInCharacters(7))
 	        	.down(SizeInCharacters(1))
 	        	.draw(renderer);
@@ -234,14 +154,14 @@ impl<'a> KCalWindow<'a> {
 	        	.draw(renderer);
 	        {
 
-		        label(&mut self.layer, format!("Protein: {:3}", self.protein).as_slice() )
+		        label(&mut self.layer, format!("Protein: {:3}", recommended_macros.protein).as_slice() )
 		        	.inner_down(SizeInCharacters(1))
 		            .draw(renderer);
 
-		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut self.protein_percent )
+		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut recommended_macros.protein_percent )
 		        	.right(SizeInCharacters(2))
 		        	.draw(renderer) {
-		        	self.protein_percent_changed();
+		        	protein_percent_changed(recommended_macros);
 		        }
 		        scrollbar_x = self.layer.last_x;
 
@@ -249,12 +169,12 @@ impl<'a> KCalWindow<'a> {
 		        	.right(SizeInCharacters(2))
 		            .draw(renderer);
 
-		        if scrollbar(&mut self.layer, SizeInCharacters(6), 1f32, 4f32, &mut self.protein_per_kg )
+		        if scrollbar(&mut self.layer, SizeInCharacters(6), 1f32, 4f32, &mut recommended_macros.protein_per_kg )
 		        	.right(SizeInCharacters(1))
 		        	.draw(renderer) {
-		        	let calced_prot = self.protein_per_kg * self.weight;
-		        	self.protein_percent = (calced_prot*4f32) as f32 / (self.target_calories / 100f32);
-		        	self.protein_percent_changed();
+		        	let calced_prot = recommended_macros.protein_per_kg * recommended_macros.weight;
+		        	recommended_macros.protein_percent = (calced_prot*4f32) as f32 / (recommended_macros.target_calories / 100f32);
+		        	protein_percent_changed(recommended_macros);
 		        }
 	    	}
 
@@ -263,15 +183,15 @@ impl<'a> KCalWindow<'a> {
 	        	.down(SizeInCharacters(1))
 	        	.draw(renderer);
 	        {
-		        label(&mut self.layer, ("Ch: ".into_string() + self.ch.to_string().as_slice()).as_slice() )
+		        label(&mut self.layer, ("Ch: ".into_string() + recommended_macros.ch.to_string().as_slice()).as_slice() )
 		        	.inner_down(SizeInCharacters(1))
 		            .draw(renderer);
 
-		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut self.ch_percent )
+		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut recommended_macros.ch_percent )
 		        	.x(scrollbar_x)
 		        	.color(RGB(237, 166, 0))
 		        	.draw(renderer) {
-		        	self.ch_percent_changed();
+		        	ch_percent_changed(recommended_macros);
 		        }
 		    }
 
@@ -280,18 +200,26 @@ impl<'a> KCalWindow<'a> {
 	        	.down(SizeInCharacters(1))
 	        	.draw(renderer);
 	        {
-		        label(&mut self.layer, ("Fat: ".into_string() + self.fat.to_string().as_slice()).as_slice() )
+		        label(&mut self.layer, ("Fat: ".into_string() + recommended_macros.fat.to_string().as_slice()).as_slice() )
 		        	.inner_down(SizeInCharacters(1))
 		            .draw(renderer);
 
-		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut self.fat_percent )
+		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut recommended_macros.fat_percent )
 		        	.x(scrollbar_x)
 		        	.color(RGB(210, 93, 90))
 		        	.draw(renderer) {
-		        	self.fat_percent_changed();
+		        	fat_percent_changed(recommended_macros);
 		        }
 		    }
         }
+
+        if button(&mut self.layer, "Save")
+            .x(SizeInCharacters(10))
+            .y(SizeInCharacters(25))
+            .draw(renderer) {
+            return true;
+    	}
+    	return false;
 	}
 
 }
