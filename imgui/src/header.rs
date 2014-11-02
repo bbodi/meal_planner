@@ -107,17 +107,17 @@ pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) {
 
 	let border_width = 2;
 	if builder.color.is_some() {
-		builder.layer.draw_rect_gradient1(renderer, x, y, w, header_h, builder.color.unwrap());	
+		builder.layer.draw_rect_gradient1(x, y, w, header_h, builder.color.unwrap());	
 	} else {
-		builder.layer.draw_rect_gradient(renderer, x, y, w, header_h, RGB(40, 120, 182), RGB(22, 83, 144));
+		builder.layer.draw_rect_gradient(x, y, w, header_h, RGB(40, 120, 182), RGB(22, 83, 144));
 	}
 	base::draw_rect(renderer, x, y, w+border_width, header_h+border_width, 2, RGB(0, 0, 0));
 	let text_x = base::center_text(builder.label, char_w, w);
 	if builder.label.len() > 0 {
 		if builder.bold {
-			builder.layer.draw_bold_text(x + text_x, y, renderer, builder.label, RGB(236, 236, 236));
+			builder.layer.draw_bold_text(x + text_x, y, builder.label, RGB(236, 236, 236));
 		} else {
-			builder.layer.draw_text(x + text_x, y, renderer, builder.label, RGB(236, 236, 236));
+			builder.layer.draw_text(x + text_x, y, builder.label, RGB(236, 236, 236));
 		}
 	}
 

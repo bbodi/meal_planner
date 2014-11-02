@@ -155,9 +155,9 @@ pub fn draw_bg(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer
 	let clicked_out = builder.layer.is_mouse_down() && !hover && was_active;
 	let active = was_active && !clicked_out;
 	if hover || active {
-		builder.layer.draw_rect_gradient(renderer, label_width+x, y, w, h, RGB(51, 51, 51), RGB(61, 61, 61));
+		builder.layer.draw_rect_gradient(label_width+x, y, w, h, RGB(51, 51, 51), RGB(61, 61, 61));
 	} else {
-		builder.layer.draw_rect_gradient(renderer, label_width+x, y, w, h, RGB(51, 51, 51), RGB(51, 51, 51));
+		builder.layer.draw_rect_gradient(label_width+x, y, w, h, RGB(51, 51, 51), RGB(51, 51, 51));
 	}
 }
 
@@ -179,22 +179,22 @@ pub fn draw_text(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Render
 	let output_value = builder.layer.get_textfield_state(builder.value.get_id()).value.clone();
 	if output_value.len() > 0 {
 		if builder.bold {
-			builder.layer.draw_bold_text(label_width+x+border_width, y, renderer, output_value.as_slice(), builder.value_color);
+			builder.layer.draw_bold_text(label_width+x+border_width, y, output_value.as_slice(), builder.value_color);
 		} else {
-			builder.layer.draw_text(label_width+x+border_width, y, renderer, output_value.as_slice(), builder.value_color);
+			builder.layer.draw_text(label_width+x+border_width, y, output_value.as_slice(), builder.value_color);
 		}
 	} else if builder.default_text != "" && !active {
-		builder.layer.draw_text(label_width+x+border_width, y, renderer, builder.default_text.as_slice(), RGB(113, 113, 113));
+		builder.layer.draw_text(label_width+x+border_width, y, builder.default_text.as_slice(), RGB(113, 113, 113));
 	}
 
 	if label_width > 0 {
-		builder.layer.draw_text(x+border_width, y, renderer, builder.label.as_slice(), builder.label_color);
+		builder.layer.draw_text(x+border_width, y, builder.label.as_slice(), builder.label_color);
 	}
 	if active {
 		let cursor_pos = builder.layer.get_textfield_state(builder.value.get_id()).cursor_pos;
 		let cursor_visible = builder.layer.get_textfield_state(builder.value.get_id()).cursor_visible;
 		if cursor_visible {
-			builder.layer.draw_text(label_width+x + char_w as i32 * cursor_pos, y, renderer, "_", RGB(204, 204, 204));
+			builder.layer.draw_text(label_width+x + char_w as i32 * cursor_pos, y, "_", RGB(204, 204, 204));
 		}
 	}
 }

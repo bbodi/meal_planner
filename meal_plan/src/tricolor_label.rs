@@ -18,6 +18,11 @@ pub fn tricolor_label<'a>(label: label::LabelBuilder<'a>, values: (f32, f32, f32
     TriColorLabelBuilder::new(label.color(RGB(0, 0, 0)).bold(true), values, width)
 }
 
+pub fn tricolor_label3<'a>(label: label::LabelBuilder<'a>, values: (f32, f32, f32), width: SizeInCharacters) -> TriColorLabelBuilder<'a> {
+    let (a, b, c) = values;
+    let d = a + b + c;
+    TriColorLabelBuilder::new(label.color(RGB(0, 0, 0)).bold(true), (a, b, c, d), width)
+}
 
 impl<'a> TriColorLabelBuilder<'a> {
     pub fn new(label: label::LabelBuilder<'a>, values: (f32, f32, f32, f32), width: SizeInCharacters)-> TriColorLabelBuilder<'a> {

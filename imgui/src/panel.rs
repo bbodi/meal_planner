@@ -66,5 +66,5 @@ pub fn draw(builder: &mut PanelBuilder, renderer: &sdl2::render::Renderer) {
 	builder.layer.last_h = builder.h;
 
 
-	base::fill_rect(renderer, x, y, w, h, builder.color);
+	builder.layer.fill_rect(x, y, w, h, builder.color);
 }

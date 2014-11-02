@@ -80,9 +80,9 @@ pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) ->
 	}
 
 	if hover {
-		builder.layer.draw_rect_gradient(renderer, x, y, char_h, char_h, RGB(99, 103, 113), RGB(62, 65, 73));
+		builder.layer.draw_rect_gradient(x, y, char_h, char_h, RGB(99, 103, 113), RGB(62, 65, 73));
 	} else {
-		builder.layer.draw_rect_gradient(renderer, x, y, char_h, char_h, RGB(82, 86, 90), RGB(49, 52, 55));
+		builder.layer.draw_rect_gradient(x, y, char_h, char_h, RGB(82, 86, 90), RGB(49, 52, 55));
 	}
 
 	if *builder.value {
@@ -92,7 +92,7 @@ pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) ->
 	}
 	let _ = renderer.fill_rect(&Rect::new(x + char_h/3, y + char_h/3, char_h/3, char_h/3));
 	if builder.label.len() > 0 {
-		builder.layer.draw_text(x + char_h, y, renderer, builder.label, RGB(151, 151, 151));
+		builder.layer.draw_text(x + char_h, y, builder.label, RGB(151, 151, 151));
 	}
 
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 0));

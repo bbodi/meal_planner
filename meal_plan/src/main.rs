@@ -26,6 +26,7 @@ mod tricolor_label;
 mod kcal_window;
 mod kcal_table;
 mod daily_plan;
+mod weekly_plan;
 
 
 fn main() {
@@ -87,19 +88,21 @@ fn main() {
     let mut daily_menus = dao.load_daily_menus();
 
     let mut layer = imgui::base::Layer::new();
-    let mut recommended_macros = dao.load_recommended_macros();
-    println!("{}", recommended_macros.protein);
+    let mut nutr_goal = dao.load_nutritional_goals();
     let mut kcal_win = kcal_window::KCalWindow::new();
     let mut kcal_table = kcal_table::KCalTable::new();
+
+    let mut last_daily_menu_id = 0;
+    let mut weekly_plan = weekly_plan::WeeklyPlan::new(&mut last_daily_menu_id);
+    
     let mut last_meal_id = 0;
-    let mut last_meal_food_id = 0;
-    let mut daily_plan = daily_plan::DailyPlan::new(&mut last_meal_id, &mut last_meal_food_id);
+    let mut daily_plan = daily_plan::DailyPlan::new(&mut last_meal_id);
     let mut show_cal_win = false;
     let mut show_table_win = false;
-    let mut show_daily_win = true;
+    let mut show_daily_win = false;
+    let mut show_weekly_plan = true;
     'main : loop {
         sdl2::timer::delay(10);
-        let current_tick = sdl2::timer::get_ticks();
 
 
         let event = match sdl2::event::poll_event() {
@@ -108,9 +111,20 @@ fn main() {
             // _ => {},
         };
 
+        layer.handle_event(&event);
+        if !layer.active {
+            sdl2::timer::delay(100);
+            continue;
+        }
+        let mouse_str = format!("FPS: {}, {}, {}", fps, layer.mouse_x() / layer.char_w, layer.mouse_y()/ layer.char_h);
+        match renderer.get_parent() {
+            &sdl2::render::WindowParent(ref w) => w.set_title(mouse_str.as_slice()),
+            _ => {},
+        };
+
         if show_cal_win {
-            if kcal_win.do_logic(&renderer, &event, &mut recommended_macros) {
-                dao.persist_recommended_macros(&recommended_macros);
+            if kcal_win.do_logic(&renderer, &event, &mut nutr_goal) {
+                dao.persist_nutritional_goals(&nutr_goal);
             }
         }
         if show_table_win {
@@ -118,9 +132,14 @@ fn main() {
                 dao.persist_foods(foods.as_slice());
             }
         }
-        if show_daily_win {
-            if daily_plan.do_logic(&renderer, &event, &mut foods, daily_menus.get_mut(0)) {
+        if show_daily_win && daily_menus.len() > 0 {
+            if daily_plan.do_logic(&renderer, &event, foods.as_slice(), daily_menus.get_mut(0), &nutr_goal) {
                 dao.persist_daily_menu(daily_menus.as_mut_slice());
+            }
+        }
+        if show_weekly_plan {
+            if weekly_plan.do_logic(&renderer, &event, foods.as_slice(), daily_menus.as_slice(), &nutr_goal) {
+                //dao.persist_daily_menu(daily_menus.as_mut_slice());
             }
         }
 
@@ -135,6 +154,7 @@ fn main() {
                 .y(SizeInCharacters(10)).draw(&renderer) && show_cal_win {
                 show_daily_win = false;
                 show_table_win = false;
+                show_weekly_plan = false;
             }
             if checkbox(&mut layer, &mut show_table_win)
                 .label("Food list window")
@@ -142,6 +162,7 @@ fn main() {
                 .down(SizeInCharacters(1)).draw(&renderer) && show_table_win {
                 show_daily_win = false;
                 show_cal_win = false;
+                show_weekly_plan = false;
             }
             if checkbox(&mut layer, &mut show_daily_win)
                 .label("Daily window")
@@ -149,16 +170,18 @@ fn main() {
                 .down(SizeInCharacters(1)).draw(&renderer) && show_daily_win {
                 show_table_win = false;
                 show_cal_win = false;
+                show_weekly_plan = false;
+            }
+            if checkbox(&mut layer, &mut show_weekly_plan)
+                .label("Weekly window")
+                .x(SizeInCharacters(10))
+                .down(SizeInCharacters(1)).draw(&renderer) && show_weekly_plan {
+                show_table_win = false;
+                show_cal_win = false;
+                show_daily_win = false;
+                show_weekly_plan = true;
             }
         }
-
-
-        layer.handle_event(&event);
-        let mouse_str = format!("FPS: {}, {}, {}", fps, layer.mouse_x() / layer.char_w, layer.mouse_y()/ layer.char_h);
-        match renderer.get_parent() {
-            &sdl2::render::WindowParent(ref w) => w.set_title(mouse_str.as_slice()),
-            _ => {},
-        };
 
         /*layer.handle_event(event);
         if layer.button("Add data", 420, 20).draw(&renderer) {
@@ -202,6 +225,7 @@ fn main() {
         let _ = renderer.clear();
         frame_count += 1;
 
+        let current_tick = sdl2::timer::get_ticks();
         if current_tick >= next_frame_tick {
             fps = frame_count;
             next_frame_tick = current_tick + 1000;

@@ -74,6 +74,7 @@ impl<'a> KCalTable<'a> {
 			.draw(renderer);
 		let price_header_x = self.layer.last_x + self.layer.last_w;
 		let first_row = self.layer.last_x + SizeInCharacters(1);
+		self.last_food_id = foods.len();
 		for (i, food) in foods.iter_mut().skip(self.page * 16).take((self.page+1) * 16).enumerate() {
 			let fs = food.weight_type.to_g(food.weight);
 			let values = (food.protein, food.ch, food.fat, fs);
@@ -126,7 +127,6 @@ impl<'a> KCalTable<'a> {
 	        if button(&mut self.layer, "Del").right(SizeInCharacters(4)).draw(renderer) {
 
 			}
-			self.last_food_id = i;
 		}
 		if button(&mut self.layer, "Prev")
 			.disabled(self.page == 0)
@@ -145,10 +145,10 @@ impl<'a> KCalTable<'a> {
 		if button(&mut self.layer, "New")
 			.down(SizeInCharacters(1))
 			.x(first_row).draw(renderer) {
-			foods.push(db::Food::new(self.last_food_id+1));
 			self.last_food_id = self.last_food_id + 1;
+			foods.push(db::Food::new(self.last_food_id));
 		}
-		if button(&mut self.layer, "Close").right(SizeInCharacters(2)).draw(renderer) {
+		if button(&mut self.layer, "Save").right(SizeInCharacters(2)).draw(renderer) {
 			return true;
 		}
 		header(&mut self.layer, "Név", SizeInCharacters(22), column_height - SizeInCharacters(1))

@@ -54,6 +54,11 @@ impl<'a> ButtonBuilder<'a> {
 		self
 	}
 
+	pub fn up(mut self, y: SizeInCharacters) -> ButtonBuilder<'a> {
+		self.y = self.layer.last_y - y;
+		self
+	}
+
 	pub fn inner_down(mut self, y: SizeInCharacters) -> ButtonBuilder<'a> {
 		self.y = self.layer.last_y + y;
 		self
@@ -67,7 +72,7 @@ impl<'a> ButtonBuilder<'a> {
 pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> bool {
 	builder.layer.last_x = builder.x;
 	builder.layer.last_y = builder.y;
-	builder.layer.last_w = SizeInCharacters(builder.label.len() as i32);
+	builder.layer.last_w = SizeInCharacters(base::text_len(builder.label) as i32);
 	builder.layer.last_h = SizeInCharacters(1);
 
 	let char_w = builder.layer.char_w;
@@ -76,11 +81,11 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 	let y = builder.y.in_pixels(char_h);
 	let border_width = 2i32;
 	let text_border_dist = 3;
-	let w = char_w*builder.label.len() as i32 + text_border_dist*2;
+	let w = char_w*base::text_len(builder.label) as i32 + text_border_dist*2;
 	let h = char_h;
 	if builder.disabled {
-		base::fill_rect(renderer, x, y, w, h, RGB(50, 50, 50));
-		builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, renderer, builder.label, RGB(151, 151, 151));
+		builder.layer.fill_rect(x, y, w, h, RGB(50, 50, 50));
+		builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, builder.label, RGB(151, 151, 151));
 		return false;
 	}
 
@@ -107,13 +112,13 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
 
 	if button_down {
-		builder.layer.draw_rect_gradient(renderer, x, y, w, h, RGB(48, 48, 48), RGB(83, 83, 83));
+		builder.layer.draw_rect_gradient(x, y, w, h, RGB(48, 48, 48), RGB(83, 83, 83));
 	} else if hover {
-		builder.layer.draw_rect_gradient(renderer, x, y, w, h, RGB(114, 114, 114), RGB(68, 68, 68));
+		builder.layer.draw_rect_gradient(x, y, w, h, RGB(114, 114, 114), RGB(68, 68, 68));
 	} else {
-		builder.layer.draw_rect_gradient(renderer, x, y, w, h, RGB(82, 85, 90), RGB(47, 50, 53));
+		builder.layer.draw_rect_gradient(x, y, w, h, RGB(82, 85, 90), RGB(47, 50, 53));
 	}
 	base::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
-	builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, renderer, builder.label, RGB(151, 151, 151));
+	builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, builder.label, RGB(151, 151, 151));
 	return (released && hover) || (button_down && hover && builder.allow_multi_click);
 }

@@ -84,12 +84,39 @@ impl ActivityModifier {
     }
 }
 
+#[deriving(Decodable, Encodable)]
+pub struct MacroNutrient {
+    pub protein: f32,
+    pub ch: f32,
+    pub fat: f32,
+}
+
+impl MacroNutrient {
+    pub fn new(p: f32, ch: f32, f: f32) -> MacroNutrient {
+        MacroNutrient {
+            protein: p,
+            ch: ch,
+            fat: f,
+        }
+    }
+
+    pub fn kcal(&self) -> f32 {
+        self.protein * 4f32 + self.ch * 4f32 + self.fat*9f32
+    }
+}
+
+impl Add<MacroNutrient, MacroNutrient> for MacroNutrient {
+    fn add(&self, rhs: &MacroNutrient) -> MacroNutrient {
+        let p = self.protein + rhs.protein;
+        let ch = self.ch + rhs.ch;
+        let fat = self.fat + rhs.fat;
+        MacroNutrient::new(p, ch, fat)
+    }
+}
 
 #[deriving(Decodable, Encodable)]
-pub struct RecommendedMacros {
-    pub protein: i32,
-    pub ch: i32,
-    pub fat: i32,
+pub struct NutritionGoal {
+    pub macros: MacroNutrient,
     pub age: i32,
     pub height: i32,
     pub weight: f32,
@@ -105,12 +132,10 @@ pub struct RecommendedMacros {
     pub target_calories: f32,
 }
 
-impl RecommendedMacros {
-    pub fn new(p: i32, ch: i32, f: i32) -> RecommendedMacros {
-        RecommendedMacros {
-            protein: p,
-            ch: ch,
-            fat: f,
+impl NutritionGoal {
+    pub fn new(p: f32, ch: f32, f: f32) -> NutritionGoal {
+        NutritionGoal {
+            macros: MacroNutrient::new(p, ch, f),
             age: 0,
             height: 0,
             weight: 0f32,
@@ -165,16 +190,16 @@ impl Food {
 
 #[deriving(Decodable, Encodable)]
 pub struct MealFood {
-    id: uint,
+    parent_id: uint,
     pub food_id: uint,
     pub weight: f32,
     pub weight_type: WeightType,
 }
 
 impl MealFood {
-    pub fn new(id: uint, food_id: uint) -> MealFood {
+    pub fn new(meal: &Meal, food_id: uint) -> MealFood {
         MealFood { 
-            id: id,
+            parent_id: meal.id,
             food_id: food_id,
             weight: 0f32,
             weight_type: G,
@@ -185,18 +210,37 @@ impl MealFood {
 #[deriving(Decodable, Encodable)]
 pub struct Meal {
     id: uint,
+    parent_id: uint,
     pub name: String,
     pub foods: Vec<MealFood>,
 }
 
 impl Meal {
-    pub fn new(id: uint) -> Meal {
+
+    fn new(id: uint, name: String, parent_id: uint) -> Meal {
         Meal {
-            name: "".into_string(),
+            name: name,
             foods: vec![],
             id: id,
+            parent_id: parent_id,
         }
     }
+
+    pub fn add_food(&mut self, food_id: uint) {
+        let meal_food = MealFood::new(self, food_id);
+        self.foods.push(meal_food)
+    }
+    pub fn add_meal_food(&mut self, meal_food: MealFood) {
+        self.foods.push(meal_food);
+    }
+
+    /*pub fn from_meal(id: uint, src: &Meal) -> Meal {
+        let meal = Meal::new(id);
+        meal.name = src.name.clone();
+        for meal_food in src.foods.iter() {
+            //meal.foods.push();
+        }
+    }*/
 }
 
 #[deriving(Decodable, Encodable)]
@@ -207,12 +251,27 @@ pub struct DailyMenu {
 }
 
 impl DailyMenu {
-    pub fn new(id: uint) -> DailyMenu {
+    pub fn new(id: uint, name: String) -> DailyMenu {
         DailyMenu {
             id: id,
-            name: "".into_string(),
+            name: name,
             meals: vec![],
         }
+    }
+
+    pub fn add_new_meal(&mut self, meal_id: uint) {
+        let meal = Meal {
+            name: "".into_string(),
+            foods: vec![],
+            id: meal_id,
+            parent_id: self.id,
+        };
+        self.meals.push(meal);
+    }
+
+    pub fn add_meal(&mut self, mut meal: Meal) {
+        meal.parent_id = self.id;
+        self.meals.push(meal);   
     }
 }
 
@@ -235,17 +294,6 @@ impl Dao {
         }
     }
 
-    fn remove_meal_food(meal_food_id: uint, meal_foods: &mut Vec<MealFood>) -> MealFood {
-        let mut idx = 0;
-        for (i, meal_food) in meal_foods.iter().enumerate() {
-            if meal_food.id == meal_food_id {
-                idx = i;
-                break;
-            }
-        }
-        return meal_foods.remove(idx).unwrap();
-    }
-
     fn remove_meal(meal_id: uint, meals: &mut Vec<Meal>) -> Meal {
         let mut idx = 0;
         for (i, meal) in meals.iter().enumerate() {
@@ -257,6 +305,20 @@ impl Dao {
         return meals.remove(idx).unwrap();
     }
 
+    fn get_daily_menu<'a>(daily_menu_id: uint, daily_menus: &'a mut Vec<DailyMenu>) -> &'a mut DailyMenu {
+        match daily_menus.iter_mut().filter(|x| x.id == daily_menu_id).next() {
+            None => panic!("DailyMenu not found: {}", daily_menu_id),
+            Some(m) => m
+        }
+    }
+
+    fn get_meal<'a>(meal_id: uint, meals: &'a mut Vec<Meal>) -> &'a mut Meal {
+        match meals.iter_mut().filter(|x| x.id == meal_id).next() {
+            None => panic!("Meal not found: {}", meal_id),
+            Some(m) => m
+        }
+    }
+
     pub fn load_daily_menus(&self) -> Vec<DailyMenu> {
         let mut rdr = ::csv::Reader::from_file(&Path::new("data\\meal_foods.csv")).has_headers(false);
         let mut meal_foods = rdr.decode().map(|r| r.unwrap()).collect::<Vec<MealFood>>();
@@ -264,35 +326,25 @@ impl Dao {
         let mut meals = vec![];
         let mut rdr = ::csv::Reader::from_file(&Path::new("data\\meals.csv")).has_headers(false);
         for row in rdr.decode() {
-            let (id, name, meal_food_ids): (uint, String, String) = row.unwrap();
-            let mut meal = Meal::new(id);
-            meal.name = name.into_string();
-            for id in meal_food_ids.split(';') {
-                let id = from_str::<uint>(id).unwrap_or(0);
-                if id == 0 {
-                    continue;
-                }
-                let meal_food = Dao::remove_meal_food(id, &mut meal_foods);
-                meal.foods.push(meal_food);
-            }
+            let (id, name, parent_id): (uint, String, uint) = row.unwrap();
+            let mut meal = Meal::new(id, name.into_string(), parent_id);
             meals.push(meal);
         }
 
         let mut daily_menus = vec![];
         let mut rdr = ::csv::Reader::from_file(&Path::new("data\\dailies.csv")).has_headers(false);
         for row in rdr.decode() {
-            let (id, name, meal_ids): (uint, String, String) = row.unwrap();
-            let mut daily_menu = DailyMenu::new(id);
-            daily_menu.name = name.into_string();
-            for id in meal_ids.split(';') {
-                let id = from_str::<uint>(id).unwrap_or(0);
-                if id == 0 {
-                    continue;
-                }
-                let meal = Dao::remove_meal(id, &mut meals);
-                daily_menu.meals.push(meal);
-            }
+            let (id, name): (uint, String) = row.unwrap();
+            let mut daily_menu = DailyMenu::new(id, name.into_string());
             daily_menus.push(daily_menu);
+        }
+        for meal_food in meal_foods.into_iter() {
+            let mut parent_meal = Dao::get_meal(meal_food.parent_id, &mut meals);
+            parent_meal.add_meal_food(meal_food);
+        }
+        for meal in meals.into_iter() {
+            let mut parent_daily_menu = Dao::get_daily_menu(meal.parent_id, &mut daily_menus);
+            parent_daily_menu.add_meal(meal);   
         }
         return daily_menus;
     }
@@ -307,7 +359,8 @@ impl Dao {
                 for meal_food in meal.foods.as_slice().iter() {
                     meal_food_writer.encode(*meal_food);
                 }
-                let dao = (meal.id, meal.name.as_slice(), meal.foods.iter().fold("".into_string(), |a, b| a + format!("{};", b.id)));
+                let dao = (meal.id, meal.name.as_slice(), meal.parent_id);
+                // , meal.foods.iter().fold("".into_string(), |a, b| a + format!("{};", b.id)));
                 meal_writer.encode(dao);
             }
             let dao = (daily_menu.id, daily_menu.name.as_slice(), daily_menu.meals.iter().fold("".into_string(), |a, b| a + format!("{};", b.id)));
@@ -315,15 +368,15 @@ impl Dao {
         }
     }
 
-    pub fn load_recommended_macros(&self) -> RecommendedMacros {
+    pub fn load_nutritional_goals(&self) -> NutritionGoal {
         let mut rdr = ::csv::Reader::from_file(&Path::new("data\\recommended.csv")).has_headers(false);
         return match rdr.decode().take(1).next() {
             Some(r) => r.unwrap(),
-            None => RecommendedMacros::new(0, 0, 0),
+            None => NutritionGoal::new(0f32, 0f32, 0f32),
         };
     }
 
-    pub fn persist_recommended_macros(&mut self, recommended_macros: &RecommendedMacros) {
+    pub fn persist_nutritional_goals(&mut self, recommended_macros: &NutritionGoal) {
         let mut enc = ::csv::Writer::from_file(&Path::new("data\\recommended.csv"));
         enc.encode(recommended_macros);
     }

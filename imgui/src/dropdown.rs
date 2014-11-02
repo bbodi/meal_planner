@@ -122,24 +122,25 @@ pub fn draw(builder: &mut DropdownBuilder, renderer: &sdl2::render::Renderer) ->
 	};
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 0));
 	let _ = renderer.draw_rect(&Rect::new(x, y, label_w, h));
-	builder.layer.draw_rect_gradient(renderer, x+1, y+1, label_w-2, h-2, top_color, bottom_color);
+	builder.layer.draw_rect_gradient(x+1, y+1, label_w-2, h-2, top_color, bottom_color);
 	if builder.labels[builder.value.get()].len() > 0 {
-		builder.layer.draw_text(x+1, y+1, renderer, builder.labels[builder.value.get()], RGB(221, 221, 221));
+		builder.layer.draw_text(x+1, y+1, builder.labels[builder.value.get()], RGB(221, 221, 221));
 	}
 
 	let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 0));
 	let _ = renderer.draw_rect(&Rect::new(x+label_w, y, down_arrow_w, h));
-	builder.layer.draw_rect_gradient(renderer, x+label_w+1, y+1, down_arrow_w-2, h-2, top_color, bottom_color);
+	builder.layer.draw_rect_gradient(x+label_w+1, y+1, down_arrow_w-2, h-2, top_color, bottom_color);
 	let arrow_char = if active {"▲"} else {"▼"};
-	builder.layer.draw_text(x + label_w+char_w/3, y, renderer, arrow_char, RGB(221, 221, 221));
+	builder.layer.draw_text(x + label_w+char_w/3, y, arrow_char, RGB(221, 221, 221));
 
 	if active {
+		let mut layer = builder.layer.popup_layer.as_mut().unwrap();
 		for (i, label) in builder.labels.iter().enumerate() {
 			let i = i as i32;
 			let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 0));
 			let _ = renderer.draw_rect(&Rect::new(x, y + (1+i)*char_h, all_w, h));
 
-			let color = match builder.layer.is_mouse_in(x, y + (1+i)*char_h, all_w, h) {
+			let color = match layer.is_mouse_in(x, y + (1+i)*char_h, all_w, h) {
 				true => sdl2::pixels::RGB(82, 82, 90),
 				false => sdl2::pixels::RGB(51, 51, 51),
 			};
@@ -148,7 +149,7 @@ pub fn draw(builder: &mut DropdownBuilder, renderer: &sdl2::render::Renderer) ->
 			if label.len() == 0 {
 				continue;
 			}
-			builder.layer.draw_text(x+1, y +1+ (1+i)*char_h, renderer, *label, RGB(198, 198, 198));
+			layer.draw_text(x+1, y +1+ (1+i)*char_h, *label, RGB(198, 198, 198));
 		}
 	}
 	modified
