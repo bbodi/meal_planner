@@ -234,18 +234,22 @@ impl Meal {
         self.foods.push(meal_food);
     }
 
-    /*pub fn from_meal(id: uint, src: &Meal) -> Meal {
-        let meal = Meal::new(id);
-        meal.name = src.name.clone();
+    pub fn from_meal(id: uint, src: &Meal) -> Meal {
+        let mut meal = Meal::new(id, src.name.clone(), src.parent_id);
         for meal_food in src.foods.iter() {
-            //meal.foods.push();
+            let mut new_meal_food = *meal_food;
+            new_meal_food.parent_id = id;
+            meal.foods.push(new_meal_food);
         }
-    }*/
+        meal
+    }
+
+    pub fn id(&self) -> uint {self.id}
 }
 
 #[deriving(Decodable, Encodable)]
 pub struct DailyMenu {
-    pub id: uint,
+    id: uint,
     pub name: String, 
     pub meals: Vec<Meal>
 }
@@ -273,6 +277,8 @@ impl DailyMenu {
         meal.parent_id = self.id;
         self.meals.push(meal);   
     }
+
+    pub fn id(&self) -> uint {self.id}
 }
 
 pub struct Dao;
@@ -363,7 +369,7 @@ impl Dao {
                 // , meal.foods.iter().fold("".into_string(), |a, b| a + format!("{};", b.id)));
                 meal_writer.encode(dao);
             }
-            let dao = (daily_menu.id, daily_menu.name.as_slice(), daily_menu.meals.iter().fold("".into_string(), |a, b| a + format!("{};", b.id)));
+            let dao = (daily_menu.id, daily_menu.name.as_slice());
             enc.encode(dao);
         }
     }

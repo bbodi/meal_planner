@@ -34,10 +34,10 @@ impl<'a> KCalTable<'a> {
 		}
 	}
 
-	pub fn draw_rects(&self, renderer: &sdl2::render::Renderer) {
+	pub fn draw_rects(&mut self) {
 		for x in range(0, 20) {
 			for y in range(0, 20) {
-				base::fill_rect(renderer, x * 42, y * 22, 40, 10, RGB(51, 51, 51));
+				self.layer.fill_rect(x * 42, y * 22, 40, 10, RGB(51, 51, 51));
 			}
 		}
 	}
@@ -45,15 +45,15 @@ impl<'a> KCalTable<'a> {
 	pub fn draw_gradient_rects(&mut self, renderer: &sdl2::render::Renderer) {
 		for x in range(0, 20) {
 			for y in range(0, 20) {
-				self.layer.draw_rect_gradient(renderer, x * 42, y * 22, 40, 10, RGB(114, 114, 114), RGB(68, 68, 68));
+				self.layer.draw_rect_gradient(x * 42, y * 22, 40, 10, RGB(114, 114, 114), RGB(68, 68, 68));
 			}
 		}
 	}
 
-	pub fn draw_texts(&mut self, renderer: &sdl2::render::Renderer) {
+	pub fn draw_texts(&mut self) {
 		for x in range(0, 20) {
 			for y in range(0, 20) {
-				self.layer.draw_text(x * 42, 20 + y * 22, renderer, "bali", RGB(221, 221, 221));
+				self.layer.draw_text(x * 42, 20 + y * 22, "bali", RGB(221, 221, 221));
 			}
 		}
 	}
@@ -178,7 +178,7 @@ impl<'a> KCalTable<'a> {
 		header(&mut self.layer, "Tömeg", SizeInCharacters(12), column_height - SizeInCharacters(1))
 			.down(SizeInCharacters(0))
 			.draw(renderer);
-		
+
 		header(&mut self.layer, "Price", SizeInCharacters(6), column_height - SizeInCharacters(1))
 			.right(SizeInCharacters(0))
 			.draw(renderer);

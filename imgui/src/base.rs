@@ -53,6 +53,7 @@ impl IndexValue for i32 {
 	}
 }
 
+#[deriving(PartialEq, Clone)]
 pub enum DrawCommand {
 	Rect(i32, i32, i32, i32, sdl2::pixels::Color),
 	Line(i32, i32, i32, i32, sdl2::pixels::Color),
@@ -367,7 +368,7 @@ impl Layer {
     }
 
     pub fn draw(&mut self, renderer: &sdl2::render::Renderer) {
-    	let mut newvec: Vec<DrawCommand> = self.draw_commands.clone();
+		let mut newvec = self.draw_commands.iter().map(|x| x.clone()).collect::<Vec<DrawCommand>>();
     	for draw_command in newvec.iter() {
     		match draw_command {
     			&Line(x1, y1, x2, y2, color) => {
@@ -379,6 +380,9 @@ impl Layer {
     		}
     	}
     	self.draw_commands.clear();
+		if self.popup_layer.is_some() {
+			self.popup_layer.as_mut().unwrap().draw(renderer);
+		}
     }
 
 	pub fn add_textfield_state(&mut self, id: i32, state: ::textfield::State) {

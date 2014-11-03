@@ -85,12 +85,12 @@ pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) ->
 		builder.layer.draw_rect_gradient(x, y, char_h, char_h, RGB(82, 86, 90), RGB(49, 52, 55));
 	}
 
-	if *builder.value {
-		let _ = renderer.set_draw_color(sdl2::pixels::RGB(51 , 200, 51));
+	let color = if *builder.value {
+		sdl2::pixels::RGB(51 , 200, 51)
 	} else {
-		let _ = renderer.set_draw_color(sdl2::pixels::RGB(51 , 51, 51));
-	}
-	let _ = renderer.fill_rect(&Rect::new(x + char_h/3, y + char_h/3, char_h/3, char_h/3));
+		sdl2::pixels::RGB(51 , 51, 51)
+	};
+	let _ = builder.layer.fill_rect(x + char_h/3, y + char_h/3, char_h/3, char_h/3, color);
 	if builder.label.len() > 0 {
 		builder.layer.draw_text(x + char_h, y, builder.label, RGB(151, 151, 151));
 	}

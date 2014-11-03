@@ -86,17 +86,23 @@ fn main() {
     let mut dao = db::Dao::new();
     let mut foods = dao.load_foods();
     let mut daily_menus = dao.load_daily_menus();
+    let mut last_meal_id = 0;
+    let mut last_daily_menu_id = 0;
+    for daily_menu in daily_menus.iter() {
+        last_daily_menu_id = std::cmp::max(last_daily_menu_id, daily_menu.id());
+        for meal in daily_menu.meals.iter() {
+            last_meal_id = std::cmp::max(last_meal_id, meal.id());
+        }
+    }
 
     let mut layer = imgui::base::Layer::new();
     let mut nutr_goal = dao.load_nutritional_goals();
     let mut kcal_win = kcal_window::KCalWindow::new();
     let mut kcal_table = kcal_table::KCalTable::new();
 
-    let mut last_daily_menu_id = 0;
-    let mut weekly_plan = weekly_plan::WeeklyPlan::new(&mut last_daily_menu_id);
-    
-    let mut last_meal_id = 0;
-    let mut daily_plan = daily_plan::DailyPlan::new(&mut last_meal_id);
+    let mut weekly_plan = weekly_plan::WeeklyPlan::new();
+
+    let mut daily_plan = daily_plan::DailyPlan::new();
     let mut show_cal_win = false;
     let mut show_table_win = false;
     let mut show_daily_win = false;
@@ -126,25 +132,33 @@ fn main() {
             if kcal_win.do_logic(&renderer, &event, &mut nutr_goal) {
                 dao.persist_nutritional_goals(&nutr_goal);
             }
+            kcal_win.layer.draw(&renderer);
         }
         if show_table_win {
             if kcal_table.do_logic(&renderer, &event, &mut foods) {
                 dao.persist_foods(foods.as_slice());
             }
+            kcal_table.layer.draw(&renderer);
         }
-        if show_daily_win && daily_menus.len() > 0 {
-            if daily_plan.do_logic(&renderer, &event, foods.as_slice(), daily_menus.get_mut(0), &nutr_goal) {
+        if show_daily_win {
+            if daily_menus.len() == 0 {
+                last_daily_menu_id = 1;
+                daily_menus.push(db::DailyMenu::new(last_daily_menu_id, "".into_string()));
+            }
+            if daily_plan.do_logic(&renderer, &event, foods.as_slice(), daily_menus.get_mut(0), &nutr_goal, &mut last_meal_id) {
                 dao.persist_daily_menu(daily_menus.as_mut_slice());
             }
+            daily_plan.layer.draw(&renderer);
         }
         if show_weekly_plan {
-            if weekly_plan.do_logic(&renderer, &event, foods.as_slice(), daily_menus.as_slice(), &nutr_goal) {
+            if weekly_plan.do_logic(&renderer, &event, foods.as_slice(), daily_menus.as_slice(), &nutr_goal, &mut last_daily_menu_id) {
                 //dao.persist_daily_menu(daily_menus.as_mut_slice());
             }
+            weekly_plan.layer.draw(&renderer);
         }
 
         if layer.control_keys.ctrl.down {
-            panel(&mut layer, SizeInCharacters(20), SizeInCharacters(5))
+            panel(&mut layer, SizeInCharacters(20), SizeInCharacters(7))
                 .x(SizeInCharacters(10))
                 .y(SizeInCharacters(10))
                 .draw(&renderer);
@@ -182,6 +196,7 @@ fn main() {
                 show_weekly_plan = true;
             }
         }
+        layer.draw(&renderer);
 
         /*layer.handle_event(event);
         if layer.button("Add data", 420, 20).draw(&renderer) {

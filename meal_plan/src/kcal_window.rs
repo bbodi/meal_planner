@@ -21,7 +21,7 @@ use db::NutritionGoal;
 
 
 pub struct KCalWindow<'a> {
-	layer: base::Layer,
+	pub layer: base::Layer,
 }
 
 

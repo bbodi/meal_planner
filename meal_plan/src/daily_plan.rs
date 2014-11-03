@@ -27,26 +27,24 @@ pub struct DailyPlan<'a> {
 
     page: uint,
     selected_meal: uint,
-    last_meal_id: &'a mut uint,
 }
 
 impl<'a> DailyPlan<'a> {
 
-    pub fn new(last_meal_id: &'a mut uint) -> DailyPlan<'a> {
+    pub fn new() -> DailyPlan<'a> {
         DailyPlan {
             layer: base::Layer::new(),
             page: 0,
             selected_meal: 0,
-            last_meal_id: last_meal_id, 
         }
     }
 
-    pub fn do_logic(&mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event, foods: &[db::Food], daily_menu: &mut DailyMenu, nutr_goal: &db::NutritionGoal) -> bool {
+    pub fn do_logic(&mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event, foods: &[db::Food], daily_menu: &mut DailyMenu, nutr_goal: &db::NutritionGoal, last_meal_id: &mut uint) -> bool {
         self.layer.handle_event(event);
 
         if daily_menu.meals.len() == 0 {
-            *self.last_meal_id = *self.last_meal_id + 1;
-            daily_menu.add_new_meal(*self.last_meal_id);
+            *last_meal_id = *last_meal_id + 1;
+            daily_menu.add_new_meal(*last_meal_id);
         }
 
         let column_height = SizeInCharacters(36);
@@ -93,7 +91,7 @@ impl<'a> DailyPlan<'a> {
             .default_text("Daily Menu name...")
             .draw(renderer);
         
-        let meals_menu_y = self.draw_meals_table(renderer, foods, daily_menu);
+        let meals_menu_y = self.draw_meals_table(renderer, foods, daily_menu, last_meal_id);
         self.draw_meal_foods_table(renderer, foods, daily_menu, meals_menu_y);
         self.draw_sum_table(renderer, foods, daily_menu, nutr_goal);
         return false;
@@ -222,15 +220,15 @@ impl<'a> DailyPlan<'a> {
         });
     }
 
-    fn draw_meals_table(&mut self, renderer: &sdl2::render::Renderer, foods: &[db::Food], daily_menu: &mut DailyMenu) -> SizeInCharacters{
+    fn draw_meals_table(&mut self, renderer: &sdl2::render::Renderer, foods: &[db::Food], daily_menu: &mut DailyMenu, last_meal_id: &mut uint) -> SizeInCharacters{
         let mut meals_menu_y = SizeInCharacters(0);
         let mut selected_meal = self.selected_meal;
-        let mut last_meal_id = *self.last_meal_id;
         let mut delete_idx = None;
         let meal_count = daily_menu.meals.len();
         let mut move_up_idx = None;
         let mut move_down_idx = None;
-        header(&mut self.layer, "Meals", SizeInCharacters(27), SizeInCharacters(4 + (daily_menu.meals.len() as i32*4) ))
+        let mut copy_idx = None;
+        header(&mut self.layer, "Meals", SizeInCharacters(27), SizeInCharacters(4 + (daily_menu.meals.len() as i32*5) ))
             .down(SizeInCharacters(1))
             .draw_with_body(renderer, |layer| {
             meals_menu_y = layer.last_y;
@@ -296,7 +294,7 @@ impl<'a> DailyPlan<'a> {
                 if button(layer, "C")
                     .down(SizeInCharacters(0))
                     .draw(renderer) {
-                    
+                    copy_idx = Some(i);
                 }
                 if button(layer, "-")
                     .disabled(meal_count <= 1)
@@ -335,8 +333,8 @@ impl<'a> DailyPlan<'a> {
                 .x(meal_checkbox_x)
                 .down(SizeInCharacters(1))
                 .draw(renderer) {
-                last_meal_id = last_meal_id + 1;
-                daily_menu.add_new_meal(last_meal_id);
+                *last_meal_id = *last_meal_id + 1;
+                daily_menu.add_new_meal(*last_meal_id);
             }
 
             if delete_idx.is_some() {
@@ -350,9 +348,13 @@ impl<'a> DailyPlan<'a> {
                 let i = move_down_idx.unwrap();
                 let moved_meal = daily_menu.meals.remove(i);
                 daily_menu.meals.insert(i+1, moved_meal.unwrap())
+            } else if copy_idx.is_some() {
+                let i = copy_idx.unwrap();
+                *last_meal_id = *last_meal_id + 1;
+                let new_meal = db::Meal::from_meal(*last_meal_id, &daily_menu.meals[i]);
+                daily_menu.add_meal(new_meal);
             }
         });
-        *self.last_meal_id = last_meal_id;
         if selected_meal >= daily_menu.meals.len() {
             selected_meal = daily_menu.meals.len()-1;
         }

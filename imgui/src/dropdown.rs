@@ -144,8 +144,7 @@ pub fn draw(builder: &mut DropdownBuilder, renderer: &sdl2::render::Renderer) ->
 				true => sdl2::pixels::RGB(82, 82, 90),
 				false => sdl2::pixels::RGB(51, 51, 51),
 			};
-			let _ = renderer.set_draw_color(color);
-			let _ = renderer.fill_rect(&Rect::new(x+1, y +1+ (1+i)*char_h, all_w-2, h-2));
+			layer.fill_rect(x+1, y+1+(1+i)*char_h, all_w-2, h-2, color);
 			if label.len() == 0 {
 				continue;
 			}
