@@ -58,7 +58,7 @@ fn recalc_bmr(rm: &mut NutritionGoal) {
 	let height = rm.height as f32 * if rm.height_type == 1 {30.48f32} else {1f32};
 	let b = 5f32 * height;
 	let c = 6.8f32 * rm.age as f32;
-	let d = 66f32 + a+b+c;
+	let d = 66f32 + a+b-c;
 	let bmr = rm.activity_mod.get_modified_value(d);
 	rm.bmr = bmr;
 	set_target_calories(rm, bmr);

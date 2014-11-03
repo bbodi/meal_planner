@@ -13,6 +13,10 @@ use imgui::label::label;
 use imgui::base::SizeInCharacters;
 use imgui::checkbox::checkbox;
 use imgui::panel::panel;
+use imgui::button::button;
+use imgui::textfield::textfield_i32;
+use imgui::dropdown::dropdown;
+use imgui::line_chart::line_chart;
 
 const SCREEN_WIDHT: u32 = 1024;
 const SCREEN_HEIGHT: u32 = 768;
@@ -104,9 +108,15 @@ fn main() {
 
     let mut daily_plan = daily_plan::DailyPlan::new();
     let mut show_cal_win = false;
-    let mut show_table_win = false;
+    let mut show_table_win = true;
     let mut show_daily_win = false;
-    let mut show_weekly_plan = true;
+    let mut show_weekly_plan = false;
+    let mut selected_menu_idx: uint = 0;
+
+    let mut show_surface = false;
+    let mut text = 0;
+    let mut dropdown_value: i32 = 0;
+
     'main : loop {
         sdl2::timer::delay(10);
 
@@ -127,7 +137,7 @@ fn main() {
             &sdl2::render::WindowParent(ref w) => w.set_title(mouse_str.as_slice()),
             _ => {},
         };
-
+        /*
         if show_cal_win {
             if kcal_win.do_logic(&renderer, &event, &mut nutr_goal) {
                 dao.persist_nutritional_goals(&nutr_goal);
@@ -140,12 +150,8 @@ fn main() {
             }
             kcal_table.layer.draw(&renderer);
         }
-        if show_daily_win {
-            if daily_menus.len() == 0 {
-                last_daily_menu_id = 1;
-                daily_menus.push(db::DailyMenu::new(last_daily_menu_id, "".into_string()));
-            }
-            if daily_plan.do_logic(&renderer, &event, foods.as_slice(), daily_menus.get_mut(0), &nutr_goal, &mut last_meal_id) {
+        if daily_menus.len() > 0 && show_daily_win {
+            if daily_plan.do_logic(&renderer, &event, foods.as_slice(), daily_menus.get_mut(selected_menu_idx), &nutr_goal, &mut last_meal_id) {
                 dao.persist_daily_menu(daily_menus.as_mut_slice());
             }
             daily_plan.layer.draw(&renderer);
@@ -157,6 +163,28 @@ fn main() {
             weekly_plan.layer.draw(&renderer);
         }
 
+        if layer.control_keys.alt.down {
+            panel(&mut layer, SizeInCharacters(20), SizeInCharacters(2 + daily_menus.len() as i32 * 2))
+                .x(SizeInCharacters(10))
+                .y(SizeInCharacters(10))
+                .draw(&renderer);
+            if button(&mut layer, "New...")
+                .x(SizeInCharacters(10))
+                .y(SizeInCharacters(10))
+                .draw(&renderer) {
+                last_daily_menu_id = last_daily_menu_id + 1;
+                daily_menus.push(db::DailyMenu::new(last_daily_menu_id, "Unnamed".into_string()));
+                selected_menu_idx = 0;
+            }
+            for (i, daily_menu) in daily_menus.iter().enumerate() {
+                if button(&mut layer, daily_menu.name.as_slice())
+                    .x(SizeInCharacters(10))
+                    .y(SizeInCharacters(12+i as i32*2))
+                    .draw(&renderer) {
+                    selected_menu_idx = i;
+                }
+            }
+        }
         if layer.control_keys.ctrl.down {
             panel(&mut layer, SizeInCharacters(20), SizeInCharacters(7))
                 .x(SizeInCharacters(10))
@@ -196,39 +224,41 @@ fn main() {
                 show_weekly_plan = true;
             }
         }
-        layer.draw(&renderer);
+        */
 
-        /*layer.handle_event(event);
-        if layer.button("Add data", 420, 20).draw(&renderer) {
+        if button(&mut layer, "Add data").draw(&renderer) {
             last = last + std::rand::random::<i32>().abs() % 7 - 3;
             datas[0].push(last);
         }
 
-        layer.checkbox("Add data", &mut show_surface, 550, 20).draw(&renderer);
+        checkbox(&mut layer, &mut show_surface)
+            .label("Add data")
+            .draw(&renderer);
 
-        if layer.textfield(&mut text, 420, 50, 400, 55)
+        match textfield_i32(&mut layer, &mut text, SizeInCharacters(55))
+            .down(SizeInCharacters(0))
             .default_text("Írj be egy számot, majd nyomj entert!")
             .draw(&renderer) {
-            match std::from_str::FromStr::from_str(text.as_slice()) {
-                Some(d) => {
-                    datas[0].push(d);
-                    text.clear();
-                },
-                None => {},
-            }
+            Some(imgui::textfield::Enter) => {
+                datas[0].push(text);
+            },
+            _ => {}
         }
-        layer.dropdown(vec!["", "One", "Two", "Three", "Four", "Five"].as_slice(), &mut dropdown_value,  420, 120).draw(&renderer);
+        dropdown(&mut layer, vec!["", "One", "Two", "Three", "Four", "Five"].as_slice(), &mut dropdown_value)
+            .down(SizeInCharacters(0))
+            .draw(&renderer);
 
         for i in range(0, dropdown_value) {
-            layer.line_chart("Datas", 10, 10 + i as i32 *70, 410, 60).data(datas[i].as_slice()).draw(&renderer);
+            line_chart(&mut layer, "Datas", 10, 10 + i as i32 *70, 410, 60).data(datas[i as uint].as_slice()).draw(&renderer);
         }
 
-        layer.line_chart("Datas", 10, 10 + 5 * 70, 410, 60)
+        line_chart(&mut layer, "Datas", 10, 10 + 5 * 70, 410, 60)
             .data(datas[1].as_slice())
             .bottom_color(RGBA(82, 82, 82, 150))
             .top_color(RGB(60, 60, 60))
             .surface_color(if show_surface {Some(RGB(255, 255, 255))} else {None})
-            .draw(&renderer);*/
+            .draw(&renderer);
+        layer.draw(&renderer);
         renderer.present();
 
         let keys = sdl2::keyboard::get_keyboard_state();

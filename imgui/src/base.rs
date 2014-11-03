@@ -92,6 +92,7 @@ pub struct ControlKeys {
 	pub enter: Key,
 	pub tab: Key,
 	pub ctrl: Key,
+	pub alt: Key,
 }
 
 impl ControlKeys {
@@ -108,6 +109,7 @@ impl ControlKeys {
 			enter: Key::new(),
 			tab: Key::new(),
 			ctrl: Key::new(),
+			alt: Key::new(),
 		}
 	}
 }
@@ -334,6 +336,7 @@ impl Layer {
 		Layer::update_key(keys[sdl2::scancode::EndScanCode], &mut self.control_keys.end);
 		Layer::update_key(keys[sdl2::scancode::TabScanCode], &mut self.control_keys.tab);
 		Layer::update_key(keys[sdl2::scancode::LCtrlScanCode], &mut self.control_keys.ctrl);
+		Layer::update_key(keys[sdl2::scancode::LAltScanCode], &mut self.control_keys.alt);
 
     	match sdl_event {
     		&sdl2::event::WindowEvent(_, _, win_event_id, _, _) => {

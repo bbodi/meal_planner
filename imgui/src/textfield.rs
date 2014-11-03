@@ -10,6 +10,7 @@ use base::SizeInCharacters;
 pub enum TextFieldResult {
 	Selected,
 	Changed,
+	Enter,
 }
 
 pub struct TextFieldBuilder<'a> {
@@ -298,6 +299,9 @@ pub fn handle_logic(builder: &mut TextFieldBuilder) -> Option<TextFieldResult> {
 			state.cursor_visible = !state.cursor_visible;
 			state.cursor_visibility_change_tick = tick + 500;
 		}
+	}
+	if builder.layer.control_keys.enter.just_pressed {
+		return Some(Enter);
 	}
 	if !edited {
 		return if just_clicked { Some(Selected) } else {None};

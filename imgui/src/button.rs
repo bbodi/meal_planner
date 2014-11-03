@@ -119,6 +119,8 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 		builder.layer.draw_rect_gradient(x, y, w, h, RGB(82, 85, 90), RGB(47, 50, 53));
 	}
 	base::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
-	builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, builder.label, RGB(151, 151, 151));
+	if builder.label.len() > 0 {
+		builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, builder.label, RGB(151, 151, 151));
+	}
 	return (released && hover) || (button_down && hover && builder.allow_multi_click);
 }

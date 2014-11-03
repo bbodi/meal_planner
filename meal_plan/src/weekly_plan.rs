@@ -42,8 +42,6 @@ impl<'a> WeeklyPlan<'a> {
         self.layer.handle_event(event);
 
         let julian = time::now().tm_yday+1;
-        //let dow = time::now().tm_wday;
-        //let dowJan1 = 
         let current_week = (time::now().tm_yday+6) / 7;
         let day_names = ["Monday", "Thuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         for (i, week_num) in range(max(0, current_week-3), min(52, current_week+4) ).enumerate() {
@@ -53,7 +51,7 @@ impl<'a> WeeklyPlan<'a> {
                 .draw_with_body(renderer, |layer| {
                     let mut selected_index = 0;
                     let header_start_x = layer.last_x;
-                    for (i, _) in day_names.iter().enumerate() {
+                    for (i, _) in daily_menus.iter().enumerate() {
                         let daily_menu_names = if daily_menus.len() > 0 {
                             daily_menus.iter().map(|x| x.name.as_slice()).collect::<Vec<&str>>()
                         } else {
@@ -64,11 +62,16 @@ impl<'a> WeeklyPlan<'a> {
                             .down(SizeInCharacters(0))
                             .x(header_start_x + SizeInCharacters(1))
                             .draw(renderer);
-                        /*if button(&mut self.layer, "Add new")
+                        if button(layer, "Add new")
                             .x(header_start_x + SizeInCharacters(1))
                             .draw(renderer) {
-                            let mut daily_plan = daily_plan::DailyPlan::new(&mut last_meal_id);
-                        }*/
+                            //let mut daily_plan = daily_plan::DailyPlan::new(&mut last_meal_id);
+                        }
+                    }
+                    if button(layer, "Add new")
+                        .x(header_start_x + SizeInCharacters(1))
+                        .draw(renderer) {
+                        //let mut daily_plan = daily_plan::DailyPlan::new(&mut last_meal_id);
                     }
                 });
         }
