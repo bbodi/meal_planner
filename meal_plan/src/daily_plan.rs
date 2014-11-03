@@ -142,7 +142,6 @@ impl<'a> DailyPlan<'a> {
                 .color(RGB(76, 166, 79))
                 .draw_with_body(renderer, |layer| {
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.protein).as_slice())
-                    .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
                     .draw(renderer);
@@ -152,7 +151,6 @@ impl<'a> DailyPlan<'a> {
                     .down(SizeInCharacters(0))
                     .draw(renderer);
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.protein - daily_macros.protein).as_slice())
-                    .bold(true)     
                     .color(RGB(0, 0, 0))           
                     .down(SizeInCharacters(0))
                     .draw(renderer);
@@ -162,7 +160,6 @@ impl<'a> DailyPlan<'a> {
                 .color(RGB(237, 166, 0))
                 .draw_with_body(renderer, |layer| {
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.ch).as_slice())
-                    .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
                     .draw(renderer);
@@ -172,7 +169,6 @@ impl<'a> DailyPlan<'a> {
                     .down(SizeInCharacters(0))
                     .draw(renderer);
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.ch - daily_macros.ch).as_slice())
-                    .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
                     .draw(renderer);
@@ -182,7 +178,6 @@ impl<'a> DailyPlan<'a> {
                 .color(RGB(210, 93, 90))
                 .draw_with_body(renderer, |layer| {
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.fat).as_slice())
-                    .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
                     .draw(renderer);
@@ -192,7 +187,6 @@ impl<'a> DailyPlan<'a> {
                     .down(SizeInCharacters(0))
                     .draw(renderer);
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.fat - daily_macros.fat).as_slice())
-                    .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
                     .draw(renderer);
@@ -202,7 +196,6 @@ impl<'a> DailyPlan<'a> {
                 //.color(RGB(210, 93, 90))
                 .draw_with_body(renderer, |layer| {
                 label(layer, format!("{: ^6.0f}", nutr_goal.macros.kcal()).as_slice())
-                    .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
                     .draw(renderer);
@@ -212,7 +205,6 @@ impl<'a> DailyPlan<'a> {
                     .down(SizeInCharacters(0))
                     .draw(renderer);
                 label(layer, format!("{: ^6.0f}", nutr_goal.macros.kcal() - daily_macros.kcal()).as_slice())
-                    .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
                     .draw(renderer);

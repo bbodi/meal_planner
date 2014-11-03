@@ -113,9 +113,9 @@ fn main() {
     let mut show_weekly_plan = false;
     let mut selected_menu_idx: uint = 0;
 
-    let mut show_surface = false;
+    /*let mut show_surface = false;
     let mut text = 0;
-    let mut dropdown_value: i32 = 0;
+    let mut dropdown_value: i32 = 0;*/
 
     'main : loop {
         sdl2::timer::delay(10);
@@ -137,7 +137,7 @@ fn main() {
             &sdl2::render::WindowParent(ref w) => w.set_title(mouse_str.as_slice()),
             _ => {},
         };
-        /*
+        
         if show_cal_win {
             if kcal_win.do_logic(&renderer, &event, &mut nutr_goal) {
                 dao.persist_nutritional_goals(&nutr_goal);
@@ -224,9 +224,8 @@ fn main() {
                 show_weekly_plan = true;
             }
         }
-        */
 
-        if button(&mut layer, "Add data").draw(&renderer) {
+        /*if button(&mut layer, "Add data").draw(&renderer) {
             last = last + std::rand::random::<i32>().abs() % 7 - 3;
             datas[0].push(last);
         }
@@ -257,7 +256,7 @@ fn main() {
             .bottom_color(RGBA(82, 82, 82, 150))
             .top_color(RGB(60, 60, 60))
             .surface_color(if show_surface {Some(RGB(255, 255, 255))} else {None})
-            .draw(&renderer);
+            .draw(&renderer);*/
         layer.draw(&renderer);
         renderer.present();
 
