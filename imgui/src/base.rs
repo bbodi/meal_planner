@@ -244,19 +244,16 @@ impl Layer {
 		self.mouse_state == 0 && self.prev_mouse_state == 1
 	}
 
-	pub fn set_hot_widget(&mut self, x: i32, y: i32) {
-		let id = x << 8 | y;
+	pub fn set_hot_widget(&mut self, id: i32) {
 		self.hot_id = id;
 	}
 
-	pub fn set_active_widget_temporarily(&mut self, x: i32, y: i32) {
+	pub fn set_active_widget_temporarily(&mut self, id: i32) {
 		self.last_active_id = self.active_id;
-		let id = x << 8 | y;
 		self.active_id = id;
 	}
 
-	pub fn is_hot_widget(&self, x: i32, y: i32) -> bool {
-		let id = x << 8 | y;
+	pub fn is_hot_widget(&self, id: i32) -> bool {
 		self.hot_id == id
 	}
 
@@ -269,13 +266,11 @@ impl Layer {
 		self.last_active_id = NO_WIDGET_ID;
 	}
 
-	pub fn set_active_widget(&mut self, x: i32, y: i32) {
-		let id = x << 8 | y;
+	pub fn set_active_widget(&mut self, id: i32) {
 		self.active_id = id;
 	}
 
-	pub fn is_active_widget(&self, x: i32, y: i32) -> bool {
-		let id = x << 8 | y;
+	pub fn is_active_widget(&self, id: i32) -> bool {
 		self.active_id == id
 	}
 

@@ -47,12 +47,12 @@ impl<'a> PanelBuilder<'a> {
 	}
 
 
-	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) {
-		draw(self, renderer)
+	pub fn draw(&mut self) {
+		draw(self)
 	}
 }
 
-pub fn draw(builder: &mut PanelBuilder, renderer: &sdl2::render::Renderer) {
+pub fn draw(builder: &mut PanelBuilder) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);

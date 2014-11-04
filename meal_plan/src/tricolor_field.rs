@@ -62,7 +62,8 @@ pub fn draw(builder: &mut TriColorFieldBuilder, renderer: &sdl2::render::Rendere
 	let w = builder.textfield.w.in_pixels(char_w);
 	let h = char_h;
 	let label_width = builder.textfield.label.len() as i32  * char_w;
-	let was_active = builder.textfield.layer.is_active_widget(x, y);
+	let id = builder.textfield.value.get_id();
+	let was_active = builder.textfield.layer.is_active_widget(id);
 	let hover = builder.textfield.layer.is_mouse_in(x, y, label_width+w, h);
 	let clicked_out = builder.textfield.layer.is_mouse_down() && !hover && was_active;
 	let active = was_active && !clicked_out;

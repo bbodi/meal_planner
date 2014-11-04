@@ -89,8 +89,8 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 		return false;
 	}
 
-	let was_hot = builder.layer.is_hot_widget(x, y);
-	let was_active = builder.layer.is_active_widget(x, y);
+	let was_hot = builder.layer.is_hot_widget(x << 16 | (y & 0xFFFF) );
+	let was_active = builder.layer.is_active_widget(x << 16 | (y & 0xFFFF) );
 	let hover = builder.layer.is_mouse_in(x, y, w, h);
 	let released = builder.layer.is_mouse_released();
 
@@ -98,13 +98,13 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 	let mouse_down = builder.layer.is_mouse_down();
 
 	if mouse_down && hover && !was_active {
-		builder.layer.set_active_widget_temporarily(x, y);
+		builder.layer.set_active_widget_temporarily(x << 16 | (y & 0xFFFF) );
 	} else if was_active && released {
 		builder.layer.clear_active_widget();
 	}
 
 	if hover && !was_hot {
-		builder.layer.set_hot_widget(x, y);
+		builder.layer.set_hot_widget(x << 16 | (y & 0xFFFF) );
 	} else if was_hot && !hover {
 		builder.layer.clear_hot_widget();
 	}

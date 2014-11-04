@@ -79,7 +79,7 @@ impl<'a> WeeklyPlan<'a> {
             label(&mut self.layer, *day_name)
                 .x(SizeInCharacters(1))
                 .y(SizeInCharacters(2 + i as i32))
-                .draw(renderer);
+                .draw();
         }
         return false;
     }

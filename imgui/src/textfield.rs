@@ -46,11 +46,6 @@ impl State {
 	}
 }
 
-pub enum Value<'a> {
-	Text(&'a mut String),
-	F32(&'a mut f32),
-	I32(&'a mut i32),
-}
 
 pub fn textfield_f32<'a>(layer: &'a mut base::Layer, ptr: &'a mut f32, w: SizeInCharacters)-> TextFieldBuilder<'a> {
 	TextFieldBuilder::new(layer, F32(ptr), w)
@@ -62,6 +57,12 @@ pub fn textfield_i32<'a>(layer: &'a mut base::Layer, ptr: &'a mut i32, w: SizeIn
 
 pub fn textfield_str<'a>(layer: &'a mut base::Layer, ptr: &'a mut String, w: SizeInCharacters)-> TextFieldBuilder<'a> {
 	TextFieldBuilder::new(layer, Text(ptr), w)
+}
+
+pub enum Value<'a> {
+	Text(&'a mut String),
+	F32(&'a mut f32),
+	I32(&'a mut i32),
 }
 
 impl <'a> Value<'a> {
@@ -150,9 +151,9 @@ pub fn draw_bg(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer
 	let y = builder.y.in_pixels(char_h);
 	let w = builder.w.in_pixels(char_w);
 	let h = char_h;
-
+	let id = builder.value.get_id();
 	let hover = builder.layer.is_mouse_in(x, y, label_width+w, h);
-	let was_active = builder.layer.is_active_widget(x, y);
+	let was_active = builder.layer.is_active_widget(id);
 	let clicked_out = builder.layer.is_mouse_down() && !hover && was_active;
 	let active = was_active && !clicked_out;
 	if hover || active {
@@ -172,7 +173,8 @@ pub fn draw_text(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Render
 	let h = char_h;
 
 	let hover = builder.layer.is_mouse_in(x, y, label_width+w, h);
-	let was_active = builder.layer.is_active_widget(x, y);
+	let id = builder.value.get_id();
+	let was_active = builder.layer.is_active_widget(id);
 	let clicked_out = builder.layer.is_mouse_down() && !hover && was_active;
 	let active = was_active && !clicked_out;
 	let border_width = 2;
@@ -221,8 +223,9 @@ pub fn handle_logic(builder: &mut TextFieldBuilder) -> Option<TextFieldResult> {
 	let w = builder.w.in_pixels(char_w);
 	let h = char_h;
 	let label_width = builder.label.len() as i32  * char_w;
-	let was_hot = builder.layer.is_hot_widget(x, y);
-	let was_active = builder.layer.is_active_widget(x, y);
+	let id = builder.value.get_id();
+	let was_hot = builder.layer.is_hot_widget(id);
+	let was_active = builder.layer.is_active_widget(id);
 	let hover = builder.layer.is_mouse_in(x, y, label_width+w, h);
 	let just_clicked = builder.layer.is_mouse_down() && hover && !was_active;
 	let clicked_out = builder.layer.is_mouse_down() && !hover && was_active;
@@ -274,18 +277,18 @@ pub fn handle_logic(builder: &mut TextFieldBuilder) -> Option<TextFieldResult> {
 	if active && builder.layer.control_keys.tab.just_pressed {
 		builder.layer.clear_active_widget();
 	} else if !builder.layer.is_there_active_widget() {
-		builder.layer.set_active_widget(x, y);
+		builder.layer.set_active_widget(id);
 	}
 
 
 	if just_clicked {
-		builder.layer.set_active_widget(x, y);
+		builder.layer.set_active_widget(id);
 	} else if clicked_out {
 		builder.layer.clear_active_widget();
 	}
 
 	if hover && !was_hot {
-		builder.layer.set_hot_widget(x, y);
+		builder.layer.set_hot_widget(id);
 	} else if was_hot && !hover {
 		builder.layer.clear_hot_widget();
 	}

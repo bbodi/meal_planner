@@ -88,7 +88,8 @@ pub fn draw(builder: &mut DropdownBuilder, renderer: &sdl2::render::Renderer) ->
 	builder.layer.last_w = SizeInCharacters(longest_word_len + 2);
 	builder.layer.last_h = SizeInCharacters(1);
 
-	let was_active = builder.layer.is_active_widget(x, y);
+	let id = x << 16 | (y&0xFFFF);
+	let was_active = builder.layer.is_active_widget(id);
 	let hover = builder.layer.is_mouse_in(x, y, all_w, h);
 	let click = builder.layer.is_mouse_released() && hover;
 	let just_clicked = click && !was_active;
@@ -98,7 +99,7 @@ pub fn draw(builder: &mut DropdownBuilder, renderer: &sdl2::render::Renderer) ->
 
 	let mut modified = false;
 	if just_clicked {
-		builder.layer.set_active_widget(x, y);
+		builder.layer.set_active_widget(id);
 	} else if click_while_active {
 		builder.layer.clear_active_widget();
 	} else if clicked_out {

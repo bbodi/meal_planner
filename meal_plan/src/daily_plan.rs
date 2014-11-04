@@ -27,6 +27,7 @@ pub struct DailyPlan<'a> {
 
     page: uint,
     selected_meal: uint,
+    selected_food_type: db::FoodType,
 }
 
 impl<'a> DailyPlan<'a> {
@@ -36,6 +37,7 @@ impl<'a> DailyPlan<'a> {
             layer: base::Layer::new(),
             page: 0,
             selected_meal: 0,
+            selected_food_type: db::Meat,
         }
     }
 
@@ -54,8 +56,18 @@ impl<'a> DailyPlan<'a> {
             .draw(renderer);
         let price_header_x = self.layer.last_x + self.layer.last_w;
         let first_row = self.layer.last_x + SizeInCharacters(1);
+
+        dropdown(&mut self.layer, db::FoodType::names(), &mut self.selected_food_type)
+            .down(SizeInCharacters(1))
+            .x(first_row)
+            .draw(renderer);
+
         let can_add_row = daily_menu.meals[self.selected_meal].foods.len() < 9;
-        for (_, food) in foods.iter().skip(self.page * 16).take((self.page+1) * 16).enumerate() {
+        let selected_food_type = self.selected_food_type;
+        for (_, food) in foods.iter()
+            .filter(|x| x.food_type == selected_food_type)
+            .skip(self.page * 16)
+            .take((self.page+1) * 16).enumerate() {
             let fs = food.weight_type.to_g(food.weight);
             let values = (food.protein, food.ch, food.fat, fs);
             tricolor_label(label(&mut self.layer, food.name.as_slice())
@@ -69,7 +81,7 @@ impl<'a> DailyPlan<'a> {
         if button(&mut self.layer, "Prev")
             .disabled(self.page == 0)
             .x(first_row)
-            .y(SizeInCharacters(35))
+            .y(SizeInCharacters(37))
             .draw(renderer) {
             self.page = self.page - 1;
         }
@@ -129,13 +141,13 @@ impl<'a> DailyPlan<'a> {
             label(layer, "Current")
                 .y(start_y+SizeInCharacters(3))
                 .x(start_x + SizeInCharacters(1))
-                .draw(renderer);
+                .draw();
             label(layer, "Diff")
                 .down(SizeInCharacters(0))
-                .draw(renderer);
+                .draw();
             label(layer, "Recommended")
                 .up(SizeInCharacters(2))
-                .draw(renderer);
+                .draw();
             header(layer, "P", SizeInCharacters(5), SizeInCharacters(4))
                 .up(SizeInCharacters(1))
                 .right(SizeInCharacters(1))
@@ -144,16 +156,16 @@ impl<'a> DailyPlan<'a> {
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.protein).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
                 label(layer, format!("{: ^5.0f}", daily_macros.protein).as_slice())
                     .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.protein - daily_macros.protein).as_slice())
                     .color(RGB(0, 0, 0))           
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
             });
             header(layer, "Ch", SizeInCharacters(5), SizeInCharacters(4))
                 .right(SizeInCharacters(0))
@@ -162,16 +174,16 @@ impl<'a> DailyPlan<'a> {
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.ch).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
                 label(layer, format!("{: ^5.0f}", daily_macros.ch).as_slice())
                     .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.ch - daily_macros.ch).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
             });
             header(layer, "F", SizeInCharacters(5), SizeInCharacters(4))
                 .right(SizeInCharacters(0))
@@ -180,16 +192,16 @@ impl<'a> DailyPlan<'a> {
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.fat).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
                 label(layer, format!("{: ^5.0f}", daily_macros.fat).as_slice())
                     .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.fat - daily_macros.fat).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
             });
             header(layer, "kCal", SizeInCharacters(6), SizeInCharacters(4))
                 .right(SizeInCharacters(0))
@@ -198,16 +210,16 @@ impl<'a> DailyPlan<'a> {
                 label(layer, format!("{: ^6.0f}", nutr_goal.macros.kcal()).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
                 label(layer, format!("{: ^6.0f}", daily_macros.kcal()).as_slice())
                     .bold(true)
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
                 label(layer, format!("{: ^6.0f}", nutr_goal.macros.kcal() - daily_macros.kcal()).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
-                    .draw(renderer);
+                    .draw();
             });
         });
     }
@@ -251,7 +263,7 @@ impl<'a> DailyPlan<'a> {
                     .draw_with_body(renderer, |layer| {
                     label(layer, format!("{: ^5.0f}", macros.protein).as_slice())
                         .down(SizeInCharacters(0))
-                        .draw(renderer);
+                        .draw();
                 });
                 header(layer, "Ch", SizeInCharacters(5), SizeInCharacters(2))
                     .right(SizeInCharacters(0))
@@ -259,7 +271,7 @@ impl<'a> DailyPlan<'a> {
                     .draw_with_body(renderer, |layer| {
                     label(layer, format!("{: ^5.0f}", macros.ch).as_slice())
                         .down(SizeInCharacters(0))
-                        .draw(renderer);
+                        .draw();
                 });
                 header(layer, "F", SizeInCharacters(5), SizeInCharacters(2))
                     .right(SizeInCharacters(0))
@@ -267,14 +279,14 @@ impl<'a> DailyPlan<'a> {
                     .draw_with_body(renderer, |layer| {
                     label(layer, format!("{: ^5.0f}", macros.fat).as_slice())
                         .down(SizeInCharacters(0))
-                        .draw(renderer);
+                        .draw();
                 });
                 header(layer, "kCal", SizeInCharacters(6), SizeInCharacters(2))
                     .right(SizeInCharacters(0))
                     .draw_with_body(renderer, |layer| {
                     label(layer, format!("{: ^6.0f}", macros.kcal()).as_slice())
                         .down(SizeInCharacters(0))
-                        .draw(renderer);
+                        .draw();
                 });
                 if button(layer, "▲")
                     .disabled(i == 0)

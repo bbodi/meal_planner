@@ -34,43 +34,13 @@ impl<'a> KCalTable<'a> {
 		}
 	}
 
-	pub fn draw_rects(&mut self) {
-		for x in range(0, 20) {
-			for y in range(0, 20) {
-				self.layer.fill_rect(x * 42, y * 22, 40, 10, RGB(51, 51, 51));
-			}
-		}
-	}
-
-	pub fn draw_gradient_rects(&mut self, renderer: &sdl2::render::Renderer) {
-		for x in range(0, 20) {
-			for y in range(0, 20) {
-				self.layer.draw_rect_gradient(x * 42, y * 22, 40, 10, RGB(114, 114, 114), RGB(68, 68, 68));
-			}
-		}
-	}
-
-	pub fn draw_texts(&mut self) {
-		for x in range(0, 20) {
-			for y in range(0, 20) {
-				self.layer.draw_text(x * 42, 20 + y * 22, "bali", RGB(221, 221, 221));
-			}
-		}
-	}
-
-	// 1 oldalon 16
 	pub fn do_logic(&'a mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event, foods: &'a mut Vec<db::Food>) -> bool {
 		self.layer.handle_event(event);
-		//self.draw_gradient_rects(renderer);
-		//self.draw_rects(renderer);
-		//self.draw_texts(renderer);
-
-		//return false;
 
 		let column_height = SizeInCharacters(36);
-		header(&mut self.layer, "Foods", SizeInCharacters(70), column_height)
+		header(&mut self.layer, "Foods", SizeInCharacters(71), column_height)
 			.x(SizeInCharacters(1))
-			.y(SizeInCharacters(1))
+			.y(SizeInCharacters(3))
 			.draw(renderer);
 		let price_header_x = self.layer.last_x + self.layer.last_w;
 		let first_row = self.layer.last_x + SizeInCharacters(1);
@@ -108,10 +78,14 @@ impl<'a> KCalTable<'a> {
 	            .value_color(RGB(210, 93, 90))
 	            .draw(renderer);
 
+	        // kCal
 	        label(&mut self.layer, format!("{: >4}", food.get_kcal()).as_slice())
 				.right(SizeInCharacters(2))
-	            .draw(renderer);
+	            .draw();
 
+	        dropdown(&mut self.layer, db::FoodType::names(), &mut food.food_type)
+	        	.right(SizeInCharacters(2))
+	        	.draw(renderer);
 
 	        // PRICE
 			let _ = textfield_i32(&mut self.layer, &mut food.price_weight, SizeInCharacters(4))
@@ -132,7 +106,7 @@ impl<'a> KCalTable<'a> {
 			.disabled(self.page == 0)
 			.down(SizeInCharacters(1))
 			.x(first_row)
-			.y(SizeInCharacters(35))
+			.y(SizeInCharacters(36))
 			.draw(renderer) {
 			self.page = self.page - 1;
 		}
@@ -153,7 +127,7 @@ impl<'a> KCalTable<'a> {
 		}
 		header(&mut self.layer, "Név", SizeInCharacters(22), column_height - SizeInCharacters(1))
 			.x(SizeInCharacters(1))
-			.y(SizeInCharacters(2))
+			.y(SizeInCharacters(4))
 			.draw(renderer);
 		header(&mut self.layer, "Tömeg", SizeInCharacters(12), column_height - SizeInCharacters(1))
 			.right(SizeInCharacters(0))
@@ -173,7 +147,7 @@ impl<'a> KCalTable<'a> {
 
 		header(&mut self.layer, "Prices", SizeInCharacters(18), column_height)
 				.up(SizeInCharacters(1))
-				.right(SizeInCharacters(0))
+				.right(SizeInCharacters(13))
 				.draw(renderer);
 		header(&mut self.layer, "Tömeg", SizeInCharacters(12), column_height - SizeInCharacters(1))
 			.down(SizeInCharacters(0))

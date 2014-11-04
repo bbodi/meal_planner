@@ -134,12 +134,12 @@ impl<'a> KCalWindow<'a> {
 	        panel(&mut self.layer, SizeInCharacters(68), SizeInCharacters(3))
 	        	.x(SizeInCharacters(7))
 	        	.down(SizeInCharacters(0))
-	        	.draw(renderer);
+	        	.draw();
 	        {
 
 		        label(&mut self.layer, format!("Protein: {:3.0f}", nutr_goal.macros.protein).as_slice() )
 		        	.inner_down(SizeInCharacters(1))
-		            .draw(renderer);
+		            .draw();
 
 		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut nutr_goal.protein_percent )
 		        	.right(SizeInCharacters(2))
@@ -150,7 +150,7 @@ impl<'a> KCalWindow<'a> {
 
 		        label(&mut self.layer, "g/kg: ")
 		        	.right(SizeInCharacters(2))
-		            .draw(renderer);
+		            .draw();
 
 		        if scrollbar(&mut self.layer, SizeInCharacters(6), 1f32, 4f32, &mut nutr_goal.protein_per_kg )
 		        	.right(SizeInCharacters(1))
@@ -164,11 +164,11 @@ impl<'a> KCalWindow<'a> {
 	    	panel(&mut self.layer, SizeInCharacters(68), SizeInCharacters(3))
 	        	.x(SizeInCharacters(7))
 	        	.down(SizeInCharacters(1))
-	        	.draw(renderer);
+	        	.draw();
 	        {
 		        label(&mut self.layer, format!("Ch: {:3.0f}", nutr_goal.macros.ch).as_slice() )
 		        	.inner_down(SizeInCharacters(1))
-		            .draw(renderer);
+		            .draw();
 
 		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut nutr_goal.ch_percent )
 		        	.x(scrollbar_x)
@@ -181,11 +181,11 @@ impl<'a> KCalWindow<'a> {
 		    panel(&mut self.layer, SizeInCharacters(68), SizeInCharacters(3))
 	        	.x(SizeInCharacters(7))
 	        	.down(SizeInCharacters(1))
-	        	.draw(renderer);
+	        	.draw();
 	        {
 		        label(&mut self.layer, format!("Fat: {:3.0f}", nutr_goal.macros.fat).as_slice() )
 		        	.inner_down(SizeInCharacters(1))
-		            .draw(renderer);
+		            .draw();
 
 		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut nutr_goal.fat_percent )
 		        	.x(scrollbar_x)

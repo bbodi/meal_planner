@@ -27,8 +27,8 @@ mod db;
 mod tricolor_field;
 mod tricolor_label;
 
-mod kcal_window;
-mod kcal_table;
+mod food_list_layer;
+mod bmr_layer;
 mod daily_plan;
 mod weekly_plan;
 
@@ -101,8 +101,8 @@ fn main() {
 
     let mut layer = imgui::base::Layer::new();
     let mut nutr_goal = dao.load_nutritional_goals();
-    let mut kcal_win = kcal_window::KCalWindow::new();
-    let mut kcal_table = kcal_table::KCalTable::new();
+    let mut bmr_layer = bmr_layer::KCalWindow::new();
+    let mut food_list_layer = food_list_layer::KCalTable::new();
 
     let mut weekly_plan = weekly_plan::WeeklyPlan::new();
 
@@ -139,16 +139,16 @@ fn main() {
         };
         
         if show_cal_win {
-            if kcal_win.do_logic(&renderer, &event, &mut nutr_goal) {
+            if bmr_layer.do_logic(&renderer, &event, &mut nutr_goal) {
                 dao.persist_nutritional_goals(&nutr_goal);
             }
-            kcal_win.layer.draw(&renderer);
+            bmr_layer.layer.draw(&renderer);
         }
         if show_table_win {
-            if kcal_table.do_logic(&renderer, &event, &mut foods) {
+            if food_list_layer.do_logic(&renderer, &event, &mut foods) {
                 dao.persist_foods(foods.as_slice());
             }
-            kcal_table.layer.draw(&renderer);
+            food_list_layer.layer.draw(&renderer);
         }
         if daily_menus.len() > 0 && show_daily_win {
             if daily_plan.do_logic(&renderer, &event, foods.as_slice(), daily_menus.get_mut(selected_menu_idx), &nutr_goal, &mut last_meal_id) {
@@ -167,7 +167,7 @@ fn main() {
             panel(&mut layer, SizeInCharacters(20), SizeInCharacters(2 + daily_menus.len() as i32 * 2))
                 .x(SizeInCharacters(10))
                 .y(SizeInCharacters(10))
-                .draw(&renderer);
+                .draw();
             if button(&mut layer, "New...")
                 .x(SizeInCharacters(10))
                 .y(SizeInCharacters(10))
@@ -176,6 +176,7 @@ fn main() {
                 daily_menus.push(db::DailyMenu::new(last_daily_menu_id, "Unnamed".into_string()));
                 selected_menu_idx = 0;
             }
+            let mut copy_idx = None;
             for (i, daily_menu) in daily_menus.iter().enumerate() {
                 if button(&mut layer, daily_menu.name.as_slice())
                     .x(SizeInCharacters(10))
@@ -183,13 +184,28 @@ fn main() {
                     .draw(&renderer) {
                     selected_menu_idx = i;
                 }
+                if button(&mut layer, "Copy")
+                    .right(SizeInCharacters(1))
+                    .draw(&renderer) {
+                    copy_idx = Some(i);
+                }
             }
-        }
-        if layer.control_keys.ctrl.down {
+            if copy_idx.is_some() {
+                let i = copy_idx.unwrap();
+                last_daily_menu_id = last_daily_menu_id + 1;
+                let mut new_daily_menu = db::DailyMenu::new(last_daily_menu_id, daily_menus[i].name.clone());
+                for meal in daily_menus[i].meals.iter() {
+                    last_meal_id = last_meal_id + 1;
+                    let new_meal = db::Meal::from_meal(last_meal_id, meal);
+                    new_daily_menu.add_meal(new_meal);
+                }
+                daily_menus.push(new_daily_menu);
+            }
+        } else if layer.control_keys.ctrl.down {
             panel(&mut layer, SizeInCharacters(20), SizeInCharacters(7))
                 .x(SizeInCharacters(10))
                 .y(SizeInCharacters(10))
-                .draw(&renderer);
+                .draw();
             if checkbox(&mut layer, &mut show_cal_win)
                 .label("Calorie window")
                 .x(SizeInCharacters(10))

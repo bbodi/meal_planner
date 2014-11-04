@@ -2,6 +2,28 @@
 use std::io;
 use imgui::base;
 
+#[deriving(Decodable, Encodable, PartialEq, PartialOrd)]
+pub enum FoodType {
+    Meat, Fruit, Vegetable, Nuts, Legume, Dairy, Egg, Grain
+}
+
+impl FoodType {
+    pub fn names() -> [&'static str, ..8] {
+        ["Hús", "Gyümölcs", "Zöldség", "Mag", "Hüvelyes", "Tej", "Tojás", "Gabona"]
+    }
+}
+
+impl base::IndexValue for FoodType {
+    fn set(&mut self, value: uint) {
+        unsafe {
+            *(self as *mut FoodType as *mut uint) = value;
+        }
+    }
+    fn get(&self) -> uint {
+        *self as uint
+    }
+}
+
 #[deriving(Decodable, Encodable)]
 pub enum WeightType {
     G, Dkg, Kg, Lb
@@ -165,6 +187,7 @@ pub struct Food {
     pub price: i32,
     pub price_weight: i32,
     pub price_weight_type: WeightType,
+    pub food_type: FoodType,
 }
 
 impl Food {
@@ -180,6 +203,7 @@ impl Food {
             price: 0,
             price_weight: 100,
             price_weight_type: G,
+            food_type: Meat,
         }
     }
 
@@ -290,7 +314,7 @@ impl Dao {
 
     pub fn load_foods(&self) -> Vec<Food> {
         let mut rdr = ::csv::Reader::from_file(&Path::new("data\\foods.csv")).has_headers(false);
-        rdr.decode().map(|r| r.unwrap()).collect::<Vec<Food>>()
+        rdr.decode().map(|r| {let r: Food = r.unwrap();println!("{}", r.name);r}).collect::<Vec<Food>>()
     }
 
     pub fn persist_foods(&mut self, foods: &[Food]) {

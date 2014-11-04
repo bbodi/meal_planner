@@ -45,6 +45,6 @@ pub fn draw(builder: &mut TriColorLabelBuilder, renderer: &sdl2::render::Rendere
     let y = builder.label.y.in_pixels(char_h);
 
     tricolor_field::fill_tri_rect(renderer, x, y, builder.width.in_pixels(char_w), char_h, builder.values, false);
-    builder.label.draw(renderer);
+    builder.label.draw();
     builder.label.layer.last_w = builder.width;
 }
