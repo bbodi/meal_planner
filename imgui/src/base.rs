@@ -222,6 +222,10 @@ impl Layer {
 		}
 	}
 
+	pub fn clear_textfield_states(&mut self) {
+		self.textfield_datas.clear();
+	}
+
 	pub fn start_group(func: ||) {
 		func();
 	}

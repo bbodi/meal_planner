@@ -344,19 +344,23 @@ impl<'a> DailyPlan<'a> {
             if delete_idx.is_some() {
                 let i = delete_idx.unwrap();
                 daily_menu.meals.remove(i);
+                layer.clear_textfield_states();
             } else if move_up_idx.is_some() {
                 let i = move_up_idx.unwrap();
                 let moved_meal = daily_menu.meals.remove(i);
-                daily_menu.meals.insert(i-1, moved_meal.unwrap())
+                daily_menu.meals.insert(i-1, moved_meal.unwrap());
+                layer.clear_textfield_states();
             } else if move_down_idx.is_some() {
                 let i = move_down_idx.unwrap();
                 let moved_meal = daily_menu.meals.remove(i);
-                daily_menu.meals.insert(i+1, moved_meal.unwrap())
+                daily_menu.meals.insert(i+1, moved_meal.unwrap());
+                layer.clear_textfield_states();
             } else if copy_idx.is_some() {
                 let i = copy_idx.unwrap();
                 *last_meal_id = *last_meal_id + 1;
                 let new_meal = db::Meal::from_meal(*last_meal_id, &daily_menu.meals[i]);
                 daily_menu.add_meal(new_meal);
+                layer.clear_textfield_states();
             }
         });
         if selected_meal >= daily_menu.meals.len() {
@@ -413,6 +417,7 @@ impl<'a> DailyPlan<'a> {
             }
             if deleting_index.is_some() {
                 meal.foods.remove(deleting_index.unwrap());
+                layer.clear_textfield_states();
             }
         });
     }
