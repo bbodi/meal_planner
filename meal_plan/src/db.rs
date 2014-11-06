@@ -1,5 +1,4 @@
 
-use std::io;
 use imgui::base;
 
 #[deriving(Decodable, Encodable, PartialEq, PartialOrd)]
@@ -320,19 +319,8 @@ impl Dao {
     pub fn persist_foods(&mut self, foods: &[Food]) {
         let mut enc = ::csv::Writer::from_file(&Path::new("data\\foods.csv"));
         for food in foods.iter() {
-            enc.encode(food);
+            let _ = enc.encode(food);
         }
-    }
-
-    fn remove_meal(meal_id: uint, meals: &mut Vec<Meal>) -> Meal {
-        let mut idx = 0;
-        for (i, meal) in meals.iter().enumerate() {
-            if meal.id == meal_id {
-                idx = i;
-                break;
-            }
-        }
-        return meals.remove(idx).unwrap();
     }
 
     fn get_daily_menu<'a>(daily_menu_id: uint, daily_menus: &'a mut Vec<DailyMenu>) -> &'a mut DailyMenu {
@@ -351,13 +339,13 @@ impl Dao {
 
     pub fn load_daily_menus(&self) -> Vec<DailyMenu> {
         let mut rdr = ::csv::Reader::from_file(&Path::new("data\\meal_foods.csv")).has_headers(false);
-        let mut meal_foods = rdr.decode().map(|r| r.unwrap()).collect::<Vec<MealFood>>();
+        let meal_foods = rdr.decode().map(|r| r.unwrap()).collect::<Vec<MealFood>>();
 
         let mut meals = vec![];
         let mut rdr = ::csv::Reader::from_file(&Path::new("data\\meals.csv")).has_headers(false);
         for row in rdr.decode() {
             let (id, name, parent_id): (uint, String, uint) = row.unwrap();
-            let mut meal = Meal::new(id, name.into_string(), parent_id);
+            let meal = Meal::new(id, name.into_string(), parent_id);
             meals.push(meal);
         }
 
@@ -365,15 +353,15 @@ impl Dao {
         let mut rdr = ::csv::Reader::from_file(&Path::new("data\\dailies.csv")).has_headers(false);
         for row in rdr.decode() {
             let (id, name): (uint, String) = row.unwrap();
-            let mut daily_menu = DailyMenu::new(id, name.into_string());
+            let daily_menu = DailyMenu::new(id, name.into_string());
             daily_menus.push(daily_menu);
         }
         for meal_food in meal_foods.into_iter() {
-            let mut parent_meal = Dao::get_meal(meal_food.parent_id, &mut meals);
+            let parent_meal = Dao::get_meal(meal_food.parent_id, &mut meals);
             parent_meal.add_meal_food(meal_food);
         }
         for meal in meals.into_iter() {
-            let mut parent_daily_menu = Dao::get_daily_menu(meal.parent_id, &mut daily_menus);
+            let parent_daily_menu = Dao::get_daily_menu(meal.parent_id, &mut daily_menus);
             parent_daily_menu.add_meal(meal);   
         }
         return daily_menus;
@@ -387,14 +375,14 @@ impl Dao {
         for daily_menu in daily_menus.iter() {
             for meal in daily_menu.meals.as_slice().iter() {
                 for meal_food in meal.foods.as_slice().iter() {
-                    meal_food_writer.encode(*meal_food);
+                    let _ = meal_food_writer.encode(*meal_food);
                 }
                 let dao = (meal.id, meal.name.as_slice(), meal.parent_id);
                 // , meal.foods.iter().fold("".into_string(), |a, b| a + format!("{};", b.id)));
-                meal_writer.encode(dao);
+                let _ = meal_writer.encode(dao);
             }
             let dao = (daily_menu.id, daily_menu.name.as_slice());
-            enc.encode(dao);
+            let _ = enc.encode(dao);
         }
     }
 
@@ -408,6 +396,6 @@ impl Dao {
 
     pub fn persist_nutritional_goals(&mut self, recommended_macros: &NutritionGoal) {
         let mut enc = ::csv::Writer::from_file(&Path::new("data\\recommended.csv"));
-        enc.encode(recommended_macros);
+        let _ = enc.encode(recommended_macros);
     }
 }

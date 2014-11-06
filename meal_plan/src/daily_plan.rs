@@ -8,7 +8,6 @@ use sdl2::pixels::RGB;
 
 use imgui::label::label;
 use imgui::textfield::textfield_f32;
-use imgui::textfield::textfield_i32;
 use imgui::textfield::textfield_str;
 use imgui::textfield;
 use tricolor_field::tricolor_field_str;
@@ -41,7 +40,7 @@ impl<'a> DailyPlan<'a> {
         }
     }
 
-    pub fn do_logic(&mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event, foods: &[db::Food], daily_menu: &mut DailyMenu, nutr_goal: &db::NutritionGoal, last_meal_id: &mut uint) -> bool {
+    pub fn do_logic(&mut self, event: &sdl2::event::Event, foods: &[db::Food], daily_menu: &mut DailyMenu, nutr_goal: &db::NutritionGoal, last_meal_id: &mut uint) -> bool {
         self.layer.handle_event(event);
 
         if daily_menu.meals.len() == 0 {
@@ -54,7 +53,6 @@ impl<'a> DailyPlan<'a> {
             .x(SizeInCharacters(72))
             .y(SizeInCharacters(1))
             .draw();
-        let price_header_x = self.layer.last_x + self.layer.last_w;
         let first_row = self.layer.last_x + SizeInCharacters(1);
 
         dropdown(&mut self.layer, db::FoodType::names(), &mut self.selected_food_type)
@@ -103,13 +101,13 @@ impl<'a> DailyPlan<'a> {
             .default_text("Daily Menu name...")
             .draw();
         
-        let meals_menu_y = self.draw_meals_table(renderer, foods, daily_menu, last_meal_id);
-        self.draw_meal_foods_table(renderer, foods, daily_menu, meals_menu_y);
-        self.draw_sum_table(renderer, foods, daily_menu, nutr_goal);
+        self.draw_meals_table(foods, daily_menu, last_meal_id);
+        self.draw_meal_foods_table(foods, daily_menu);
+        self.draw_sum_table(foods, daily_menu, nutr_goal);
         return false;
     }
 
-    fn draw_sum_table(&mut self, renderer: &sdl2::render::Renderer, foods: &[db::Food], daily_menu: &mut DailyMenu, nutr_goal: &db::NutritionGoal) {
+    fn draw_sum_table(&mut self, foods: &[db::Food], daily_menu: &mut DailyMenu, nutr_goal: &db::NutritionGoal) {
         let mut daily_macros = db::MacroNutrient::new(0f32, 0f32, 0f32);
         let mut daily_weight = 0f32;
         for meal in daily_menu.meals.iter() {
@@ -224,7 +222,7 @@ impl<'a> DailyPlan<'a> {
         });
     }
 
-    fn draw_meals_table(&mut self, renderer: &sdl2::render::Renderer, foods: &[db::Food], daily_menu: &mut DailyMenu, last_meal_id: &mut uint) -> SizeInCharacters{
+    fn draw_meals_table(&mut self, foods: &[db::Food], daily_menu: &mut DailyMenu, last_meal_id: &mut uint) {
         let mut meals_menu_y = SizeInCharacters(0);
         let mut selected_meal = self.selected_meal;
         let mut delete_idx = None;
@@ -255,7 +253,7 @@ impl<'a> DailyPlan<'a> {
                     Some(textfield::Selected) => meal_was_selected = true,
                     _ => {},
                 }
-                let (macros, w) = DailyPlan::calc_macro_ratio(foods, meal);
+                let (macros, _) = DailyPlan::calc_macro_ratio(foods, meal);
                 header(layer, "P", SizeInCharacters(5), SizeInCharacters(2))
                     .down(SizeInCharacters(0))
                     .x(meal_checkbox_x + SizeInCharacters(2))
@@ -314,7 +312,8 @@ impl<'a> DailyPlan<'a> {
                 }
                 let hori_line_x = (meal_checkbox_x-SizeInCharacters(1)).in_pixels(layer.char_w);
                 let hori_line_y = (layer.last_y + layer.last_h).in_pixels(layer.char_h);
-                base::draw_line(renderer, hori_line_x, hori_line_y, hori_line_x+SizeInCharacters(27).in_pixels(layer.char_w), hori_line_y, RGB(0, 0, 0));
+                let char_w = layer.char_w;
+                layer.draw_line(hori_line_x, hori_line_y, hori_line_x+SizeInCharacters(27).in_pixels(char_w), hori_line_y, RGB(0, 0, 0));
 
                 if meal_was_selected {
                     selected_meal = i;
@@ -328,8 +327,9 @@ impl<'a> DailyPlan<'a> {
                     let line_y2 = meals_menu_y.in_pixels(layer.char_h);
                     let row = layer.char_h;
                     let color = RGB(0, 0, 0);
-                    base::draw_line(renderer, line_x1, line_y1-3*row, line_x2, line_y2, color);
-                    base::draw_line(renderer, line_x1, line_y1+row, line_x2, line_y2+table_height.in_pixels(layer.char_h), color);
+                    layer.draw_line(line_x1, line_y1-3*row, line_x2, line_y2, color);
+                    let char_h = layer.char_h;
+                    layer.draw_line(line_x1, line_y1+row, line_x2, line_y2+table_height.in_pixels(char_h), color);
                 }
             }
             
@@ -367,10 +367,9 @@ impl<'a> DailyPlan<'a> {
             selected_meal = daily_menu.meals.len()-1;
         }
         self.selected_meal = selected_meal;
-        return meals_menu_y;
     }
 
-    fn draw_meal_foods_table(&mut self, renderer: &sdl2::render::Renderer, foods: &[db::Food], daily_menu: &mut DailyMenu, meals_menu_y: SizeInCharacters) {
+    fn draw_meal_foods_table(&mut self, foods: &[db::Food], daily_menu: &mut DailyMenu) {
         let food_count = daily_menu.meals[self.selected_meal].foods.len() as i32;
         let table_height = SizeInCharacters(3+food_count *2);
         let selected_meal = self.selected_meal;
@@ -390,7 +389,7 @@ impl<'a> DailyPlan<'a> {
             if food_count == 0 {
                 return;
             }        
-            let mut meal = daily_menu.meals.get_mut(selected_meal);
+            let meal = daily_menu.meals.get_mut(selected_meal);
             let mut deleting_index = None;
             for (i, meal_food) in meal.foods.iter_mut().enumerate() {
                 let ref food = foods[meal_food.food_id-1];

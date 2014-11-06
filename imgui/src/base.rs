@@ -374,9 +374,7 @@ impl Layer {
 		let mut newvec = self.draw_commands.iter().map(|x| x.clone()).collect::<Vec<DrawCommand>>();
     	for draw_command in newvec.iter() {
     		match draw_command {
-    			&Line(x1, y1, x2, y2, color) => {
-
-    			},
+    			&Line(x1, y1, x2, y2, color) => sdl_line(renderer, x1, y1, x2, y1, color),
     			&FilledRect(x, y, w, h, color) => {sdl_fill_rect(renderer, x, y, w, h, color);},
     			&Rect(x, y, w, h, b, color) => {sdl_rect(renderer, x, y, w, h, b, color);},
     			&GradientRect(x, y, w, h, color1, color2) => {self.do_draw_rect_gradient(renderer, x, y, w, h, color1, color2);},
@@ -480,19 +478,19 @@ impl Layer {
 	}
 }
 
-pub fn sdl_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, border: i32, color: sdl2::pixels::Color) {
+fn sdl_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, border: i32, color: sdl2::pixels::Color) {
 	let _ = renderer.set_draw_color(color);
 	for i in range(0, border) {
 		let _ = renderer.draw_rect(&SdlRect::new(x+i, y+i, w-2*i, h-2*i));
 	}
 }
 
-pub fn sdl_fill_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, color: sdl2::pixels::Color) {
+fn sdl_fill_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, color: sdl2::pixels::Color) {
 	let _ = renderer.set_draw_color(color);
 	let _ = renderer.fill_rect(&SdlRect::new(x, y, w, h));
 }
 
-pub fn draw_line(renderer: &sdl2::render::Renderer, x1: i32, y1: i32, x2: i32, y2: i32, color: sdl2::pixels::Color) {
+fn sdl_line(renderer: &sdl2::render::Renderer, x1: i32, y1: i32, x2: i32, y2: i32, color: sdl2::pixels::Color) {
 	let _ = renderer.set_draw_color(color);
 	let _ = renderer.draw_line(Point::new(x1, y1), Point::new(x2, y2));
 }

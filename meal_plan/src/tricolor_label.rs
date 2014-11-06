@@ -2,7 +2,6 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 use sdl2::pixels::RGB;
-use imgui::base;
 use imgui::label;
 use imgui::base::SizeInCharacters;
 
@@ -16,12 +15,6 @@ pub struct TriColorLabelBuilder<'a> {
 
 pub fn tricolor_label<'a>(label: label::LabelBuilder<'a>, values: (f32, f32, f32, f32), width: SizeInCharacters) -> TriColorLabelBuilder<'a> {
     TriColorLabelBuilder::new(label.color(RGB(0, 0, 0)).bold(true), values, width)
-}
-
-pub fn tricolor_label3<'a>(label: label::LabelBuilder<'a>, values: (f32, f32, f32), width: SizeInCharacters) -> TriColorLabelBuilder<'a> {
-    let (a, b, c) = values;
-    let d = a + b + c;
-    TriColorLabelBuilder::new(label.color(RGB(0, 0, 0)).bold(true), (a, b, c, d), width)
 }
 
 impl<'a> TriColorLabelBuilder<'a> {

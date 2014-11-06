@@ -2,7 +2,6 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 use sdl2::pixels::RGB;
-use sdl2::rect::Rect;
 
 use imgui::textfield;
 use imgui::base;

@@ -46,10 +46,10 @@ fn fat_percent_changed(rm: &mut NutritionGoal) {
 }
 
 fn recalc_macronutrients(rm: &mut NutritionGoal) {
-	rm.macros.protein = ((rm.protein_percent / 100f32 * rm.target_calories) / 4f32);
+	rm.macros.protein = (rm.protein_percent / 100f32 * rm.target_calories) / 4f32;
 	rm.protein_per_kg = rm.macros.protein as f32 / rm.weight;
-	rm.macros.ch = ((rm.ch_percent / 100f32 * rm.target_calories) / 4f32);
-	rm.macros.fat = ((rm.fat_percent / 100f32 * rm.target_calories) / 9f32);
+	rm.macros.ch = (rm.ch_percent / 100f32 * rm.target_calories) / 4f32;
+	rm.macros.fat = (rm.fat_percent / 100f32 * rm.target_calories) / 9f32;
 }
 
 fn recalc_bmr(rm: &mut NutritionGoal) {
@@ -71,7 +71,7 @@ impl<'a> KCalWindow<'a> {
 		}
 	}
 
-	pub fn do_logic(&'a mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event, nutr_goal: &mut db::NutritionGoal) -> bool {
+	pub fn do_logic(&'a mut self, event: &sdl2::event::Event, nutr_goal: &mut db::NutritionGoal) -> bool {
 		self.layer.handle_event(event);
 
 		header(&mut self.layer, "BMR", SizeInCharacters(70), SizeInCharacters(22))
@@ -130,7 +130,7 @@ impl<'a> KCalWindow<'a> {
 	        	.down(SizeInCharacters(1))
 	        	.draw();
 
-	        let mut scrollbar_x = SizeInCharacters(0);
+	        let mut scrollbar_x;
 	        panel(&mut self.layer, SizeInCharacters(68), SizeInCharacters(3))
 	        	.x(SizeInCharacters(7))
 	        	.down(SizeInCharacters(0))

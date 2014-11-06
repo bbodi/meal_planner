@@ -34,7 +34,7 @@ impl<'a> KCalTable<'a> {
 		}
 	}
 
-	pub fn do_logic(&'a mut self, renderer: &sdl2::render::Renderer, event: &sdl2::event::Event, foods: &'a mut Vec<db::Food>) -> bool {
+	pub fn do_logic(&'a mut self, event: &sdl2::event::Event, foods: &'a mut Vec<db::Food>) -> bool {
 		self.layer.handle_event(event);
 
 		let column_height = SizeInCharacters(36);
@@ -42,10 +42,9 @@ impl<'a> KCalTable<'a> {
 			.x(SizeInCharacters(1))
 			.y(SizeInCharacters(3))
 			.draw();
-		let price_header_x = self.layer.last_x + self.layer.last_w;
 		let first_row = self.layer.last_x + SizeInCharacters(1);
 		self.last_food_id = foods.len();
-		for (i, food) in foods.iter_mut().skip(self.page * 16).take((self.page+1) * 16).enumerate() {
+		for food in foods.iter_mut().skip(self.page * 16).take((self.page+1) * 16) {
 			let fs = food.weight_type.to_g(food.weight);
 			let values = (food.protein, food.ch, food.fat, fs);
 			let _ = tricolor_field_str(textfield_str(&mut self.layer, &mut food.name, SizeInCharacters(20))
