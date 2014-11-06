@@ -66,5 +66,5 @@ pub fn draw(builder: &mut PanelBuilder) {
 	builder.layer.last_h = builder.h;
 
 
-	builder.layer.fill_rect(x, y, w, h, builder.color);
+	builder.layer.bottom_surface.fill_rect(x, y, w, h, builder.color);
 }

@@ -95,22 +95,22 @@ pub fn draw(builder: &mut ScrollBarBuilder) -> bool {
 
 	let value_place = ((value - builder.min_value) / value_range * place_count as f32) as i32;
 
-	builder.layer.draw_text(x, y, min_label.as_slice(), RGB(151, 151, 151));
+	builder.layer.bottom_surface.draw_text(x, y, min_label.as_slice(), RGB(151, 151, 151));
 	let range_start_x = min_label_w+char_w + x;
-	builder.layer.fill_rect(range_start_x, y, w, char_h, builder.color);
+	builder.layer.bottom_surface.fill_rect(range_start_x, y, w, char_h, builder.color);
 
 	let pointer_x = min_label_w+char_w + x + char_w*value_place;
 
 	let hover = builder.layer.is_mouse_in(x, y, all_w, h);
 	if hover {
-		builder.layer.draw_rect_gradient(pointer_x, y-char_h/2, char_w, char_h*2, RGB(114, 114, 114), RGB(68, 68, 68));
+		builder.layer.bottom_surface.draw_rect_gradient(pointer_x, y-char_h/2, char_w, char_h*2, RGB(114, 114, 114), RGB(68, 68, 68));
 		let str = format!("{:.1f}", *builder.value);
-		builder.layer.fill_rect(pointer_x, y-char_h, str.len() as i32 * char_w, char_h, RGB(51, 51, 51));
-		builder.layer.draw_text(pointer_x, y-char_h, str.as_slice(), RGB(221, 221, 221));
+		builder.layer.bottom_surface.fill_rect(pointer_x, y-char_h, str.len() as i32 * char_w, char_h, RGB(51, 51, 51));
+		builder.layer.bottom_surface.draw_text(pointer_x, y-char_h, str.as_slice(), RGB(221, 221, 221));
 	} else {
-		builder.layer.draw_rect_gradient(pointer_x, y-char_h/2, char_w, char_h*2, RGB(82, 85, 90), RGB(47, 50, 53));
+		builder.layer.bottom_surface.draw_rect_gradient(pointer_x, y-char_h/2, char_w, char_h*2, RGB(82, 85, 90), RGB(47, 50, 53));
 	}
-	builder.layer.draw_text(min_label_w+char_w + x + w + char_w, y, max_label.as_slice(), RGB(151, 151, 151));
+	builder.layer.bottom_surface.draw_text(min_label_w+char_w + x + w + char_w, y, max_label.as_slice(), RGB(151, 151, 151));
 
 	let click = builder.layer.is_mouse_down() && hover;
 

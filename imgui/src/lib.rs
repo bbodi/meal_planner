@@ -6,6 +6,7 @@
 extern crate sdl2;
 extern crate sdl2_ttf;
 
+pub mod drawing_surf;
 pub mod base;
 pub mod button;
 pub mod textfield;

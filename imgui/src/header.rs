@@ -107,19 +107,19 @@ pub fn draw(builder: &mut HeaderBuilder) {
 
 	let border_width = 2;
 	if builder.color.is_some() {
-		builder.layer.draw_rect_gradient1(x, y, w, header_h, builder.color.unwrap());	
+		builder.layer.bottom_surface.draw_rect_gradient1(x, y, w, header_h, builder.color.unwrap());	
 	} else {
-		builder.layer.draw_rect_gradient(x, y, w, header_h, RGB(40, 120, 182), RGB(22, 83, 144));
+		builder.layer.bottom_surface.draw_rect_gradient(x, y, w, header_h, RGB(40, 120, 182), RGB(22, 83, 144));
 	}
-	builder.layer.draw_rect(x, y, w+border_width, header_h+border_width, 2, RGB(0, 0, 0));
+	builder.layer.bottom_surface.draw_rect(x, y, w+border_width, header_h+border_width, 2, RGB(0, 0, 0));
 	let text_x = base::center_text(builder.label, char_w, w);
 	if builder.label.len() > 0 {
 		if builder.bold {
-			builder.layer.draw_bold_text(x + text_x, y, builder.label, RGB(236, 236, 236));
+			builder.layer.bottom_surface.draw_bold_text(x + text_x, y, builder.label, RGB(236, 236, 236));
 		} else {
-			builder.layer.draw_text(x + text_x, y, builder.label, RGB(236, 236, 236));
+			builder.layer.bottom_surface.draw_text(x + text_x, y, builder.label, RGB(236, 236, 236));
 		}
 	}
 
-	builder.layer.draw_rect(x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
+	builder.layer.bottom_surface.draw_rect(x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 }

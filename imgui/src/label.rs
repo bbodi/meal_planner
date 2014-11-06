@@ -80,9 +80,9 @@ pub fn draw(builder: &mut LabelBuilder) {
 
 	if builder.label.len() > 0 {
 		if builder.bold {
-			builder.layer.draw_bold_text(x, y, builder.label, builder.color);
+			builder.layer.bottom_surface.draw_bold_text(x, y, builder.label, builder.color);
 		} else {
-			builder.layer.draw_text(x, y, builder.label, builder.color);
+			builder.layer.bottom_surface.draw_text(x, y, builder.label, builder.color);
 		}
 	}
 }

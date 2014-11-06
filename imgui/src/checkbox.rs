@@ -2,7 +2,6 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 use sdl2::pixels::RGB;
-use sdl2::rect::Rect;
 use base;
 use base::SizeInCharacters;
 
@@ -80,9 +79,9 @@ pub fn draw(builder: &mut CheckboxBuilder) -> bool {
 	}
 
 	if hover {
-		builder.layer.draw_rect_gradient(x, y, char_h, char_h, RGB(99, 103, 113), RGB(62, 65, 73));
+		builder.layer.bottom_surface.draw_rect_gradient(x, y, char_h, char_h, RGB(99, 103, 113), RGB(62, 65, 73));
 	} else {
-		builder.layer.draw_rect_gradient(x, y, char_h, char_h, RGB(82, 86, 90), RGB(49, 52, 55));
+		builder.layer.bottom_surface.draw_rect_gradient(x, y, char_h, char_h, RGB(82, 86, 90), RGB(49, 52, 55));
 	}
 
 	let color = if *builder.value {
@@ -90,9 +89,9 @@ pub fn draw(builder: &mut CheckboxBuilder) -> bool {
 	} else {
 		sdl2::pixels::RGB(51 , 51, 51)
 	};
-	builder.layer.fill_rect(x + char_h/3, y + char_h/3, char_h/3, char_h/3, color);
+	builder.layer.bottom_surface.fill_rect(x + char_h/3, y + char_h/3, char_h/3, char_h/3, color);
 	if builder.label.len() > 0 {
-		builder.layer.draw_text(x + char_h, y, builder.label, RGB(151, 151, 151));
+		builder.layer.bottom_surface.draw_text(x + char_h, y, builder.label, RGB(151, 151, 151));
 	}
 
 	return mousebtn_just_released;

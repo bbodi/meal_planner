@@ -3,7 +3,6 @@ extern crate sdl2_ttf;
 
 
 use sdl2::pixels::RGB;
-use sdl2::rect::Rect;
 use base;
 use base::SizeInCharacters;
 use base::IndexValue;
@@ -121,32 +120,31 @@ pub fn draw(builder: &mut DropdownBuilder) -> bool {
 		false => RGB(47, 50, 53),
 		true => RGB(47, 50, 53),
 	};
-	builder.layer.fill_rect(x, y, label_w, h, RGB(0, 0, 0));
-	builder.layer.draw_rect_gradient(x+1, y+1, label_w-2, h-2, top_color, bottom_color);
+	builder.layer.bottom_surface.fill_rect(x, y, label_w, h, RGB(0, 0, 0));
+	builder.layer.bottom_surface.draw_rect_gradient(x+1, y+1, label_w-2, h-2, top_color, bottom_color);
 	if builder.labels[builder.value.get()].len() > 0 {
-		builder.layer.draw_text(x+1, y+1, builder.labels[builder.value.get()], RGB(221, 221, 221));
+		builder.layer.bottom_surface.draw_text(x+1, y+1, builder.labels[builder.value.get()], RGB(221, 221, 221));
 	}
 
-	builder.layer.fill_rect(x+label_w, y, down_arrow_w, h, RGB(0, 0, 0));
-	builder.layer.draw_rect_gradient(x+label_w+1, y+1, down_arrow_w-2, h-2, top_color, bottom_color);
+	builder.layer.bottom_surface.fill_rect(x+label_w, y, down_arrow_w, h, RGB(0, 0, 0));
+	builder.layer.bottom_surface.draw_rect_gradient(x+label_w+1, y+1, down_arrow_w-2, h-2, top_color, bottom_color);
 	let arrow_char = if active {"▲"} else {"▼"};
-	builder.layer.draw_text(x + label_w+char_w/3, y, arrow_char, RGB(221, 221, 221));
+	builder.layer.bottom_surface.draw_text(x + label_w+char_w/3, y, arrow_char, RGB(221, 221, 221));
 
 	if active {
-		let mut layer = builder.layer.popup_layer.as_mut().unwrap();
 		for (i, label) in builder.labels.iter().enumerate() {
 			let i = i as i32;
-			layer.fill_rect(x, y + (1+i)*char_h, all_w, h, RGB(0, 0, 0));
+			builder.layer.middle_surface.fill_rect(x, y + (1+i)*char_h, all_w, h, RGB(0, 0, 0));
 
-			let color = match layer.is_mouse_in(x, y + (1+i)*char_h, all_w, h) {
+			let color = match builder.layer.is_mouse_in(x, y + (1+i)*char_h, all_w, h) {
 				true => sdl2::pixels::RGB(82, 82, 90),
 				false => sdl2::pixels::RGB(51, 51, 51),
 			};
-			layer.fill_rect(x+1, y+1+(1+i)*char_h, all_w-2, h-2, color);
+			builder.layer.middle_surface.fill_rect(x+1, y+1+(1+i)*char_h, all_w-2, h-2, color);
 			if label.len() == 0 {
 				continue;
 			}
-			layer.draw_text(x+1, y +1+ (1+i)*char_h, *label, RGB(198, 198, 198));
+			builder.layer.middle_surface.draw_text(x+1, y +1+ (1+i)*char_h, *label, RGB(198, 198, 198));
 		}
 	}
 	modified

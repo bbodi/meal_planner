@@ -84,8 +84,8 @@ pub fn draw(builder: &mut ButtonBuilder) -> bool {
 	let w = char_w*base::text_len(builder.label) as i32 + text_border_dist*2;
 	let h = char_h;
 	if builder.disabled {
-		builder.layer.fill_rect(x, y, w, h, RGB(50, 50, 50));
-		builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, builder.label, RGB(151, 151, 151));
+		builder.layer.bottom_surface.fill_rect(x, y, w, h, RGB(50, 50, 50));
+		builder.layer.bottom_surface.draw_text(border_width+text_border_dist+x, y+border_width, builder.label, RGB(151, 151, 151));
 		return false;
 	}
 
@@ -110,15 +110,15 @@ pub fn draw(builder: &mut ButtonBuilder) -> bool {
 	}
 
 	if button_down {
-		builder.layer.draw_rect_gradient(x, y, w, h, RGB(48, 48, 48), RGB(83, 83, 83));
+		builder.layer.bottom_surface.draw_rect_gradient(x, y, w, h, RGB(48, 48, 48), RGB(83, 83, 83));
 	} else if hover {
-		builder.layer.draw_rect_gradient(x, y, w, h, RGB(114, 114, 114), RGB(68, 68, 68));
+		builder.layer.bottom_surface.draw_rect_gradient(x, y, w, h, RGB(114, 114, 114), RGB(68, 68, 68));
 	} else {
-		builder.layer.draw_rect_gradient(x, y, w, h, RGB(82, 85, 90), RGB(47, 50, 53));
+		builder.layer.bottom_surface.draw_rect_gradient(x, y, w, h, RGB(82, 85, 90), RGB(47, 50, 53));
 	}
-	builder.layer.draw_rect(x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
+	builder.layer.bottom_surface.draw_rect(x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 	if builder.label.len() > 0 {
-		builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, builder.label, RGB(151, 151, 151));
+		builder.layer.bottom_surface.draw_text(border_width+text_border_dist+x, y+border_width, builder.label, RGB(151, 151, 151));
 	}
 	return (released && hover) || (button_down && hover && builder.allow_multi_click);
 }

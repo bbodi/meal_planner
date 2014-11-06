@@ -105,8 +105,8 @@ pub fn draw(builder: &mut LineChartBuilder, renderer: &sdl2::render::Renderer) {
 			let w = 26i32;
 			let h = 15i32;
 			let v = scaled_data[index as uint];
-			builder.layer.draw_rect_gradient(x, y, w, h, RGB(174, 67, 75), RGB(166, 38, 51));
-			builder.layer.draw_text(x, y, format!("{}", v).as_slice(), RGB(255, 255, 255));
+			builder.layer.bottom_surface.draw_rect_gradient(x, y, w, h, RGB(174, 67, 75), RGB(166, 38, 51));
+			builder.layer.bottom_surface.draw_text(x, y, format!("{}", v).as_slice(), RGB(255, 255, 255));
 		}
 	}
 }
