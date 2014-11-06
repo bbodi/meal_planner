@@ -55,7 +55,8 @@ impl IndexValue for i32 {
 
 #[deriving(PartialEq, Clone)]
 pub enum DrawCommand {
-	Rect(i32, i32, i32, i32, sdl2::pixels::Color),
+	FilledRect(i32, i32, i32, i32, sdl2::pixels::Color),
+	Rect(i32, i32, i32, i32, i32, sdl2::pixels::Color),
 	Line(i32, i32, i32, i32, sdl2::pixels::Color),
 	// x, y, bold, color
 	Text(i32, i32, bool, String, sdl2::pixels::Color),
@@ -376,7 +377,8 @@ impl Layer {
     			&Line(x1, y1, x2, y2, color) => {
 
     			},
-    			&Rect(x, y, w, h, color) => {sdl_fill_rect(renderer, x, y, w, h, color);},
+    			&FilledRect(x, y, w, h, color) => {sdl_fill_rect(renderer, x, y, w, h, color);},
+    			&Rect(x, y, w, h, b, color) => {sdl_rect(renderer, x, y, w, h, b, color);},
     			&GradientRect(x, y, w, h, color1, color2) => {self.do_draw_rect_gradient(renderer, x, y, w, h, color1, color2);},
     			&Text(x, y, bold, ref text, color) => {self.do_do_draw_text(renderer, x, y, bold, text.as_slice(), color);},
     		}
@@ -470,11 +472,15 @@ impl Layer {
 	}
 
 	pub fn fill_rect(&mut self, x: i32, y: i32, w: i32, h: i32, color: sdl2::pixels::Color) {
-		self.draw_commands.push(Rect(x, y, w, h, color));
+		self.draw_commands.push(FilledRect(x, y, w, h, color));
+	}
+
+	pub fn draw_rect(&mut self, x: i32, y: i32, w: i32, h: i32, border: i32, color: sdl2::pixels::Color) {
+		self.draw_commands.push(Rect(x, y, w, h, border, color));
 	}
 }
 
-pub fn draw_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, border: i32, color: sdl2::pixels::Color) {
+pub fn sdl_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, border: i32, color: sdl2::pixels::Color) {
 	let _ = renderer.set_draw_color(color);
 	for i in range(0, border) {
 		let _ = renderer.draw_rect(&SdlRect::new(x+i, y+i, w-2*i, h-2*i));

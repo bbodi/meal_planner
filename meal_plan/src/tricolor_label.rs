@@ -33,18 +33,18 @@ impl<'a> TriColorLabelBuilder<'a> {
         }
     }
 
-    pub fn draw(&mut self, renderer: &sdl2::render::Renderer)  {
-        draw(self, renderer);
+    pub fn draw(&mut self)  {
+        draw(self);
     }
 }
 
-pub fn draw(builder: &mut TriColorLabelBuilder, renderer: &sdl2::render::Renderer) {
+pub fn draw(builder: &mut TriColorLabelBuilder) {
     let char_w = builder.label.layer.char_w;
     let char_h = builder.label.layer.char_h;
     let x = builder.label.x.in_pixels(char_w);
     let y = builder.label.y.in_pixels(char_h);
 
-    tricolor_field::fill_tri_rect(renderer, x, y, builder.width.in_pixels(char_w), char_h, builder.values, false);
+    tricolor_field::fill_tri_rect(builder.label.layer, x, y, builder.width.in_pixels(char_w), char_h, builder.values, false);
     builder.label.draw();
     builder.label.layer.last_w = builder.width;
 }

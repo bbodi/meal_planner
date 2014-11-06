@@ -41,7 +41,7 @@ impl<'a> KCalTable<'a> {
 		header(&mut self.layer, "Foods", SizeInCharacters(71), column_height)
 			.x(SizeInCharacters(1))
 			.y(SizeInCharacters(3))
-			.draw(renderer);
+			.draw();
 		let price_header_x = self.layer.last_x + self.layer.last_w;
 		let first_row = self.layer.last_x + SizeInCharacters(1);
 		self.last_food_id = foods.len();
@@ -51,32 +51,32 @@ impl<'a> KCalTable<'a> {
 			let _ = tricolor_field_str(textfield_str(&mut self.layer, &mut food.name, SizeInCharacters(20))
 				.x(first_row)
 				.down(SizeInCharacters(1))
-	            .default_text("Name..."), values).draw(renderer);
+	            .default_text("Name..."), values).draw();
 
 			let _ = textfield_f32(&mut self.layer, &mut food.weight, SizeInCharacters(4))
 				.right(SizeInCharacters(2))
-	            .draw(renderer);
+	            .draw();
 
 	        dropdown(&mut self.layer, vec!["g", "dkg", "kg"].as_slice(), &mut food.weight_type)
 	        	.right(SizeInCharacters(1))
-	        	.draw(renderer);
+	        	.draw();
 	        let _ = textfield_f32(&mut self.layer, &mut food.protein, SizeInCharacters(4))
 				.right(SizeInCharacters(2))
 	            .label_color(RGB(76, 166, 79))
 	            .value_color(RGB(76, 166, 79))
-	            .draw(renderer);
+	            .draw();
 
 	        let _ = textfield_f32(&mut self.layer, &mut food.ch, SizeInCharacters(4))
 				.right(SizeInCharacters(2))
 	            .label_color(RGB(237, 166, 0))
 	            .value_color(RGB(237, 166, 0))
-	            .draw(renderer);
+	            .draw();
 
 	        let _ = textfield_f32(&mut self.layer, &mut food.fat, SizeInCharacters(4))
 				.right(SizeInCharacters(2))
 	            .label_color(RGB(210, 93, 90))
 	            .value_color(RGB(210, 93, 90))
-	            .draw(renderer);
+	            .draw();
 
 	        // kCal
 	        label(&mut self.layer, format!("{: >4}", food.get_kcal()).as_slice())
@@ -85,20 +85,20 @@ impl<'a> KCalTable<'a> {
 
 	        dropdown(&mut self.layer, db::FoodType::names(), &mut food.food_type)
 	        	.right(SizeInCharacters(2))
-	        	.draw(renderer);
+	        	.draw();
 
 	        // PRICE
 			let _ = textfield_i32(&mut self.layer, &mut food.price_weight, SizeInCharacters(4))
 				.right(SizeInCharacters(2))
-	            .draw(renderer);
+	            .draw();
 	        dropdown(&mut self.layer, vec!["g", "dkg", "kg"].as_slice(), &mut food.price_weight_type)
 	        	.right(SizeInCharacters(1))
-	        	.draw(renderer);
+	        	.draw();
 	        let _ = textfield_i32(&mut self.layer, &mut food.price, SizeInCharacters(4))
 				.right(SizeInCharacters(2))
-	            .draw(renderer);
+	            .draw();
 
-	        if button(&mut self.layer, "Del").right(SizeInCharacters(4)).draw(renderer) {
+	        if button(&mut self.layer, "Del").right(SizeInCharacters(4)).draw() {
 
 			}
 		}
@@ -107,55 +107,55 @@ impl<'a> KCalTable<'a> {
 			.down(SizeInCharacters(1))
 			.x(first_row)
 			.y(SizeInCharacters(36))
-			.draw(renderer) {
+			.draw() {
 			self.page = self.page - 1;
 		}
 		if button(&mut self.layer, "Next")
 			.disabled(self.page >= (foods.len() / 16))
 			.right(SizeInCharacters(60))
-			.draw(renderer) {
+			.draw() {
 			self.page = self.page + 1;
 		}
 		if button(&mut self.layer, "New")
 			.down(SizeInCharacters(1))
-			.x(first_row).draw(renderer) {
+			.x(first_row).draw() {
 			self.last_food_id = self.last_food_id + 1;
 			foods.push(db::Food::new(self.last_food_id));
 		}
-		if button(&mut self.layer, "Save").right(SizeInCharacters(2)).draw(renderer) {
+		if button(&mut self.layer, "Save").right(SizeInCharacters(2)).draw() {
 			return true;
 		}
 		header(&mut self.layer, "Név", SizeInCharacters(22), column_height - SizeInCharacters(1))
 			.x(SizeInCharacters(1))
 			.y(SizeInCharacters(4))
-			.draw(renderer);
+			.draw();
 		header(&mut self.layer, "Tömeg", SizeInCharacters(12), column_height - SizeInCharacters(1))
 			.right(SizeInCharacters(0))
-			.draw(renderer);
+			.draw();
 		header(&mut self.layer, "P", SizeInCharacters(6), column_height - SizeInCharacters(1))
 			.right(SizeInCharacters(0))
-			.draw(renderer);
+			.draw();
 		header(&mut self.layer, "C", SizeInCharacters(6), column_height - SizeInCharacters(1))
 			.right(SizeInCharacters(0))
-			.draw(renderer);
+			.draw();
 		header(&mut self.layer, "F", SizeInCharacters(6), column_height - SizeInCharacters(1))
 			.right(SizeInCharacters(0))
-			.draw(renderer);
+			.draw();
 		header(&mut self.layer, "kCal", SizeInCharacters(6), column_height - SizeInCharacters(1))
 			.right(SizeInCharacters(0))
-			.draw(renderer);
+			.draw();
 
 		header(&mut self.layer, "Prices", SizeInCharacters(18), column_height)
 				.up(SizeInCharacters(1))
 				.right(SizeInCharacters(13))
-				.draw(renderer);
+				.draw();
 		header(&mut self.layer, "Tömeg", SizeInCharacters(12), column_height - SizeInCharacters(1))
 			.down(SizeInCharacters(0))
-			.draw(renderer);
+			.draw();
 
 		header(&mut self.layer, "Price", SizeInCharacters(6), column_height - SizeInCharacters(1))
 			.right(SizeInCharacters(0))
-			.draw(renderer);
+			.draw();
 		return false;
 	}
 

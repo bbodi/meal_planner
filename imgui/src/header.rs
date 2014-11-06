@@ -73,12 +73,12 @@ impl<'a> HeaderBuilder<'a> {
 		self
 	}
 
-	pub fn draw_with_body(&mut self, renderer: &sdl2::render::Renderer, body: |&mut base::Layer|) {
+	pub fn draw_with_body(&mut self, body: |&mut base::Layer|) {
 		self.layer.last_x = self.x;
 		self.layer.last_y = self.y;
 		self.layer.last_w = SizeInCharacters(0);
 		self.layer.last_h = SizeInCharacters(1);
-		draw(self, renderer);
+		draw(self);
 		body(self.layer);
 		self.layer.last_x = self.x;
 		self.layer.last_y = self.y;
@@ -86,17 +86,17 @@ impl<'a> HeaderBuilder<'a> {
 		self.layer.last_h = self.h;
 	}
 
-	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) {
+	pub fn draw(&mut self) {
 		self.layer.last_x = self.x;
 		self.layer.last_y = self.y;
 		self.layer.last_w = self.w;
 		self.layer.last_h = SizeInCharacters(1);
-		draw(self, renderer);
+		draw(self);
 	}
 }
 
 
-pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) {
+pub fn draw(builder: &mut HeaderBuilder) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);
@@ -111,7 +111,7 @@ pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) {
 	} else {
 		builder.layer.draw_rect_gradient(x, y, w, header_h, RGB(40, 120, 182), RGB(22, 83, 144));
 	}
-	base::draw_rect(renderer, x, y, w+border_width, header_h+border_width, 2, RGB(0, 0, 0));
+	builder.layer.draw_rect(x, y, w+border_width, header_h+border_width, 2, RGB(0, 0, 0));
 	let text_x = base::center_text(builder.label, char_w, w);
 	if builder.label.len() > 0 {
 		if builder.bold {
@@ -121,5 +121,5 @@ pub fn draw(builder: &mut HeaderBuilder, renderer: &sdl2::render::Renderer) {
 		}
 	}
 
-	base::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
+	builder.layer.draw_rect(x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 }

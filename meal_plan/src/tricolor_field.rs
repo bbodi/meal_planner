@@ -5,6 +5,7 @@ use sdl2::pixels::RGB;
 use sdl2::rect::Rect;
 
 use imgui::textfield;
+use imgui::base;
 
 pub struct TriColorFieldBuilder<'a> {
 	textfield: textfield::TextFieldBuilder<'a>,
@@ -15,7 +16,7 @@ pub fn tricolor_field_str<'a>(tf: textfield::TextFieldBuilder<'a>, values: (f32,
 	TriColorFieldBuilder::new(tf.value_color(RGB(0, 0, 0)).bold(true), values)
 }
 
-pub fn fill_tri_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i32, values: (f32, f32, f32, f32), hover: bool) {
+pub fn fill_tri_rect(layer: &mut base::Layer, x: i32, y: i32, w: i32, h: i32, values: (f32, f32, f32, f32), hover: bool) {
 	let (p, ch, f, weight) = values;
 	let w = w as f32;
 	let values = [p / weight, ch / weight, f / weight];
@@ -30,15 +31,11 @@ pub fn fill_tri_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, 
 		return;
 	}
 	let add = if hover {10} else {0};
-	let _ = renderer.set_draw_color(RGB(76+add, 166+add, 79+add));
-	let _ = renderer.fill_rect(&Rect::new(x, y, w1 as i32, h));
-	let _ = renderer.set_draw_color(RGB(237+add, 166+add, 0+add));
-	let _ = renderer.fill_rect(&Rect::new(x+w1 as i32, y, w2 as i32, h));
-	let _ = renderer.set_draw_color(RGB(210+add, 93+add, 90+add));
-	let _ = renderer.fill_rect(&Rect::new(x+(w1+w2) as i32, y, w3 as i32, h));
+	layer.fill_rect(x, y, w1 as i32, h, RGB(76+add, 166+add, 79+add));
+	layer.fill_rect(x+w1 as i32, y, w2 as i32, h, RGB(237+add, 166+add, 0+add));
+	layer.fill_rect(x+(w1+w2) as i32, y, w3 as i32, h, RGB(210+add, 93+add, 90+add));
 
-	let _ = renderer.set_draw_color(RGB(210+add, 210+add, 210+add));
-	let _ = renderer.fill_rect(&Rect::new(x+(w1+w2+w3) as i32, y, w4 as i32, h));
+	layer.fill_rect(x+(w1+w2+w3) as i32, y, w4 as i32, h, RGB(210+add, 210+add, 210+add));
 }
 
 impl<'a> TriColorFieldBuilder<'a> {
@@ -49,12 +46,12 @@ impl<'a> TriColorFieldBuilder<'a> {
 		}
 	}
 
-	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> Option<textfield::TextFieldResult> {
-		draw(self, renderer)
+	pub fn draw(&mut self) -> Option<textfield::TextFieldResult> {
+		draw(self)
 	}
 }
 
-pub fn draw(builder: &mut TriColorFieldBuilder, renderer: &sdl2::render::Renderer) -> Option<textfield::TextFieldResult> {
+pub fn draw(builder: &mut TriColorFieldBuilder) -> Option<textfield::TextFieldResult> {
 	let char_w = builder.textfield.layer.char_w;
 	let char_h = builder.textfield.layer.char_h;
 	let x = builder.textfield.x.in_pixels(char_w);
@@ -68,9 +65,9 @@ pub fn draw(builder: &mut TriColorFieldBuilder, renderer: &sdl2::render::Rendere
 	let clicked_out = builder.textfield.layer.is_mouse_down() && !hover && was_active;
 	let active = was_active && !clicked_out;
 
-	fill_tri_rect(renderer, label_width+x, y, w, h, builder.values, hover || active);
+	fill_tri_rect(builder.textfield.layer, label_width+x, y, w, h, builder.values, hover || active);
 
-	textfield::draw_text(&mut builder.textfield, renderer);
-	textfield::draw_border(&builder.textfield, renderer);
+	textfield::draw_text(&mut builder.textfield);
+	textfield::draw_border(&mut builder.textfield);
 	textfield::handle_logic(&mut builder.textfield)
 }

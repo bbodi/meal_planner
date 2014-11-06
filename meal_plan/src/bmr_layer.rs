@@ -77,24 +77,24 @@ impl<'a> KCalWindow<'a> {
 		header(&mut self.layer, "BMR", SizeInCharacters(70), SizeInCharacters(22))
 			.x(SizeInCharacters(6))
 			.y(SizeInCharacters(5))
-			.draw(renderer);
+			.draw();
 		match textfield_f32(&mut self.layer, &mut nutr_goal.weight, SizeInCharacters(4))
 			.x(SizeInCharacters(7))
 			.y(SizeInCharacters(7))
             .label("Mass: ")
-            .draw(renderer) {
+            .draw() {
         	Some(textfield::Changed) => recalc_bmr(nutr_goal),
         	_ => {},
         };
         dropdown(&mut self.layer, vec!["g", "dkg", "kg", "lb"].as_slice(), &mut nutr_goal.weight_type)
         	.right(SizeInCharacters(1))
-        	.draw(renderer);
+        	.draw();
 
         match textfield_i32(&mut self.layer, &mut nutr_goal.age, SizeInCharacters(4))
         	.x(SizeInCharacters(7))
         	.right(SizeInCharacters(2))
             .label("Age: ")
-            .draw(renderer) {
+            .draw() {
             Some(textfield::Changed) => recalc_bmr(nutr_goal),
         	_ => {},
         };
@@ -103,32 +103,32 @@ impl<'a> KCalWindow<'a> {
         	.x(SizeInCharacters(7))
         	.right(SizeInCharacters(2))
             .label("Height: ")
-            .draw(renderer) {
+            .draw() {
             Some(textfield::Changed) => recalc_bmr(nutr_goal),
         	_ => {},
         };
 
         dropdown(&mut self.layer, vec!["cm", "ft"].as_slice(), &mut nutr_goal.height_type)
         	.right(SizeInCharacters(1))
-        	.draw(renderer);
+        	.draw();
 
         if dropdown(&mut self.layer, vec!["Sedentary", "Lightly active", "Moderately active", "Very active", "Extremely active", ].as_slice(), &mut nutr_goal.activity_mod)
         	.x(SizeInCharacters(7))
         	.right(SizeInCharacters(1))
-        	.draw(renderer) {
+        	.draw() {
         	recalc_bmr(nutr_goal);
         }
         let bmr_str = format!("BMR: {:.0f}", nutr_goal.bmr);
         header(&mut self.layer, bmr_str.as_slice(), SizeInCharacters(70), SizeInCharacters(0))
 			.x(SizeInCharacters(6))
 			.down(SizeInCharacters(2))
-			.draw(renderer);
+			.draw();
 
 		if nutr_goal.height > 0 && nutr_goal.weight > 0f32 && nutr_goal.age > 0 {
 			dropdown(&mut self.layer, vec!["Bulking", "Cutting", ].as_slice(), &mut nutr_goal.goal_type)
 	        	.x(SizeInCharacters(7))
 	        	.down(SizeInCharacters(1))
-	        	.draw(renderer);
+	        	.draw();
 
 	        let mut scrollbar_x = SizeInCharacters(0);
 	        panel(&mut self.layer, SizeInCharacters(68), SizeInCharacters(3))
@@ -143,7 +143,7 @@ impl<'a> KCalWindow<'a> {
 
 		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut nutr_goal.protein_percent )
 		        	.right(SizeInCharacters(2))
-		        	.draw(renderer) {
+		        	.draw() {
 		        	protein_percent_changed(nutr_goal);
 		        }
 		        scrollbar_x = self.layer.last_x;
@@ -154,7 +154,7 @@ impl<'a> KCalWindow<'a> {
 
 		        if scrollbar(&mut self.layer, SizeInCharacters(6), 1f32, 4f32, &mut nutr_goal.protein_per_kg )
 		        	.right(SizeInCharacters(1))
-		        	.draw(renderer) {
+		        	.draw() {
 		        	let calced_prot = nutr_goal.protein_per_kg * nutr_goal.weight;
 		        	nutr_goal.protein_percent = (calced_prot*4f32) as f32 / (nutr_goal.target_calories / 100f32);
 		        	protein_percent_changed(nutr_goal);
@@ -173,7 +173,7 @@ impl<'a> KCalWindow<'a> {
 		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut nutr_goal.ch_percent )
 		        	.x(scrollbar_x)
 		        	.color(RGB(237, 166, 0))
-		        	.draw(renderer) {
+		        	.draw() {
 		        	ch_percent_changed(nutr_goal);
 		        }
 		    }
@@ -190,7 +190,7 @@ impl<'a> KCalWindow<'a> {
 		        if scrollbar(&mut self.layer, SizeInCharacters(20), 0f32, 100f32, &mut nutr_goal.fat_percent )
 		        	.x(scrollbar_x)
 		        	.color(RGB(210, 93, 90))
-		        	.draw(renderer) {
+		        	.draw() {
 		        	fat_percent_changed(nutr_goal);
 		        }
 		    }
@@ -199,7 +199,7 @@ impl<'a> KCalWindow<'a> {
         if button(&mut self.layer, "Save")
             .x(SizeInCharacters(10))
             .y(SizeInCharacters(25))
-            .draw(renderer) {
+            .draw() {
             return true;
     	}
     	return false;

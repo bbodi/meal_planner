@@ -53,14 +53,14 @@ impl<'a> DailyPlan<'a> {
         header(&mut self.layer, "Foods", SizeInCharacters(22), column_height)
             .x(SizeInCharacters(72))
             .y(SizeInCharacters(1))
-            .draw(renderer);
+            .draw();
         let price_header_x = self.layer.last_x + self.layer.last_w;
         let first_row = self.layer.last_x + SizeInCharacters(1);
 
         dropdown(&mut self.layer, db::FoodType::names(), &mut self.selected_food_type)
             .down(SizeInCharacters(1))
             .x(first_row)
-            .draw(renderer);
+            .draw();
 
         let can_add_row = daily_menu.meals[self.selected_meal].foods.len() < 9;
         let selected_food_type = self.selected_food_type;
@@ -72,9 +72,9 @@ impl<'a> DailyPlan<'a> {
             let values = (food.protein, food.ch, food.fat, fs);
             tricolor_label(label(&mut self.layer, food.name.as_slice())
                 .x(first_row)
-                .down(SizeInCharacters(1)), values, SizeInCharacters(20)).draw(renderer);
+                .down(SizeInCharacters(1)), values, SizeInCharacters(20)).draw();
 
-            if can_add_row && button(&mut self.layer, "+").right(SizeInCharacters(2)).draw(renderer) {
+            if can_add_row && button(&mut self.layer, "+").right(SizeInCharacters(2)).draw() {
                 daily_menu.meals[self.selected_meal].add_food(food.id);
             }
         }
@@ -82,18 +82,18 @@ impl<'a> DailyPlan<'a> {
             .disabled(self.page == 0)
             .x(first_row)
             .y(SizeInCharacters(37))
-            .draw(renderer) {
+            .draw() {
             self.page = self.page - 1;
         }
         if button(&mut self.layer, "Next")
             .disabled(self.page >= (foods.len() / 16))
             .right(SizeInCharacters(10))
-            .draw(renderer) {
+            .draw() {
             self.page = self.page + 1;
         }
         if button(&mut self.layer, "Save")
             .down(SizeInCharacters(1))
-            .x(first_row).draw(renderer) {
+            .x(first_row).draw() {
             return true;
         }
 
@@ -101,7 +101,7 @@ impl<'a> DailyPlan<'a> {
             .x(SizeInCharacters(1))
             .y(SizeInCharacters(2))
             .default_text("Daily Menu name...")
-            .draw(renderer);
+            .draw();
         
         let meals_menu_y = self.draw_meals_table(renderer, foods, daily_menu, last_meal_id);
         self.draw_meal_foods_table(renderer, foods, daily_menu, meals_menu_y);
@@ -120,7 +120,7 @@ impl<'a> DailyPlan<'a> {
         header(&mut self.layer, "Sum", SizeInCharacters(50), SizeInCharacters(4 + (daily_menu.meals.len() as i32*4) ))
             .x(SizeInCharacters(1))
             .y(SizeInCharacters(30))
-            .draw_with_body(renderer, |layer| {
+            .draw_with_body(|layer| {
             let start_x = layer.last_x;
             let start_y = layer.last_y;
 
@@ -128,15 +128,15 @@ impl<'a> DailyPlan<'a> {
             let values = (nutr_goal.macros.protein, nutr_goal.macros.ch, nutr_goal.macros.fat, goal_w);
             tricolor_label(label(layer, "")  
                 .right(SizeInCharacters(13))
-                .down(SizeInCharacters(1)), values, SizeInCharacters(21)).draw(renderer);
+                .down(SizeInCharacters(1)), values, SizeInCharacters(21)).draw();
 
             let values = (daily_macros.protein, daily_macros.ch, daily_macros.fat, goal_w);
             tricolor_label(label(layer, "")  
-                .down(SizeInCharacters(0)), values, SizeInCharacters(21)).draw(renderer);
+                .down(SizeInCharacters(0)), values, SizeInCharacters(21)).draw();
 
             let values = (nutr_goal.macros.protein - daily_macros.protein, nutr_goal.macros.ch - daily_macros.ch, nutr_goal.macros.fat - daily_macros.fat, goal_w);
             tricolor_label(label(layer, "")  
-                .down(SizeInCharacters(0)), values, SizeInCharacters(21)).draw(renderer);
+                .down(SizeInCharacters(0)), values, SizeInCharacters(21)).draw();
 
             label(layer, "Current")
                 .y(start_y+SizeInCharacters(3))
@@ -152,7 +152,7 @@ impl<'a> DailyPlan<'a> {
                 .up(SizeInCharacters(1))
                 .right(SizeInCharacters(1))
                 .color(RGB(76, 166, 79))
-                .draw_with_body(renderer, |layer| {
+                .draw_with_body(|layer| {
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.protein).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
@@ -170,7 +170,7 @@ impl<'a> DailyPlan<'a> {
             header(layer, "Ch", SizeInCharacters(5), SizeInCharacters(4))
                 .right(SizeInCharacters(0))
                 .color(RGB(237, 166, 0))
-                .draw_with_body(renderer, |layer| {
+                .draw_with_body(|layer| {
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.ch).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
@@ -188,7 +188,7 @@ impl<'a> DailyPlan<'a> {
             header(layer, "F", SizeInCharacters(5), SizeInCharacters(4))
                 .right(SizeInCharacters(0))
                 .color(RGB(210, 93, 90))
-                .draw_with_body(renderer, |layer| {
+                .draw_with_body(|layer| {
                 label(layer, format!("{: ^5.0f}", nutr_goal.macros.fat).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
@@ -206,7 +206,7 @@ impl<'a> DailyPlan<'a> {
             header(layer, "kCal", SizeInCharacters(6), SizeInCharacters(4))
                 .right(SizeInCharacters(0))
                 //.color(RGB(210, 93, 90))
-                .draw_with_body(renderer, |layer| {
+                .draw_with_body(|layer| {
                 label(layer, format!("{: ^6.0f}", nutr_goal.macros.kcal()).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
@@ -234,7 +234,7 @@ impl<'a> DailyPlan<'a> {
         let mut copy_idx = None;
         header(&mut self.layer, "Meals", SizeInCharacters(27), SizeInCharacters(4 + (daily_menu.meals.len() as i32*5) ))
             .down(SizeInCharacters(1))
-            .draw_with_body(renderer, |layer| {
+            .draw_with_body(|layer| {
             meals_menu_y = layer.last_y;
             let meal_checkbox_x = layer.last_x + SizeInCharacters(1);
             for (i, meal) in daily_menu.meals.iter_mut().enumerate() {
@@ -243,7 +243,7 @@ impl<'a> DailyPlan<'a> {
                 if checkbox(layer, &mut checkbox_value)
                     .x(meal_checkbox_x)
                     .down(SizeInCharacters(2))
-                    .draw(renderer) && checkbox_value {
+                    .draw() && checkbox_value {
                     meal_was_selected = true;
                 }
                 let (macros, w) = DailyPlan::calc_macro_ratio(foods, meal);
@@ -251,7 +251,7 @@ impl<'a> DailyPlan<'a> {
                     .right(SizeInCharacters(1))
                     .up(SizeInCharacters(1))
                     .default_text("Meal name..."), (macros.protein, macros.ch, macros.fat, w) )
-                    .draw(renderer) {
+                    .draw() {
                     Some(textfield::Selected) => meal_was_selected = true,
                     _ => {},
                 }
@@ -260,7 +260,7 @@ impl<'a> DailyPlan<'a> {
                     .down(SizeInCharacters(0))
                     .x(meal_checkbox_x + SizeInCharacters(2))
                     .color(RGB(76, 166, 79))
-                    .draw_with_body(renderer, |layer| {
+                    .draw_with_body(|layer| {
                     label(layer, format!("{: ^5.0f}", macros.protein).as_slice())
                         .down(SizeInCharacters(0))
                         .draw();
@@ -268,7 +268,7 @@ impl<'a> DailyPlan<'a> {
                 header(layer, "Ch", SizeInCharacters(5), SizeInCharacters(2))
                     .right(SizeInCharacters(0))
                     .color(RGB(237, 166, 0))
-                    .draw_with_body(renderer, |layer| {
+                    .draw_with_body(|layer| {
                     label(layer, format!("{: ^5.0f}", macros.ch).as_slice())
                         .down(SizeInCharacters(0))
                         .draw();
@@ -276,14 +276,14 @@ impl<'a> DailyPlan<'a> {
                 header(layer, "F", SizeInCharacters(5), SizeInCharacters(2))
                     .right(SizeInCharacters(0))
                     .color(RGB(210, 93, 90))
-                    .draw_with_body(renderer, |layer| {
+                    .draw_with_body(|layer| {
                     label(layer, format!("{: ^5.0f}", macros.fat).as_slice())
                         .down(SizeInCharacters(0))
                         .draw();
                 });
                 header(layer, "kCal", SizeInCharacters(6), SizeInCharacters(2))
                     .right(SizeInCharacters(0))
-                    .draw_with_body(renderer, |layer| {
+                    .draw_with_body(|layer| {
                     label(layer, format!("{: ^6.0f}", macros.kcal()).as_slice())
                         .down(SizeInCharacters(0))
                         .draw();
@@ -292,24 +292,24 @@ impl<'a> DailyPlan<'a> {
                     .disabled(i == 0)
                     .right(SizeInCharacters(0))
                     .up(SizeInCharacters(1))
-                    .draw(renderer) {
+                    .draw() {
                     move_up_idx = Some(i);
                 }
                 if button(layer, "C")
                     .down(SizeInCharacters(0))
-                    .draw(renderer) {
+                    .draw() {
                     copy_idx = Some(i);
                 }
                 if button(layer, "-")
                     .disabled(meal_count <= 1)
                     .down(SizeInCharacters(0))
-                    .draw(renderer) {
+                    .draw() {
                     delete_idx = Some(i);
                 }
                 if button(layer, "▼")
                     .disabled(i >= meal_count-1)
                     .down(SizeInCharacters(0))
-                    .draw(renderer) {
+                    .draw() {
                     move_down_idx = Some(i);
                 }
                 let hori_line_x = (meal_checkbox_x-SizeInCharacters(1)).in_pixels(layer.char_w);
@@ -336,7 +336,7 @@ impl<'a> DailyPlan<'a> {
             if button(layer, "Add new")
                 .x(meal_checkbox_x)
                 .down(SizeInCharacters(1))
-                .draw(renderer) {
+                .draw() {
                 *last_meal_id = *last_meal_id + 1;
                 daily_menu.add_new_meal(*last_meal_id);
             }
@@ -378,14 +378,14 @@ impl<'a> DailyPlan<'a> {
         header(&mut self.layer, head_name.as_slice(), SizeInCharacters(39), table_height) 
             .right(SizeInCharacters(4))
             .bold(true)
-            .draw_with_body(renderer, |layer| {
+            .draw_with_body(|layer| {
             header(layer, "Name", SizeInCharacters(22), table_height - SizeInCharacters(1))
                 .down(SizeInCharacters(0))
-                .draw(renderer);
+                .draw();
             let name_column_index = layer.last_x + SizeInCharacters(1);
             header(layer, "Tömeg", SizeInCharacters(12), table_height - SizeInCharacters(1))
                 .right(SizeInCharacters(0))
-                .draw(renderer);
+                .draw();
             let weight_column_index = layer.last_x + SizeInCharacters(1);
             if food_count == 0 {
                 return;
@@ -398,20 +398,20 @@ impl<'a> DailyPlan<'a> {
                 let values = (food.protein, food.ch, food.fat, fs);
                 tricolor_label(label(layer, food.name.as_slice())
                     .x(name_column_index)
-                    .down(SizeInCharacters(1)), values, SizeInCharacters(20)).draw(renderer);
+                    .down(SizeInCharacters(1)), values, SizeInCharacters(20)).draw();
 
                 match textfield_f32(layer, &mut meal_food.weight, SizeInCharacters(5))
                     .x(weight_column_index)
-                    .draw(renderer) {
+                    .draw() {
                     Some(textfield::Changed) => {},
                     _ => {},
                 }
                 dropdown(layer, vec!["g", "dkg", "kg"].as_slice(), &mut meal_food.weight_type)
                     .right(SizeInCharacters(1))
-                    .draw(renderer);
+                    .draw();
                 if button(layer, "-")
                     .right(SizeInCharacters(2))
-                    .draw(renderer) {
+                    .draw() {
                     deleting_index = Some(i);
                 }
             }

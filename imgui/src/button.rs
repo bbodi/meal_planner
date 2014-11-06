@@ -64,12 +64,12 @@ impl<'a> ButtonBuilder<'a> {
 		self
 	}
 
-	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
-		draw(self, renderer)
+	pub fn draw(&mut self) -> bool {
+		draw(self)
 	}
 }
 
-pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> bool {
+pub fn draw(builder: &mut ButtonBuilder) -> bool {
 	builder.layer.last_x = builder.x;
 	builder.layer.last_y = builder.y;
 	builder.layer.last_w = SizeInCharacters(base::text_len(builder.label) as i32);
@@ -109,8 +109,6 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 		builder.layer.clear_hot_widget();
 	}
 
-	let _ = renderer.set_draw_color(sdl2::pixels::RGB(32 , 32, 32));
-
 	if button_down {
 		builder.layer.draw_rect_gradient(x, y, w, h, RGB(48, 48, 48), RGB(83, 83, 83));
 	} else if hover {
@@ -118,7 +116,7 @@ pub fn draw(builder: &mut ButtonBuilder, renderer: &sdl2::render::Renderer) -> b
 	} else {
 		builder.layer.draw_rect_gradient(x, y, w, h, RGB(82, 85, 90), RGB(47, 50, 53));
 	}
-	base::draw_rect(renderer, x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
+	builder.layer.draw_rect(x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 	if builder.label.len() > 0 {
 		builder.layer.draw_text(border_width+text_border_dist+x, y+border_width, builder.label, RGB(151, 151, 151));
 	}

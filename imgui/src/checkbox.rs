@@ -55,12 +55,12 @@ impl<'a> CheckboxBuilder<'a> {
 		self
 	}
 
-	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
-		draw(self, renderer)
+	pub fn draw(&mut self) -> bool {
+		draw(self)
 	}
 }
 
-pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) -> bool {
+pub fn draw(builder: &mut CheckboxBuilder) -> bool {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);
@@ -90,13 +90,10 @@ pub fn draw(builder: &mut CheckboxBuilder, renderer: &sdl2::render::Renderer) ->
 	} else {
 		sdl2::pixels::RGB(51 , 51, 51)
 	};
-	let _ = builder.layer.fill_rect(x + char_h/3, y + char_h/3, char_h/3, char_h/3, color);
+	builder.layer.fill_rect(x + char_h/3, y + char_h/3, char_h/3, char_h/3, color);
 	if builder.label.len() > 0 {
 		builder.layer.draw_text(x + char_h, y, builder.label, RGB(151, 151, 151));
 	}
-
-	let _ = renderer.set_draw_color(sdl2::pixels::RGB(0, 0, 0));
-	let _ = renderer.draw_rect(&Rect::new(x, y, char_h, char_h));
 
 	return mousebtn_just_released;
 }

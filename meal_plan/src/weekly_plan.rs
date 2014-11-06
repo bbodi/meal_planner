@@ -48,7 +48,7 @@ impl<'a> WeeklyPlan<'a> {
             header(&mut self.layer, format!("Week {}", week_num).as_slice(), SizeInCharacters(11), SizeInCharacters(10))
                 .x(SizeInCharacters(10 + (11 * i as i32)) )
                 .y(SizeInCharacters(1))
-                .draw_with_body(renderer, |layer| {
+                .draw_with_body(|layer| {
                     let mut selected_index = 0;
                     let header_start_x = layer.last_x;
                     for (i, _) in daily_menus.iter().enumerate() {
@@ -61,16 +61,16 @@ impl<'a> WeeklyPlan<'a> {
                         dropdown(layer, daily_menu_names.as_slice(), &mut selected_index)
                             .down(SizeInCharacters(0))
                             .x(header_start_x + SizeInCharacters(1))
-                            .draw(renderer);
+                            .draw();
                         if button(layer, "Add new")
                             .x(header_start_x + SizeInCharacters(1))
-                            .draw(renderer) {
+                            .draw() {
                             //let mut daily_plan = daily_plan::DailyPlan::new(&mut last_meal_id);
                         }
                     }
                     if button(layer, "Add new")
                         .x(header_start_x + SizeInCharacters(1))
-                        .draw(renderer) {
+                        .draw() {
                         //let mut daily_plan = daily_plan::DailyPlan::new(&mut last_meal_id);
                     }
                 });

@@ -62,12 +62,12 @@ impl<'a> ScrollBarBuilder<'a> {
 	}
 
 
-	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> bool {
-		draw(self, renderer)
+	pub fn draw(&mut self) -> bool {
+		draw(self)
 	}
 }
 
-pub fn draw(builder: &mut ScrollBarBuilder, renderer: &sdl2::render::Renderer) -> bool {
+pub fn draw(builder: &mut ScrollBarBuilder) -> bool {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);

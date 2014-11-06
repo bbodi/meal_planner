@@ -171,7 +171,7 @@ fn main() {
             if button(&mut layer, "New...")
                 .x(SizeInCharacters(10))
                 .y(SizeInCharacters(10))
-                .draw(&renderer) {
+                .draw() {
                 last_daily_menu_id = last_daily_menu_id + 1;
                 daily_menus.push(db::DailyMenu::new(last_daily_menu_id, "Unnamed".into_string()));
                 selected_menu_idx = 0;
@@ -181,12 +181,12 @@ fn main() {
                 if button(&mut layer, daily_menu.name.as_slice())
                     .x(SizeInCharacters(10))
                     .y(SizeInCharacters(12+i as i32*2))
-                    .draw(&renderer) {
+                    .draw() {
                     selected_menu_idx = i;
                 }
                 if button(&mut layer, "Copy")
                     .right(SizeInCharacters(1))
-                    .draw(&renderer) {
+                    .draw() {
                     copy_idx = Some(i);
                 }
             }
@@ -209,7 +209,7 @@ fn main() {
             if checkbox(&mut layer, &mut show_cal_win)
                 .label("Calorie window")
                 .x(SizeInCharacters(10))
-                .y(SizeInCharacters(10)).draw(&renderer) && show_cal_win {
+                .y(SizeInCharacters(10)).draw() && show_cal_win {
                 show_daily_win = false;
                 show_table_win = false;
                 show_weekly_plan = false;
@@ -217,7 +217,7 @@ fn main() {
             if checkbox(&mut layer, &mut show_table_win)
                 .label("Food list window")
                 .x(SizeInCharacters(10))
-                .down(SizeInCharacters(1)).draw(&renderer) && show_table_win {
+                .down(SizeInCharacters(1)).draw() && show_table_win {
                 show_daily_win = false;
                 show_cal_win = false;
                 show_weekly_plan = false;
@@ -225,7 +225,7 @@ fn main() {
             if checkbox(&mut layer, &mut show_daily_win)
                 .label("Daily window")
                 .x(SizeInCharacters(10))
-                .down(SizeInCharacters(1)).draw(&renderer) && show_daily_win {
+                .down(SizeInCharacters(1)).draw() && show_daily_win {
                 show_table_win = false;
                 show_cal_win = false;
                 show_weekly_plan = false;
@@ -233,7 +233,7 @@ fn main() {
             if checkbox(&mut layer, &mut show_weekly_plan)
                 .label("Weekly window")
                 .x(SizeInCharacters(10))
-                .down(SizeInCharacters(1)).draw(&renderer) && show_weekly_plan {
+                .down(SizeInCharacters(1)).draw() && show_weekly_plan {
                 show_table_win = false;
                 show_cal_win = false;
                 show_daily_win = false;
@@ -241,19 +241,19 @@ fn main() {
             }
         }
 
-        /*if button(&mut layer, "Add data").draw(&renderer) {
+        /*if button(&mut layer, "Add data").draw() {
             last = last + std::rand::random::<i32>().abs() % 7 - 3;
             datas[0].push(last);
         }
 
         checkbox(&mut layer, &mut show_surface)
             .label("Add data")
-            .draw(&renderer);
+            .draw();
 
         match textfield_i32(&mut layer, &mut text, SizeInCharacters(55))
             .down(SizeInCharacters(0))
             .default_text("Írj be egy számot, majd nyomj entert!")
-            .draw(&renderer) {
+            .draw() {
             Some(imgui::textfield::Enter) => {
                 datas[0].push(text);
             },
@@ -261,10 +261,10 @@ fn main() {
         }
         dropdown(&mut layer, vec!["", "One", "Two", "Three", "Four", "Five"].as_slice(), &mut dropdown_value)
             .down(SizeInCharacters(0))
-            .draw(&renderer);
+            .draw();
 
         for i in range(0, dropdown_value) {
-            line_chart(&mut layer, "Datas", 10, 10 + i as i32 *70, 410, 60).data(datas[i as uint].as_slice()).draw(&renderer);
+            line_chart(&mut layer, "Datas", 10, 10 + i as i32 *70, 410, 60).data(datas[i as uint].as_slice()).draw();
         }
 
         line_chart(&mut layer, "Datas", 10, 10 + 5 * 70, 410, 60)
@@ -272,7 +272,7 @@ fn main() {
             .bottom_color(RGBA(82, 82, 82, 150))
             .top_color(RGB(60, 60, 60))
             .surface_color(if show_surface {Some(RGB(255, 255, 255))} else {None})
-            .draw(&renderer);*/
+            .draw();*/
         layer.draw(&renderer);
         renderer.present();
 

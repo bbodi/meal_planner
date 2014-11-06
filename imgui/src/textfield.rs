@@ -137,13 +137,13 @@ impl<'a> TextFieldBuilder<'a> {
 	}
 
 
-	pub fn draw(&mut self, renderer: &sdl2::render::Renderer) -> Option<TextFieldResult> {
-		draw(self, renderer)
+	pub fn draw(&mut self) -> Option<TextFieldResult> {
+		draw(self)
 	}
 }
 
 
-pub fn draw_bg(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) {
+pub fn draw_bg(builder: &mut TextFieldBuilder) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let label_width = builder.label.len() as i32  * char_w;
@@ -163,7 +163,7 @@ pub fn draw_bg(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer
 	}
 }
 
-pub fn draw_text(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) {
+pub fn draw_text(builder: &mut TextFieldBuilder) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let label_width = builder.label.len() as i32  * char_w;
@@ -202,7 +202,7 @@ pub fn draw_text(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Render
 	}
 }
 
-pub fn draw_border(builder: &TextFieldBuilder, renderer: &sdl2::render::Renderer) {
+pub fn draw_border(builder: &mut TextFieldBuilder) {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let label_width = builder.label.len() as i32  * char_w;
@@ -212,7 +212,7 @@ pub fn draw_border(builder: &TextFieldBuilder, renderer: &sdl2::render::Renderer
 	let h = char_h;
 
 	let border_width = 2;
-	base::draw_rect(renderer, label_width+x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
+	builder.layer.draw_rect(label_width+x, y, w+border_width, h+border_width, 2, RGB(0, 0, 0));
 }
 
 pub fn handle_logic(builder: &mut TextFieldBuilder) -> Option<TextFieldResult> {
@@ -333,11 +333,11 @@ pub fn handle_logic(builder: &mut TextFieldBuilder) -> Option<TextFieldResult> {
 	return None;
 }
 
-pub fn draw(builder: &mut TextFieldBuilder, renderer: &sdl2::render::Renderer) -> Option<TextFieldResult> {
-	draw_bg(builder, renderer);
+pub fn draw(builder: &mut TextFieldBuilder) -> Option<TextFieldResult> {
+	draw_bg(builder);
 
-	draw_text(builder, renderer);
-	draw_border(builder, renderer);
+	draw_text(builder);
+	draw_border(builder);
 
 	handle_logic(builder)
 }
