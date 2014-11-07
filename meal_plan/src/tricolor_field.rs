@@ -30,11 +30,11 @@ pub fn fill_tri_rect(layer: &mut base::Layer, x: i32, y: i32, w: i32, h: i32, va
 		return;
 	}
 	let add = if hover {10} else {0};
-	layer.fill_rect(x, y, w1 as i32, h, RGB(76+add, 166+add, 79+add));
-	layer.fill_rect(x+w1 as i32, y, w2 as i32, h, RGB(237+add, 166+add, 0+add));
-	layer.fill_rect(x+(w1+w2) as i32, y, w3 as i32, h, RGB(210+add, 93+add, 90+add));
+	layer.bottom_surface.fill_rect(x, y, w1 as i32, h, RGB(76+add, 166+add, 79+add));
+	layer.bottom_surface.fill_rect(x+w1 as i32, y, w2 as i32, h, RGB(237+add, 166+add, 0+add));
+	layer.bottom_surface.fill_rect(x+(w1+w2) as i32, y, w3 as i32, h, RGB(210+add, 93+add, 90+add));
 
-	layer.fill_rect(x+(w1+w2+w3) as i32, y, w4 as i32, h, RGB(210+add, 210+add, 210+add));
+	layer.bottom_surface.fill_rect(x+(w1+w2+w3) as i32, y, w4 as i32, h, RGB(210+add, 210+add, 210+add));
 }
 
 impl<'a> TriColorFieldBuilder<'a> {

@@ -1,3 +1,4 @@
+use std::iter::AdditiveIterator;
 
 use imgui::base;
 
@@ -184,7 +185,7 @@ pub struct Food {
     pub ch: f32,
     pub fat: f32,
     pub price: i32,
-    pub price_weight: i32,
+    pub price_weight: f32,
     pub price_weight_type: WeightType,
     pub food_type: FoodType,
 }
@@ -200,7 +201,7 @@ impl Food {
             ch: 0f32,
             fat: 0f32,
             price: 0,
-            price_weight: 100,
+            price_weight: 100f32,
             price_weight_type: G,
             food_type: Meat,
         }
@@ -268,6 +269,18 @@ impl Meal {
     }
 
     pub fn id(&self) -> uint {self.id}
+
+    pub fn price(&self, foods: &[Food]) -> u32 {
+        let mut sum = 0f32;
+        for meal_food in self.foods.iter() {
+            let food = &foods[meal_food.food_id];
+            let m = meal_food.weight_type.to_g(meal_food.weight);
+            let price = food.price;
+            let price_m = food.price_weight_type.to_g(food.price_weight);
+            sum = sum + m as f32 / price_m as f32 * price as f32;
+        }
+        sum as u32
+    }
 }
 
 #[deriving(Decodable, Encodable)]
@@ -302,6 +315,10 @@ impl DailyMenu {
     }
 
     pub fn id(&self) -> uint {self.id}
+
+    pub fn price(&self, foods: &[Food]) -> u32 {
+        self.meals.iter().map(|x| x.price(foods)).sum()
+    }
 }
 
 pub struct Dao;

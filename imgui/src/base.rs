@@ -133,15 +133,15 @@ impl Layer {
 
 	pub fn new() -> Layer {
 		//DejaVuSansMono, Consolas
-		let font = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono.ttf"), 16) {
+		let font = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono.ttf"), 14) {
         	Ok(f) => f,
         	Err(e) => panic!(e),
 	    };
-	    let font2 = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono.ttf"), 16) {
+	    let font2 = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono.ttf"), 14) {
         	Ok(f) => f,
         	Err(e) => panic!(e),
 	    };
-	    let font3 = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono.ttf"), 16) {
+	    let font3 = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono.ttf"), 14) {
         	Ok(f) => f,
         	Err(e) => panic!(e),
 	    };
@@ -149,15 +149,15 @@ impl Layer {
 			Ok((w, h)) => (w, h),
 			Err(e) => panic!(e),
 		};
-		let bfont = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono-Bold.ttf"), 16) {
+		let bfont = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono-Bold.ttf"), 14) {
         	Ok(f) => f,
         	Err(e) => panic!(e),
 	    };
-	    let bfont2 = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono-Bold.ttf"), 16) {
+	    let bfont2 = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono-Bold.ttf"), 14) {
         	Ok(f) => f,
         	Err(e) => panic!(e),
 	    };
-	    let bfont3 = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono-Bold.ttf"), 16) {
+	    let bfont3 = match sdl2_ttf::Font::from_file(&Path::new("ttf/DejaVuSansMono-Bold.ttf"), 14) {
         	Ok(f) => f,
         	Err(e) => panic!(e),
 	    };

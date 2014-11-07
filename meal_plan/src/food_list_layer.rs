@@ -87,7 +87,7 @@ impl<'a> KCalTable<'a> {
 	        	.draw();
 
 	        // PRICE
-			let _ = textfield_i32(&mut self.layer, &mut food.price_weight, SizeInCharacters(4))
+			let _ = textfield_f32(&mut self.layer, &mut food.price_weight, SizeInCharacters(4))
 				.right(SizeInCharacters(2))
 	            .draw();
 	        dropdown(&mut self.layer, vec!["g", "dkg", "kg"].as_slice(), &mut food.price_weight_type)

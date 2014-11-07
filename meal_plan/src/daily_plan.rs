@@ -203,7 +203,6 @@ impl<'a> DailyPlan<'a> {
             });
             header(layer, "kCal", SizeInCharacters(6), SizeInCharacters(4))
                 .right(SizeInCharacters(0))
-                //.color(RGB(210, 93, 90))
                 .draw_with_body(|layer| {
                 label(layer, format!("{: ^6.0f}", nutr_goal.macros.kcal()).as_slice())
                     .color(RGB(0, 0, 0))
@@ -217,6 +216,16 @@ impl<'a> DailyPlan<'a> {
                 label(layer, format!("{: ^6.0f}", nutr_goal.macros.kcal() - daily_macros.kcal()).as_slice())
                     .color(RGB(0, 0, 0))
                     .down(SizeInCharacters(0))
+                    .draw();
+            });
+            header(layer, "Price", SizeInCharacters(6), SizeInCharacters(4))
+                .right(SizeInCharacters(0))
+                //.color(RGB(210, 93, 90))
+                .draw_with_body(|layer| {
+                label(layer, format!("{: ^6}", daily_menu.price(foods)).as_slice())
+                    .bold(true)
+                    .color(RGB(0, 0, 0))
+                    .down(SizeInCharacters(1))
                     .draw();
             });
         });
@@ -313,7 +322,7 @@ impl<'a> DailyPlan<'a> {
                 let hori_line_x = (meal_checkbox_x-SizeInCharacters(1)).in_pixels(layer.char_w);
                 let hori_line_y = (layer.last_y + layer.last_h).in_pixels(layer.char_h);
                 let char_w = layer.char_w;
-                layer.draw_line(hori_line_x, hori_line_y, hori_line_x+SizeInCharacters(27).in_pixels(char_w), hori_line_y, RGB(0, 0, 0));
+                layer.bottom_surface.draw_line(hori_line_x, hori_line_y, hori_line_x+SizeInCharacters(27).in_pixels(char_w), hori_line_y, RGB(0, 0, 0));
 
                 if meal_was_selected {
                     selected_meal = i;
@@ -327,9 +336,9 @@ impl<'a> DailyPlan<'a> {
                     let line_y2 = meals_menu_y.in_pixels(layer.char_h);
                     let row = layer.char_h;
                     let color = RGB(0, 0, 0);
-                    layer.draw_line(line_x1, line_y1-3*row, line_x2, line_y2, color);
+                    layer.bottom_surface.draw_line(line_x1, line_y1-3*row, line_x2, line_y2, color);
                     let char_h = layer.char_h;
-                    layer.draw_line(line_x1, line_y1+row, line_x2, line_y2+table_height.in_pixels(char_h), color);
+                    layer.bottom_surface.draw_line(line_x1, line_y1+row, line_x2, line_y2+table_height.in_pixels(char_h), color);
                 }
             }
             
