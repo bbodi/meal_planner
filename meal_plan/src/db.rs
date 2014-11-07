@@ -229,6 +229,15 @@ impl MealFood {
             weight_type: G,
         }
     }
+
+    pub fn price(&self, foods: &[Food]) -> u32 {
+        let food = &foods[self.food_id-1];
+        let m = self.weight_type.to_g(self.weight);
+        let price = food.price;
+        let price_m = food.price_weight_type.to_g(food.price_weight);
+        let c = m as f32 / price_m as f32 * price as f32;
+        c as u32
+    }
 }
 
 #[deriving(Decodable, Encodable)]
@@ -273,11 +282,12 @@ impl Meal {
     pub fn price(&self, foods: &[Food]) -> u32 {
         let mut sum = 0f32;
         for meal_food in self.foods.iter() {
-            let food = &foods[meal_food.food_id];
+            let food = &foods[meal_food.food_id-1];
             let m = meal_food.weight_type.to_g(meal_food.weight);
             let price = food.price;
             let price_m = food.price_weight_type.to_g(food.price_weight);
-            sum = sum + m as f32 / price_m as f32 * price as f32;
+            let c = m as f32 / price_m as f32 * price as f32;
+            sum = sum + c;
         }
         sum as u32
     }

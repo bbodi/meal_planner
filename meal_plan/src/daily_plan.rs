@@ -50,7 +50,7 @@ impl<'a> DailyPlan<'a> {
 
         let column_height = SizeInCharacters(36);
         header(&mut self.layer, "Foods", SizeInCharacters(22), column_height)
-            .x(SizeInCharacters(72))
+            .x(SizeInCharacters(85))
             .y(SizeInCharacters(1))
             .draw();
         let first_row = self.layer.last_x + SizeInCharacters(1);
@@ -97,7 +97,7 @@ impl<'a> DailyPlan<'a> {
 
         textfield_str(&mut self.layer, &mut daily_menu.name, SizeInCharacters(20))
             .x(SizeInCharacters(1))
-            .y(SizeInCharacters(2))
+            .y(SizeInCharacters(1))
             .default_text("Daily Menu name...")
             .draw();
         
@@ -111,13 +111,13 @@ impl<'a> DailyPlan<'a> {
         let mut daily_macros = db::MacroNutrient::new(0f32, 0f32, 0f32);
         let mut daily_weight = 0f32;
         for meal in daily_menu.meals.iter() {
-            let (meal_macros, w) = DailyPlan::calc_macro_ratio(foods, meal);
+            let (meal_macros, w) = DailyPlan::calc_meal_macro(foods, meal);
             daily_macros = daily_macros + meal_macros;
             daily_weight = daily_weight + w;
         }
-        header(&mut self.layer, "Sum", SizeInCharacters(50), SizeInCharacters(4 + (daily_menu.meals.len() as i32*4) ))
+        header(&mut self.layer, "Sum", SizeInCharacters(50), SizeInCharacters(5) )
             .x(SizeInCharacters(1))
-            .y(SizeInCharacters(30))
+            .y(SizeInCharacters(35))
             .draw_with_body(|layer| {
             let start_x = layer.last_x;
             let start_y = layer.last_y;
@@ -220,7 +220,6 @@ impl<'a> DailyPlan<'a> {
             });
             header(layer, "Price", SizeInCharacters(6), SizeInCharacters(4))
                 .right(SizeInCharacters(0))
-                //.color(RGB(210, 93, 90))
                 .draw_with_body(|layer| {
                 label(layer, format!("{: ^6}", daily_menu.price(foods)).as_slice())
                     .bold(true)
@@ -239,7 +238,8 @@ impl<'a> DailyPlan<'a> {
         let mut move_up_idx = None;
         let mut move_down_idx = None;
         let mut copy_idx = None;
-        header(&mut self.layer, "Meals", SizeInCharacters(27), SizeInCharacters(4 + (daily_menu.meals.len() as i32*5) ))
+        let meals_panel_width = SizeInCharacters(33);
+        header(&mut self.layer, "Meals", meals_panel_width, SizeInCharacters(4 + (daily_menu.meals.len() as i32*5) ))
             .down(SizeInCharacters(1))
             .draw_with_body(|layer| {
             meals_menu_y = layer.last_y;
@@ -253,8 +253,9 @@ impl<'a> DailyPlan<'a> {
                     .draw() && checkbox_value {
                     meal_was_selected = true;
                 }
-                let (macros, w) = DailyPlan::calc_macro_ratio(foods, meal);
-                match tricolor_field_str(textfield_str(layer, &mut meal.name, SizeInCharacters(21))
+                let (macros, w) = DailyPlan::calc_meal_macro(foods, meal);
+                //let mut only_macro_weight = macros.protein + macros.ch + macros.fat;
+                match tricolor_field_str(textfield_str(layer, &mut meal.name, SizeInCharacters(27))
                     .right(SizeInCharacters(1))
                     .up(SizeInCharacters(1))
                     .default_text("Meal name..."), (macros.protein, macros.ch, macros.fat, w) )
@@ -262,13 +263,12 @@ impl<'a> DailyPlan<'a> {
                     Some(textfield::Selected) => meal_was_selected = true,
                     _ => {},
                 }
-                let (macros, _) = DailyPlan::calc_macro_ratio(foods, meal);
                 header(layer, "P", SizeInCharacters(5), SizeInCharacters(2))
                     .down(SizeInCharacters(0))
                     .x(meal_checkbox_x + SizeInCharacters(2))
                     .color(RGB(76, 166, 79))
                     .draw_with_body(|layer| {
-                    label(layer, format!("{: ^5.0f}", macros.protein).as_slice())
+                    label(layer, format!("{: >5.0f}", macros.protein).as_slice())
                         .down(SizeInCharacters(0))
                         .draw();
                 });
@@ -276,7 +276,7 @@ impl<'a> DailyPlan<'a> {
                     .right(SizeInCharacters(0))
                     .color(RGB(237, 166, 0))
                     .draw_with_body(|layer| {
-                    label(layer, format!("{: ^5.0f}", macros.ch).as_slice())
+                    label(layer, format!("{: >5.0f}", macros.ch).as_slice())
                         .down(SizeInCharacters(0))
                         .draw();
                 });
@@ -284,14 +284,21 @@ impl<'a> DailyPlan<'a> {
                     .right(SizeInCharacters(0))
                     .color(RGB(210, 93, 90))
                     .draw_with_body(|layer| {
-                    label(layer, format!("{: ^5.0f}", macros.fat).as_slice())
+                    label(layer, format!("{: >5.0f}", macros.fat).as_slice())
                         .down(SizeInCharacters(0))
                         .draw();
                 });
                 header(layer, "kCal", SizeInCharacters(6), SizeInCharacters(2))
                     .right(SizeInCharacters(0))
                     .draw_with_body(|layer| {
-                    label(layer, format!("{: ^6.0f}", macros.kcal()).as_slice())
+                    label(layer, format!("{: >6.0f}", macros.kcal()).as_slice())
+                        .down(SizeInCharacters(0))
+                        .draw();
+                });
+                header(layer, "Price", SizeInCharacters(6), SizeInCharacters(2))
+                    .right(SizeInCharacters(0))
+                    .draw_with_body(|layer| {
+                    label(layer, format!("{: >6}", meal.price(foods)).as_slice())
                         .down(SizeInCharacters(0))
                         .draw();
                 });
@@ -322,14 +329,14 @@ impl<'a> DailyPlan<'a> {
                 let hori_line_x = (meal_checkbox_x-SizeInCharacters(1)).in_pixels(layer.char_w);
                 let hori_line_y = (layer.last_y + layer.last_h).in_pixels(layer.char_h);
                 let char_w = layer.char_w;
-                layer.bottom_surface.draw_line(hori_line_x, hori_line_y, hori_line_x+SizeInCharacters(27).in_pixels(char_w), hori_line_y, RGB(0, 0, 0));
+                layer.bottom_surface.draw_line(hori_line_x, hori_line_y, hori_line_x+meals_panel_width.in_pixels(char_w), hori_line_y, RGB(0, 0, 0));
 
                 if meal_was_selected {
                     selected_meal = i;
                 }
                 if selected_meal == i {
                     let food_count = meal.foods.len() as i32;
-                    let table_height = SizeInCharacters(3+food_count *2);
+                    let table_height = SizeInCharacters(3+food_count *4);
                     let line_x1 = (layer.last_x + layer.last_w + SizeInCharacters(2)).in_pixels(layer.char_w);
                     let line_y1 = (layer.last_y).in_pixels(layer.char_h);
                     let line_x2 = line_x1 + SizeInCharacters(4).in_pixels(layer.char_w);
@@ -380,14 +387,17 @@ impl<'a> DailyPlan<'a> {
 
     fn draw_meal_foods_table(&mut self, foods: &[db::Food], daily_menu: &mut DailyMenu) {
         let food_count = daily_menu.meals[self.selected_meal].foods.len() as i32;
-        let table_height = SizeInCharacters(3+food_count *2);
+        let table_height = SizeInCharacters(3+food_count *4);
         let selected_meal = self.selected_meal;
         let head_name = daily_menu.meals[self.selected_meal].name.clone();
-        header(&mut self.layer, head_name.as_slice(), SizeInCharacters(39), table_height) 
+        
+        let mut deleting_index = None;
+        header(&mut self.layer, head_name.as_slice(), SizeInCharacters(42), table_height) 
             .right(SizeInCharacters(4))
             .bold(true)
             .draw_with_body(|layer| {
-            header(layer, "Name", SizeInCharacters(22), table_height - SizeInCharacters(1))
+
+            header(layer, "Name", SizeInCharacters(30), table_height - SizeInCharacters(1))
                 .down(SizeInCharacters(0))
                 .draw();
             let name_column_index = layer.last_x + SizeInCharacters(1);
@@ -397,16 +407,21 @@ impl<'a> DailyPlan<'a> {
             let weight_column_index = layer.last_x + SizeInCharacters(1);
             if food_count == 0 {
                 return;
-            }        
-            let meal = daily_menu.meals.get_mut(selected_meal);
-            let mut deleting_index = None;
+            }
+            let meal = &mut daily_menu.meals[selected_meal];
+            let (meal_macros, _) = DailyPlan::calc_meal_macro(foods, meal);
             for (i, meal_food) in meal.foods.iter_mut().enumerate() {
                 let ref food = foods[meal_food.food_id-1];
                 let fs = food.weight_type.to_g(food.weight);
-                let values = (food.protein, food.ch, food.fat, fs);
+                let only_macro_weight = meal_macros.protein + meal_macros.ch + meal_macros.fat;
+                let meal_food_macros = DailyPlan::calc_meal_food_macro(foods, meal_food);
+                let values = (meal_food_macros.protein, meal_food_macros.ch, meal_food_macros.fat, only_macro_weight);
                 tricolor_label(label(layer, food.name.as_slice())
                     .x(name_column_index)
-                    .down(SizeInCharacters(1)), values, SizeInCharacters(20)).draw();
+                    .down(SizeInCharacters(1)), values, SizeInCharacters(27)).draw();
+
+                
+                let macros = DailyPlan::calc_meal_food_macro(foods, meal_food);
 
                 match textfield_f32(layer, &mut meal_food.weight, SizeInCharacters(5))
                     .x(weight_column_index)
@@ -422,15 +437,67 @@ impl<'a> DailyPlan<'a> {
                     .draw() {
                     deleting_index = Some(i);
                 }
-            }
-            if deleting_index.is_some() {
-                meal.foods.remove(deleting_index.unwrap());
-                layer.clear_textfield_states();
+                header(layer, "P", SizeInCharacters(5), SizeInCharacters(2))
+                    .down(SizeInCharacters(0))
+                    .x(name_column_index + SizeInCharacters(0))
+                    .color(RGB(76, 166, 79))
+                    .draw_with_body(|layer| {
+                    label(layer, format!("{: >5.0f}", macros.protein).as_slice())
+                        .down(SizeInCharacters(0))
+                        .draw();
+                });
+                header(layer, "Ch", SizeInCharacters(5), SizeInCharacters(2))
+                    .right(SizeInCharacters(0))
+                    .color(RGB(237, 166, 0))
+                    .draw_with_body(|layer| {
+                    label(layer, format!("{: >5.0f}", macros.ch).as_slice())
+                        .down(SizeInCharacters(0))
+                        .draw();
+                });
+                header(layer, "F", SizeInCharacters(5), SizeInCharacters(2))
+                    .right(SizeInCharacters(0))
+                    .color(RGB(210, 93, 90))
+                    .draw_with_body(|layer| {
+                    label(layer, format!("{: >5.0f}", macros.fat).as_slice())
+                        .down(SizeInCharacters(0))
+                        .draw();
+                });
+                header(layer, "kCal", SizeInCharacters(6), SizeInCharacters(2))
+                    .right(SizeInCharacters(0))
+                    .draw_with_body(|layer| {
+                    label(layer, format!("{: >6.0f}", macros.kcal()).as_slice())
+                        .down(SizeInCharacters(0))
+                        .draw();
+                });
+                header(layer, "Price", SizeInCharacters(6), SizeInCharacters(2))
+                    .right(SizeInCharacters(0))
+                    .draw_with_body(|layer| {
+                    label(layer, format!("{: >6}", meal_food.price(foods)).as_slice())
+                        .down(SizeInCharacters(0))
+                        .draw();
+                });
             }
         });
+        if deleting_index.is_some() {
+            daily_menu.meals[selected_meal].foods.remove(deleting_index.unwrap());
+            self.layer.clear_textfield_states();
+        }
     }
 
-    fn calc_macro_ratio(foods: &[db::Food], meal: &db::Meal) -> (db::MacroNutrient, f32) {
+    fn calc_meal_food_macro(foods: &[db::Food], meal_food: &db::MealFood) -> db::MacroNutrient {
+        let ref food = foods[meal_food.food_id-1];
+
+        let standard_weight = food.weight_type.to_g(food.weight);
+        let input_weight =  meal_food.weight_type.to_g(meal_food.weight);
+        let ratio = input_weight / standard_weight;
+        let mut macros = db::MacroNutrient::new(0f32, 0f32, 0f32);
+        macros.protein = macros.protein + food.protein * ratio;
+        macros.ch = macros.ch + food.ch * ratio;
+        macros.fat = macros.fat + food.fat * ratio;
+        macros
+    }
+
+    fn calc_meal_macro(foods: &[db::Food], meal: &db::Meal) -> (db::MacroNutrient, f32) {
         let mut macros = db::MacroNutrient::new(0f32, 0f32, 0f32);
         let mut w = 0f32;
         for meal_food in meal.foods.iter() {
