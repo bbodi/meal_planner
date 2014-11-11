@@ -18,6 +18,7 @@ use imgui::dropdown::dropdown;
 use tricolor_label::tricolor_label;
 use db;
 use db::DailyMenu;
+use db::MacroNutrient;
 
 
 
@@ -108,7 +109,7 @@ impl<'a> DailyPlan<'a> {
     }
 
     fn draw_sum_table(&mut self, foods: &[db::Food], daily_menu: &mut DailyMenu, nutr_goal: &db::NutritionGoal) {
-        let mut daily_macros = db::MacroNutrient::new(0f32, 0f32, 0f32);
+        let mut daily_macros = MacroNutrient::new(0f32, 0f32, 0f32);
         let mut daily_weight = 0f32;
         for meal in daily_menu.meals.iter() {
             let (meal_macros, w) = DailyPlan::calc_meal_macro(foods, meal);
@@ -239,6 +240,15 @@ impl<'a> DailyPlan<'a> {
         let mut move_down_idx = None;
         let mut copy_idx = None;
         let meals_panel_width = SizeInCharacters(33);
+
+        let daily_macros = daily_menu.meals.iter().map(|x| {
+            let (macros, _) = DailyPlan::calc_meal_macro(foods, x);
+            macros
+        }).fold(MacroNutrient::new(0f32, 0f32, 0f32), |a, b| {
+            MacroNutrient::new(a.protein + b.protein, a.ch + b.ch, a.fat + b.fat)
+        });
+        let daily_weight = daily_macros.protein + daily_macros.ch + daily_macros.fat;
+        
         header(&mut self.layer, "Meals", meals_panel_width, SizeInCharacters(4 + (daily_menu.meals.len() as i32*5) ))
             .down(SizeInCharacters(1))
             .draw_with_body(|layer| {
@@ -253,12 +263,12 @@ impl<'a> DailyPlan<'a> {
                     .draw() && checkbox_value {
                     meal_was_selected = true;
                 }
-                let (macros, w) = DailyPlan::calc_meal_macro(foods, meal);
+                let (macros, _) = DailyPlan::calc_meal_macro(foods, meal);
                 //let mut only_macro_weight = macros.protein + macros.ch + macros.fat;
                 match tricolor_field_str(textfield_str(layer, &mut meal.name, SizeInCharacters(27))
                     .right(SizeInCharacters(1))
                     .up(SizeInCharacters(1))
-                    .default_text("Meal name..."), (macros.protein, macros.ch, macros.fat, w) )
+                    .default_text("Meal name..."), (macros.protein, macros.ch, macros.fat, daily_weight) )
                     .draw() {
                     Some(textfield::Selected) => meal_was_selected = true,
                     _ => {},
@@ -412,7 +422,6 @@ impl<'a> DailyPlan<'a> {
             let (meal_macros, _) = DailyPlan::calc_meal_macro(foods, meal);
             for (i, meal_food) in meal.foods.iter_mut().enumerate() {
                 let ref food = foods[meal_food.food_id-1];
-                let fs = food.weight_type.to_g(food.weight);
                 let only_macro_weight = meal_macros.protein + meal_macros.ch + meal_macros.fat;
                 let meal_food_macros = DailyPlan::calc_meal_food_macro(foods, meal_food);
                 let values = (meal_food_macros.protein, meal_food_macros.ch, meal_food_macros.fat, only_macro_weight);
@@ -484,21 +493,21 @@ impl<'a> DailyPlan<'a> {
         }
     }
 
-    fn calc_meal_food_macro(foods: &[db::Food], meal_food: &db::MealFood) -> db::MacroNutrient {
+    fn calc_meal_food_macro(foods: &[db::Food], meal_food: &db::MealFood) -> MacroNutrient {
         let ref food = foods[meal_food.food_id-1];
 
         let standard_weight = food.weight_type.to_g(food.weight);
         let input_weight =  meal_food.weight_type.to_g(meal_food.weight);
         let ratio = input_weight / standard_weight;
-        let mut macros = db::MacroNutrient::new(0f32, 0f32, 0f32);
+        let mut macros = MacroNutrient::new(0f32, 0f32, 0f32);
         macros.protein = macros.protein + food.protein * ratio;
         macros.ch = macros.ch + food.ch * ratio;
         macros.fat = macros.fat + food.fat * ratio;
         macros
     }
 
-    fn calc_meal_macro(foods: &[db::Food], meal: &db::Meal) -> (db::MacroNutrient, f32) {
-        let mut macros = db::MacroNutrient::new(0f32, 0f32, 0f32);
+    fn calc_meal_macro(foods: &[db::Food], meal: &db::Meal) -> (MacroNutrient, f32) {
+        let mut macros = MacroNutrient::new(0f32, 0f32, 0f32);
         let mut w = 0f32;
         for meal_food in meal.foods.iter() {
             let ref food = foods[meal_food.food_id-1];
