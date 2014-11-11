@@ -1,0 +1,12 @@
+[package]
+
+name = "quantified_self"
+version = "0.0.1"
+authors = ["bbodi <sharp1113@hotmail.com.com>"]
+
+[dependencies.imgui]
+path = "../imgui/"
+
+[profile.release]
+opt-level = 3
+debug = false

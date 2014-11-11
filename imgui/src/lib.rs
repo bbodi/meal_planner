@@ -17,3 +17,4 @@ pub mod header;
 pub mod scrollbar;
 pub mod label;
 pub mod panel;
+pub mod slider;
