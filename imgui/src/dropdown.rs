@@ -83,12 +83,6 @@ pub fn draw<T>(builder: &mut DropdownBuilder<T>) -> bool {
 	let all_w = label_w + down_arrow_w;
 
 	let mut current_index = unsafe {::std::mem::transmute_copy::<_, uint>(builder.value)};
-	//unsafe {*(builder.value as *mut T as *mut uint)};
-	unsafe {
-		println!("{}", builder.value as *mut T );
-		println!("{}", builder.value as *mut T as *mut uint);
-		//println!("{}", ::std::mem::transmute_copy(*builder.value));
-	}
 
 	builder.layer.last_x = builder.x;
 	builder.layer.last_y = builder.y;
