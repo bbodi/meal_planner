@@ -2,7 +2,7 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 extern crate imgui;
-extern crate serialize;
+extern crate sqlite3;
 
 
 use sdl2::pixels::RGB;
@@ -20,13 +20,68 @@ use imgui::slider::slider;
 use imgui::slider::Vertical;
 use imgui::slider::Horizontal;
 
+use std::default::Default;
+use std::error::FromError;
+use std::io::{IoResult, IoError, InvalidInput};
+use std::os;
+
+use sqlite3::{
+    Access,
+    DatabaseConnection,
+    DatabaseUpdate,
+    Query,
+    ResultRowAccess,
+    SqliteResult,
+};
+use sqlite3::access;
+use sqlite3::access::flags::OPEN_READONLY;
+
 const SCREEN_WIDHT: u32 = 1024;
 const SCREEN_HEIGHT: u32 = 768;
 
+#[deriving(Show)]
+struct Person {
+    id: i32,
+    name: String,
+}
 
+fn make_people(conn: &mut DatabaseConnection) -> SqliteResult<Vec<Person>> {
+    try!(conn.exec("CREATE TABLE person (
+                 id              SERIAL PRIMARY KEY,
+                 name            VARCHAR NOT NULL
+               )"));
 
+    {
+        let mut tx = try!(conn.prepare("INSERT INTO person (id, name)
+                           VALUES (0, 'Dan')"));
+        let changes = try!(conn.update(&mut tx, []));
+        assert_eq!(changes, 1);
+    }
+
+    let mut stmt = try!(conn.prepare("SELECT id, name FROM person"));
+
+    let mut ppl = vec!();
+    try!(stmt.query(
+        [], |row| {
+            ppl.push(Person {
+                id: row.get(0u),
+                name: row.get(1u)
+            });
+            Ok(())
+        }));
+    Ok(ppl)
+}
 
 fn main() {
+	let access = access::ByFilename { flags: Default::default(), filename: "db.db" };
+	let mut conn = match DatabaseConnection::new(access) {
+		Ok(x) => x,
+		Err(e) =>  panic!(e),
+	};
+    make_people(&mut conn);//.map_err(|e| FromError::from_error(e));
+
+
+
     sdl2::init(sdl2::INIT_VIDEO);
     sdl2_ttf::init();
 

@@ -195,7 +195,7 @@ impl Layer {
 	}
 
 	pub fn get_mut_textfield_state(&mut self, id: i32) -> &mut textfield::State {
-		self.textfield_datas.get_mut(&id)
+		&mut self.textfield_datas[id]
 	}
 
 	pub fn get_textfield_state(&self, id: i32) -> &textfield::State {
