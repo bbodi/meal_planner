@@ -7,6 +7,9 @@ authors = ["bbodi <sharp1113@hotmail.com.com>"]
 [dependencies.imgui]
 path = "../imgui/"
 
+[dependencies.rust-sqlite]
+git = "https://github.com/dckc/rust-sqlite3"
+
 [profile.release]
 opt-level = 3
 debug = false
