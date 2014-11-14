@@ -7,21 +7,21 @@ use base;
 use base::SizeInCharacters;
 use base::IndexValue;
 
-pub struct DropdownBuilder<'a> {
+pub struct DropdownBuilder<'a, T: 'a> {
 	disabled: bool,
 	x: SizeInCharacters,
 	y: SizeInCharacters,
 	labels: &'a [&'a str],
 	layer: &'a mut base::Layer,
-	value: &'a mut IndexValue + 'a
+	value: &'a mut T
 }
 
-pub fn dropdown<'a>(layer: &'a mut base::Layer, labels: &'a [&str], value: &'a mut IndexValue) -> DropdownBuilder<'a> {
+pub fn dropdown<'a, T: 'a>(layer: &'a mut base::Layer, labels: &'a [&str], value: &'a mut T) -> DropdownBuilder<'a, T> {
 	DropdownBuilder::new(layer, labels, value)
 }
 
-impl<'a> DropdownBuilder<'a> {
-	pub fn new(layer: &'a mut base::Layer, labels: &'a [&str], value: &'a mut IndexValue) -> DropdownBuilder<'a> {
+impl<'a, T: 'a> DropdownBuilder<'a, T> {
+	pub fn new(layer: &'a mut base::Layer, labels: &'a [&str], value: &'a mut T) -> DropdownBuilder<'a, T> {
 		DropdownBuilder {
 			disabled: false,
 			x: layer.last_x,
@@ -32,25 +32,25 @@ impl<'a> DropdownBuilder<'a> {
 		}
 	}
 
-	pub fn disabled(mut self, v: bool) -> DropdownBuilder<'a> {self.disabled = v; self}
-	pub fn x(mut self, v: SizeInCharacters) -> DropdownBuilder<'a> {self.x = v; self}
-	pub fn y(mut self, v: SizeInCharacters) -> DropdownBuilder<'a> {self.y = v; self}
-	pub fn right(mut self, x: SizeInCharacters) -> DropdownBuilder<'a> {
+	pub fn disabled(mut self, v: bool) -> DropdownBuilder<'a, T> {self.disabled = v; self}
+	pub fn x(mut self, v: SizeInCharacters) -> DropdownBuilder<'a, T> {self.x = v; self}
+	pub fn y(mut self, v: SizeInCharacters) -> DropdownBuilder<'a, T> {self.y = v; self}
+	pub fn right(mut self, x: SizeInCharacters) -> DropdownBuilder<'a, T> {
 		self.x = self.layer.last_x + self.layer.last_w + x;
 		self
 	}
 
-	pub fn inner_right(mut self, x: SizeInCharacters) -> DropdownBuilder<'a> {
+	pub fn inner_right(mut self, x: SizeInCharacters) -> DropdownBuilder<'a, T> {
 		self.x = self.layer.last_x + x;
 		self
 	}
 
-	pub fn down(mut self, y: SizeInCharacters) -> DropdownBuilder<'a> {
+	pub fn down(mut self, y: SizeInCharacters) -> DropdownBuilder<'a, T> {
 		self.y = self.layer.last_y + self.layer.last_h + y;
 		self
 	}
 
-	pub fn inner_down(mut self, y: SizeInCharacters) -> DropdownBuilder<'a> {
+	pub fn inner_down(mut self, y: SizeInCharacters) -> DropdownBuilder<'a, T> {
 		self.y = self.layer.last_y + y;
 		self
 	}
@@ -71,7 +71,7 @@ fn get_longest_word_len(labels: &[&str]) -> i32 {
 	return len as i32;
 }
 
-pub fn draw(builder: &mut DropdownBuilder) -> bool {
+pub fn draw<T>(builder: &mut DropdownBuilder<T>) -> bool {
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);
@@ -81,6 +81,14 @@ pub fn draw(builder: &mut DropdownBuilder) -> bool {
 	let label_w = char_w * longest_word_len;
 	let down_arrow_w = char_w*2;
 	let all_w = label_w + down_arrow_w;
+
+	let mut current_index = unsafe {::std::mem::transmute_copy::<_, uint>(builder.value)};
+	//unsafe {*(builder.value as *mut T as *mut uint)};
+	unsafe {
+		println!("{}", builder.value as *mut T );
+		println!("{}", builder.value as *mut T as *mut uint);
+		//println!("{}", ::std::mem::transmute_copy(*builder.value));
+	}
 
 	builder.layer.last_x = builder.x;
 	builder.layer.last_y = builder.y;
@@ -104,8 +112,11 @@ pub fn draw(builder: &mut DropdownBuilder) -> bool {
 	} else if clicked_out {
 		if builder.layer.is_mouse_in(x, y + char_h, all_w, builder.labels.len() as i32 * char_h) {
 			let selected_index = ((builder.layer.mouse_y() - (y + char_h)) / char_h) as uint ;
-			if selected_index != builder.value.get() {
-				builder.value.set(selected_index);
+			if selected_index != current_index {
+				current_index = selected_index;
+				unsafe {
+					*(builder.value as *mut T as *mut uint) = selected_index;
+				}
 				modified = true;
 			}
 		}
@@ -122,8 +133,8 @@ pub fn draw(builder: &mut DropdownBuilder) -> bool {
 	};
 	builder.layer.bottom_surface.fill_rect(x, y, label_w, h, RGB(0, 0, 0));
 	builder.layer.bottom_surface.draw_rect_gradient(x+1, y+1, label_w-2, h-2, top_color, bottom_color);
-	if builder.labels[builder.value.get()].len() > 0 {
-		builder.layer.bottom_surface.draw_text(x+1, y+1, builder.labels[builder.value.get()], RGB(221, 221, 221));
+	if builder.labels[current_index].len() > 0 {
+		builder.layer.bottom_surface.draw_text(x+1, y+1, builder.labels[current_index], RGB(221, 221, 221));
 	}
 
 	builder.layer.bottom_surface.fill_rect(x+label_w, y, down_arrow_w, h, RGB(0, 0, 0));

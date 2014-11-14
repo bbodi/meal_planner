@@ -2,7 +2,9 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 extern crate imgui;
-extern crate sqlite3;
+
+//extern crate postgres;
+extern crate time;
 
 
 use sdl2::pixels::RGB;
@@ -25,60 +27,117 @@ use std::error::FromError;
 use std::io::{IoResult, IoError, InvalidInput};
 use std::os;
 
-use sqlite3::{
-    Access,
-    DatabaseConnection,
-    DatabaseUpdate,
-    Query,
-    ResultRowAccess,
-    SqliteResult,
-};
-use sqlite3::access;
-use sqlite3::access::flags::OPEN_READONLY;
+use time::Timespec;
+
+//use postgres::{Connection, NoSsl};
+
+mod event_template_window;
 
 const SCREEN_WIDHT: u32 = 1024;
 const SCREEN_HEIGHT: u32 = 768;
 
-#[deriving(Show)]
+
 struct Person {
     id: i32,
     name: String,
+    time_created: Timespec,
+    data: Option<Vec<u8>>
 }
 
-fn make_people(conn: &mut DatabaseConnection) -> SqliteResult<Vec<Person>> {
-    try!(conn.exec("CREATE TABLE person (
-                 id              SERIAL PRIMARY KEY,
-                 name            VARCHAR NOT NULL
-               )"));
+struct Event {
+    id: u32,
+    date: u32,
+    name: String,
+    project_id: u32,
+    text: String,
+    //img: ,
+    is_priv: bool,
+    num: f32,
+}
 
-    {
-        let mut tx = try!(conn.prepare("INSERT INTO person (id, name)
-                           VALUES (0, 'Dan')"));
-        let changes = try!(conn.update(&mut tx, []));
-        assert_eq!(changes, 1);
+#[deriving(Show, PartialEq)]
+enum InputType {
+    Num,
+    Bool,
+    Stack,
+    Text,
+    Img,
+}
+
+
+struct EventTemplate {
+    id: u32,
+    name: String,
+    private: bool,
+    input_type: InputType,
+    //icon: Icon,
+    mandatory: bool,
+    event_group_id: u32,
+}
+
+impl EventTemplate {
+    pub fn new() -> EventTemplate {
+        EventTemplate {
+            id: 0,
+            name: "".into_string(),
+            private: false,
+            input_type: Num,
+            mandatory: false,
+            event_group_id: 0
+        }
     }
+}
 
-    let mut stmt = try!(conn.prepare("SELECT id, name FROM person"));
+struct EventGroup {
+    id: u32,
+    name: String,
+}
 
-    let mut ppl = vec!();
-    try!(stmt.query(
-        [], |row| {
-            ppl.push(Person {
-                id: row.get(0u),
-                name: row.get(1u)
-            });
-            Ok(())
-        }));
-    Ok(ppl)
+impl EventGroup {
+    pub fn new(id: u32, name: &str) -> EventGroup {
+        EventGroup {
+            id: 0, 
+            name: name.into_string(),
+        }
+    }
+}
+
+struct Project {
+    start_event_id: u32,
+    end_event_id: u32,
 }
 
 fn main() {
-	let access = access::ByFilename { flags: Default::default(), filename: "db.db" };
-	let mut conn = match DatabaseConnection::new(access) {
-		Ok(x) => x,
-		Err(e) =>  panic!(e),
-	};
-    make_people(&mut conn);//.map_err(|e| FromError::from_error(e));
+	/*let conn = Connection::connect("postgres://postgres@localhost", &NoSsl)
+            .unwrap();
+
+    conn.execute("CREATE TABLE person (
+                    id              SERIAL PRIMARY KEY,
+                    name            VARCHAR NOT NULL,
+                    time_created    TIMESTAMP NOT NULL,
+                    data            BYTEA
+                  )", []).unwrap();
+    let me = Person {
+        id: 0,
+        name: "Steven".into_string(),
+        time_created: time::get_time(),
+        data: None
+    };
+    conn.execute("INSERT INTO person (name, time_created, data)
+                    VALUES ($1, $2, $3)",
+                 &[&me.name, &me.time_created, &me.data]).unwrap();
+
+    let stmt = conn.prepare("SELECT id, name, time_created, data FROM person")
+            .unwrap();
+    for row in stmt.query([]).unwrap() {
+        let person = Person {
+            id: row.get(0),
+            name: row.get(1),
+            time_created: row.get(2),
+            data: row.get(3)
+        };
+        println!("Found person {}", person.name);
+    }*/
 
 
 
@@ -118,7 +177,7 @@ fn main() {
     let mut slider_val = SizeInCharacters(5);
     let mut slider_val2 = SizeInCharacters(5);
     let mut slider_val3 = SizeInCharacters(5);
-
+    let mut event_template = EventTemplate::new();
     
     'main : loop {
         sdl2::timer::delay(10);
@@ -141,7 +200,7 @@ fn main() {
             _ => {},
         };
 
-        slider(&mut layer, &mut slider_val, Vertical, SizeInCharacters(127), SizeInCharacters(45))
+        /*slider(&mut layer, &mut slider_val, Vertical, SizeInCharacters(127), SizeInCharacters(45))
             .x(SizeInCharacters(0))
             .y(SizeInCharacters(0)).draw();
 
@@ -174,9 +233,12 @@ fn main() {
             .data(datas[2].as_slice())
             .bottom_color(RGBA(82, 82, 82, 150))
             .top_color(RGB(60, 60, 60))
-            .draw(&renderer);
+            .draw(&renderer);*/
         
+        event_template_window::do_logic(&mut layer, &mut event_template);
+
         layer.draw(&renderer);
+
         renderer.present();
 
         let keys = sdl2::keyboard::get_keyboard_state();
