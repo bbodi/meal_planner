@@ -100,6 +100,9 @@ pub fn draw(builder: &mut LineChartBuilder, renderer: &sdl2::render::Renderer) {
 	if builder.maybe_data.is_none() {
 		return;
 	}
+	if w <= 0 || h <= 0 {
+		return;
+	}
 	let data = builder.maybe_data.unwrap();
 	let horizontal_pixels_between_values = w / ::std::cmp::min(w, data.len() as i32 ) ;
 	let scaled_data = create_scaled_chart_data(data.as_slice(), horizontal_pixels_between_values);

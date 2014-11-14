@@ -40,7 +40,7 @@ impl<'a> SliderBuilder<'a> {
 			value: value,
 			typ: typ,
 			min_value: SizeInCharacters(0),
-			max_value: SizeInCharacters(0),
+			max_value: if typ == Vertical {w} else {h},
 		}
 	}
 
@@ -107,10 +107,10 @@ pub fn draw(builder: &mut SliderBuilder) -> bool {
 	builder.layer.bottom_surface.fill_rect(slider_x, slider_y, slider_w, slider_h, RGB(114, 114, 114));
 	if hover {
 		if builder.typ == Vertical {
-			let center_h = (slider_y as f32 * 0.1f32) as i32; 
+			let center_h = (slider_h as f32 * 0.1f32) as i32; 
 			builder.layer.bottom_surface.fill_rect(slider_x, slider_y + slider_h/2 - center_h/2, slider_w, center_h, RGB(140, 140, 140));
 		} else {
-			let center_w = (slider_x as f32 * 0.1f32) as i32; 
+			let center_w = (slider_w as f32 * 0.1f32) as i32; 
 			builder.layer.bottom_surface.fill_rect(slider_x + slider_w/2 - center_w/2, slider_y, center_w, slider_h, RGB(140, 140, 140));
 		}
 	}
@@ -122,12 +122,16 @@ pub fn draw(builder: &mut SliderBuilder) -> bool {
 		if builder.layer.is_mouse_down() {
 			if builder.typ == Vertical {
 				let x_in_region = builder.layer.mouse_x() - region_x;
-				let nth_column = x_in_region / char_w;
-				*builder.value = SizeInCharacters(nth_column);
+				let nth_column = SizeInCharacters(x_in_region / char_w);
+				if nth_column > builder.min_value && nth_column < builder.max_value {
+					*builder.value = nth_column;
+				}
 			} else {
 				let y_in_region = builder.layer.mouse_y() - region_y;
-				let nth_row = y_in_region / char_h;
-				*builder.value = SizeInCharacters(nth_row);
+				let nth_row = SizeInCharacters(y_in_region / char_h);
+				if nth_row > builder.min_value && nth_row < builder.max_value {
+					*builder.value = nth_row;
+				}
 			}
 			return true;
 		} else {

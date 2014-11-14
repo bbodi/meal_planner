@@ -8,7 +8,7 @@ use drawing_surf::DrawingSurface;
 
 const NO_WIDGET_ID: i32 = 0x0FFFFFFF;
 
-#[deriving(PartialEq, Clone, Show)]
+#[deriving(PartialEq, Clone, Show, PartialOrd)]
 pub struct SizeInCharacters(pub i32);
 
 impl SizeInCharacters {
