@@ -110,6 +110,7 @@ pub struct Layer {
 	mouse_x: i32,
 	mouse_y: i32,
 	mouse_state: i32,
+	mouse_handled: bool,
 	prev_mouse_state: i32,
 	pub last_mouse_x: i32,
 	pub last_mouse_y: i32,
@@ -176,6 +177,7 @@ impl Layer {
 	    	mouse_y: 0,
 	    	mouse_state: 0,
 	    	prev_mouse_state: 0,
+	    	mouse_handled: false,
 	    	last_mouse_x: 0,
 			last_mouse_y: 0,
 	    	textfield_datas: HashMap::new(),
@@ -224,11 +226,15 @@ impl Layer {
 	}
 
 	pub fn is_mouse_pressed(&self) -> bool {
-		self.mouse_state == 1 && self.prev_mouse_state == 0
+		self.mouse_state == 1 && self.prev_mouse_state == 0 && !self.mouse_handled
 	}
 
 	pub fn is_mouse_released(&self) -> bool {
-		self.mouse_state == 0 && self.prev_mouse_state == 1
+		self.mouse_state == 0 && self.prev_mouse_state == 1 && !self.mouse_handled
+	}
+
+	pub fn mouse_event_handled(&mut self) {
+		self.mouse_handled = true;
 	}
 
 	pub fn set_hot_widget(&mut self, id: i32) {
@@ -304,12 +310,15 @@ impl Layer {
 		self.last_h = SizeInCharacters(0);
 		self.last_mouse_x = self.mouse_x;
 		self.last_mouse_y = self.mouse_y;
+		self.mouse_handled = false;
 		self.text_input = "".into_string();
 		self.prev_mouse_state = self.mouse_state;
 		self.tick = sdl2::timer::get_ticks();
 		let keys = sdl2::keyboard::get_keyboard_state();
 
 		Layer::update_key(keys[sdl2::scancode::BackspaceScanCode], &mut self.control_keys.backspace);
+		Layer::update_key(keys[sdl2::scancode::UpScanCode], &mut self.control_keys.up);
+		Layer::update_key(keys[sdl2::scancode::DownScanCode], &mut self.control_keys.down);
 		Layer::update_key(keys[sdl2::scancode::LeftScanCode], &mut self.control_keys.left);
 		Layer::update_key(keys[sdl2::scancode::RightScanCode], &mut self.control_keys.right);
 		Layer::update_key(keys[sdl2::scancode::DeleteScanCode], &mut self.control_keys.del);

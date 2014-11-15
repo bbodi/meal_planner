@@ -72,6 +72,7 @@ fn get_longest_word_len(labels: &[&str]) -> i32 {
 }
 
 pub fn draw<T>(builder: &mut DropdownBuilder<T>) -> bool {
+	assert!(!builder.labels.is_empty(), "It must contain at least one label!");
 	let char_w = builder.layer.char_w;
 	let char_h = builder.layer.char_h;
 	let x = builder.x.in_pixels(char_w);
@@ -82,7 +83,7 @@ pub fn draw<T>(builder: &mut DropdownBuilder<T>) -> bool {
 	let down_arrow_w = char_w*2;
 	let all_w = label_w + down_arrow_w;
 
-	let mut current_index = unsafe {::std::mem::transmute_copy::<_, uint>(builder.value)};
+	let mut current_index = unsafe {::std::mem::transmute_copy::<_, u8>(builder.value)} as uint;
 
 	builder.layer.last_x = builder.x;
 	builder.layer.last_y = builder.y;
@@ -113,6 +114,7 @@ pub fn draw<T>(builder: &mut DropdownBuilder<T>) -> bool {
 				}
 				modified = true;
 			}
+			builder.layer.mouse_event_handled();
 		}
 		builder.layer.clear_active_widget();
 	}
@@ -127,7 +129,7 @@ pub fn draw<T>(builder: &mut DropdownBuilder<T>) -> bool {
 	};
 	builder.layer.bottom_surface.fill_rect(x, y, label_w, h, RGB(0, 0, 0));
 	builder.layer.bottom_surface.draw_rect_gradient(x+1, y+1, label_w-2, h-2, top_color, bottom_color);
-	if builder.labels[current_index].len() > 0 {
+	if !builder.labels.is_empty() && builder.labels[current_index].len() > 0 {
 		builder.layer.bottom_surface.draw_text(x+1, y+1, builder.labels[current_index], RGB(221, 221, 221));
 	}
 

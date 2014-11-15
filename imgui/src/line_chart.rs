@@ -108,7 +108,7 @@ pub fn draw(builder: &mut LineChartBuilder, renderer: &sdl2::render::Renderer) {
 	let scaled_data = create_scaled_chart_data(data.as_slice(), horizontal_pixels_between_values);
 	draw_horizontal_lines(builder, renderer, scaled_data.as_slice());
 
-	//
+	// felszin színe
 	if builder.surface_color.is_some() {
 		let mut points = vec![];
 		for (i, v) in scaled_data.iter().enumerate() {

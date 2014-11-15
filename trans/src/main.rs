@@ -29,9 +29,13 @@ use std::os;
 
 use time::Timespec;
 
+use event_template_window::EventTemplateWindow;
+use timeline::TimelineWindow;
+
 //use postgres::{Connection, NoSsl};
 
 mod event_template_window;
+mod timeline;
 
 const SCREEN_WIDHT: u32 = 1024;
 const SCREEN_HEIGHT: u32 = 768;
@@ -83,7 +87,7 @@ impl EventTemplate {
             private: false,
             input_type: Num,
             mandatory: false,
-            event_group_id: 0
+            event_group_id: 0,
         }
     }
 }
@@ -158,17 +162,6 @@ fn main() {
     let _ = renderer.set_logical_size(SCREEN_WIDHT as int, SCREEN_HEIGHT as int);
     
 
-    let mut last: i32 = 30;
-    let mut datas = vec![];
-    for _ in range(0, 5i32) {
-        let mut data = vec![];
-        for _ in range(0, 50i32) {
-            last = last + std::rand::random::<i32>().abs() % 7 - 3;
-            data.push(last);
-        }
-        datas.push(data);
-    }
-
     let mut frame_count = 0u32;
     let mut next_frame_tick = 0;
     let mut fps = 0;
@@ -178,6 +171,10 @@ fn main() {
     let mut slider_val2 = SizeInCharacters(5);
     let mut slider_val3 = SizeInCharacters(5);
     let mut event_template = EventTemplate::new();
+    let mut event_groups: Vec<EventGroup> = vec![];
+
+    let mut event_template_window = EventTemplateWindow::new();
+    let mut timeline = TimelineWindow::new(SizeInCharacters(0), SizeInCharacters(0), SizeInCharacters(128), SizeInCharacters(45));
     
     'main : loop {
         sdl2::timer::delay(10);
@@ -235,7 +232,9 @@ fn main() {
             .top_color(RGB(60, 60, 60))
             .draw(&renderer);*/
         
-        event_template_window::do_logic(&mut layer, &mut event_template);
+        //event_template_window.do_logic(&mut layer, &mut event_template, &mut event_groups);
+        timeline.do_logic(&mut layer);
+        
 
         layer.draw(&renderer);
 

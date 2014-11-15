@@ -5,13 +5,14 @@ use std::cmp::max;
 use std::collections::LruCache;
 
 use sdl2::rect::Rect as SdlRect;
-use sdl2::rect::Point;
+use sdl2::rect::Point as SdlPoint;
 use sdl2::pixels::RGB;
 
 #[deriving(PartialEq, Clone)]
 pub enum DrawCommand {
 	FilledRect(i32, i32, i32, i32, sdl2::pixels::Color),
 	Rect(i32, i32, i32, i32, i32, sdl2::pixels::Color),
+	Point(i32, i32, sdl2::pixels::Color),
 	Line(i32, i32, i32, i32, sdl2::pixels::Color),
 	// x, y, bold, color
 	Text(i32, i32, bool, String, sdl2::pixels::Color),
@@ -50,6 +51,9 @@ impl DrawingSurface {
     			},
     			&Rect(x, y, w, h, b, color) => {
     				sdl_rect(renderer, x, y, w, h, b, color);
+    			},
+    			&Point(x, y, color) => {
+    				sdl_point(renderer, x, y, color);
     			},
     			&GradientRect(x, y, w, h, color1, color2) => {
     				self.do_draw_rect_gradient(renderer, x, y, w, h, color1, color2);
@@ -146,6 +150,10 @@ impl DrawingSurface {
         self.draw_commands.push(Line(x1, y1, x2, y2, color));
     }
 
+    pub fn draw_point(&mut self, x: i32, y: i32, color: sdl2::pixels::Color) {
+        self.draw_commands.push(Point(x, y, color));
+    }
+
     pub fn fill_rect(&mut self, x: i32, y: i32, w: i32, h: i32, color: sdl2::pixels::Color) {
         self.draw_commands.push(FilledRect(x, y, w, h, color));
     }
@@ -169,7 +177,12 @@ fn sdl_fill_rect(renderer: &sdl2::render::Renderer, x: i32, y: i32, w: i32, h: i
 
 fn sdl_line(renderer: &sdl2::render::Renderer, x1: i32, y1: i32, x2: i32, y2: i32, color: sdl2::pixels::Color) {
     let _ = renderer.set_draw_color(color);
-    let _ = renderer.draw_line(Point::new(x1, y1), Point::new(x2, y2));
+    let _ = renderer.draw_line(SdlPoint::new(x1, y1), SdlPoint::new(x2, y2));
+}
+
+fn sdl_point(renderer: &sdl2::render::Renderer, x: i32, y: i32, color: sdl2::pixels::Color) {
+    let _ = renderer.set_draw_color(color);
+    let _ = renderer.draw_point(SdlPoint::new(x, y));
 }
 
 fn create_gradient_texture(renderer: &sdl2::render::Renderer, w: i32, h: i32, start_color: sdl2::pixels::Color, end_color: sdl2::pixels::Color) -> sdl2::render::Texture {
@@ -186,8 +199,8 @@ fn create_gradient_texture(renderer: &sdl2::render::Renderer, w: i32, h: i32, st
         let r = start_r as f32 * sp + end_r as f32 * p;
         let g = start_g as f32 * sp + end_g as f32 * p;
         let b = start_b as f32 * sp + end_b as f32 * p;
-        let start = sdl2::rect::Point::new(0, i);
-        let end = sdl2::rect::Point::new(w, i);
+        let start = SdlPoint::new(0, i);
+        let end = SdlPoint::new(w, i);
         let _ = renderer.set_draw_color(sdl2::pixels::RGB(r as u8, g as u8, b as u8));
         let _ = renderer.draw_line(start, end);
     }

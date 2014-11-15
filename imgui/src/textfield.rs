@@ -7,6 +7,7 @@ use sdl2::pixels::RGB;
 use base;
 use base::SizeInCharacters;
 
+#[deriving(Show, PartialEq)]
 pub enum TextFieldResult {
 	Selected,
 	Changed,
