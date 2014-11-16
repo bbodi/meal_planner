@@ -248,9 +248,14 @@ pub fn handle_logic(builder: &mut TextFieldBuilder) -> Option<TextFieldResult> {
 		state.cursor_pos = ::std::cmp::min(state.cursor_pos, text_len);
 
 		if state.cursor_pos > 0 && control_keys.backspace.just_pressed {
-			let idx: uint = state.value.as_slice().graphemes(true).take(state.cursor_pos as uint - 1).map(|g| g.len()).sum();
-			state.value.remove(idx);
-			state.cursor_pos = state.cursor_pos-1;
+			if control_keys.ctrl.down {
+				state.value.clear();
+				state.cursor_pos = 0;
+			} else {
+				let idx: uint = state.value.as_slice().graphemes(true).take(state.cursor_pos as uint - 1).map(|g| g.len()).sum();
+				state.value.remove(idx);
+				state.cursor_pos = state.cursor_pos-1;
+			}
 			edited = true;
         } else if state.cursor_pos > 0 && control_keys.left.just_pressed {
         	state.cursor_pos = state.cursor_pos-1;

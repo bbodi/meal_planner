@@ -2,10 +2,7 @@ extern crate sdl2;
 extern crate sdl2_ttf;
 
 extern crate imgui;
-
-//extern crate postgres;
-extern crate time;
-
+extern crate sqlite3;
 
 use sdl2::pixels::RGB;
 use sdl2::pixels::RGBA;
@@ -22,89 +19,21 @@ use imgui::slider::slider;
 use imgui::slider::Vertical;
 use imgui::slider::Horizontal;
 
-use std::default::Default;
-use std::error::FromError;
-use std::io::{IoResult, IoError, InvalidInput};
-use std::os;
-
-use time::Timespec;
+use db::Event;
+use db::EventTemplate;
+use db::Tag;
 
 use event_template_window::EventTemplateWindow;
 use timeline::TimelineWindow;
 
-//use postgres::{Connection, NoSsl};
-
 mod event_template_window;
 mod timeline;
+mod db;
+mod new_event_win;
 
 const SCREEN_WIDHT: u32 = 1024;
 const SCREEN_HEIGHT: u32 = 768;
 
-
-struct Person {
-    id: i32,
-    name: String,
-    time_created: Timespec,
-    data: Option<Vec<u8>>
-}
-
-struct Event {
-    id: u32,
-    date: u32,
-    name: String,
-    project_id: u32,
-    text: String,
-    //img: ,
-    is_priv: bool,
-    num: f32,
-}
-
-#[deriving(Show, PartialEq)]
-enum InputType {
-    Num,
-    Bool,
-    Stack,
-    Text,
-    Img,
-}
-
-
-struct EventTemplate {
-    id: u32,
-    name: String,
-    private: bool,
-    input_type: InputType,
-    //icon: Icon,
-    mandatory: bool,
-    event_group_id: u32,
-}
-
-impl EventTemplate {
-    pub fn new() -> EventTemplate {
-        EventTemplate {
-            id: 0,
-            name: "".into_string(),
-            private: false,
-            input_type: Num,
-            mandatory: false,
-            event_group_id: 0,
-        }
-    }
-}
-
-struct EventGroup {
-    id: u32,
-    name: String,
-}
-
-impl EventGroup {
-    pub fn new(id: u32, name: &str) -> EventGroup {
-        EventGroup {
-            id: 0, 
-            name: name.into_string(),
-        }
-    }
-}
 
 struct Project {
     start_event_id: u32,
@@ -112,39 +41,6 @@ struct Project {
 }
 
 fn main() {
-	/*let conn = Connection::connect("postgres://postgres@localhost", &NoSsl)
-            .unwrap();
-
-    conn.execute("CREATE TABLE person (
-                    id              SERIAL PRIMARY KEY,
-                    name            VARCHAR NOT NULL,
-                    time_created    TIMESTAMP NOT NULL,
-                    data            BYTEA
-                  )", []).unwrap();
-    let me = Person {
-        id: 0,
-        name: "Steven".into_string(),
-        time_created: time::get_time(),
-        data: None
-    };
-    conn.execute("INSERT INTO person (name, time_created, data)
-                    VALUES ($1, $2, $3)",
-                 &[&me.name, &me.time_created, &me.data]).unwrap();
-
-    let stmt = conn.prepare("SELECT id, name, time_created, data FROM person")
-            .unwrap();
-    for row in stmt.query([]).unwrap() {
-        let person = Person {
-            id: row.get(0),
-            name: row.get(1),
-            time_created: row.get(2),
-            data: row.get(3)
-        };
-        println!("Found person {}", person.name);
-    }*/
-
-
-
     sdl2::init(sdl2::INIT_VIDEO);
     sdl2_ttf::init();
 
@@ -170,8 +66,10 @@ fn main() {
     let mut slider_val = SizeInCharacters(5);
     let mut slider_val2 = SizeInCharacters(5);
     let mut slider_val3 = SizeInCharacters(5);
-    let mut event_template = EventTemplate::new();
-    let mut event_groups: Vec<EventGroup> = vec![];
+    
+    let mut dao = db::Dao::new();
+    let mut event_tags: Vec<Tag> = dao.load_tags();
+    let mut event_templates = dao.load_event_templates();
 
     let mut event_template_window = EventTemplateWindow::new();
     let mut timeline = TimelineWindow::new(SizeInCharacters(0), SizeInCharacters(0), SizeInCharacters(128), SizeInCharacters(45));
@@ -232,8 +130,12 @@ fn main() {
             .top_color(RGB(60, 60, 60))
             .draw(&renderer);*/
         
-        //event_template_window.do_logic(&mut layer, &mut event_template, &mut event_groups);
-        timeline.do_logic(&mut layer);
+
+        if event_template_window.do_logic(&mut layer, &mut event_templates, &mut event_tags) {
+        	dao.persist_event_tags(&mut event_tags);
+        	dao.persist_event_templates(&mut event_templates);
+        }
+        //timeline.do_logic(&mut layer);
         
 
         layer.draw(&renderer);
